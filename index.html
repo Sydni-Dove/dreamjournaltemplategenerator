@@ -166,7 +166,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 @media print {
   @page { size: 8.5in 11in; margin: 0; }
   body { background: white !important; }
-  .site-header, .editor-section, .output-controls, .auth-bar, .my-journal-section { display: none !important; }
+  .site-header, .editor-section, .output-controls, .auth-bar, .my-journal-section, .tab-nav { display: none !important; }
   .page-spacer { display: none !important; }
   .output-section { display: block !important; max-width: none; margin: 0; padding: 0; overflow: visible; }
   .journal-page { width: 8.5in !important; min-height: 11in !important; box-shadow: none !important; margin: 0 !important; transform: none !important; margin-bottom: 0 !important; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -211,6 +211,26 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .sec-btn.del { color: #a04040; border-color: rgba(160,64,64,0.3); }
 .sec-btn.del:hover { background: #a04040; color: var(--white); border-color: #a04040; }
 .saved-entries-empty { font-family: 'Lora', serif; font-size: 0.82rem; font-style: italic; color: var(--text-light); text-align: center; padding: 2rem 0; }
+
+/* ── TAB NAVIGATION ───────────────────────────────────── */
+.tab-nav { background: var(--white); border-bottom: 1px solid var(--line); display: none; }
+.tab-nav.show { display: block; }
+.tab-nav-inner { max-width: 820px; margin: 0 auto; display: flex; padding: 0 1rem; }
+.tab-btn { font-family: 'Playfair Display', serif; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.78rem 1.2rem; cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-soft); margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; }
+.tab-btn:hover { color: var(--primary); }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* ── JOURNAL LIBRARY ───────────────────────────────────── */
+.library-controls { display: flex; gap: 0.65rem; flex-wrap: wrap; margin-bottom: 1.2rem; align-items: center; }
+.lib-search { font-family: 'Lora', serif; font-size: 0.85rem; color: var(--text); background: white; border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.85rem; outline: none; flex: 1; min-width: 160px; transition: border-color 0.2s; }
+.lib-search:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,0,0,0.08); }
+.lib-select { font-family: 'Lora', serif; font-size: 0.8rem; color: var(--text); background: white; border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.65rem; outline: none; cursor: pointer; }
+.lib-select:focus { border-color: var(--primary); }
+.sec-date-col { display: flex; flex-direction: column; gap: 0.3rem; flex-shrink: 0; min-width: 5rem; }
+.sec-type-badge { font-family: 'Playfair Display', serif; font-size: 0.57rem; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(99,0,0,0.08); color: var(--primary); border-radius: 4px; padding: 0.12rem 0.35rem; display: inline-block; max-width: 5.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sec-title { font-family: 'Playfair Display', serif; font-size: 0.86rem; color: var(--text); font-weight: 500; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn-load-more { font-family: 'Playfair Display', serif; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary); background: transparent; border: 1px solid rgba(99,0,0,0.3); border-radius: 8px; padding: 0.6rem 1.6rem; cursor: pointer; margin: 1rem auto 0; display: block; transition: all 0.2s; }
+.btn-load-more:hover { background: rgba(99,0,0,0.06); }
 </style>
 </head>
 <body>
@@ -228,13 +248,40 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   <div class="auth-inner" id="authInner"></div>
 </div>
 
+<!-- TAB NAV (visible when signed in) -->
+<nav class="tab-nav" id="tabNav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" id="tabBtnGenerator" onclick="switchTab('generator')">Generator</button>
+    <button class="tab-btn" id="tabBtnSaved" onclick="switchTab('saved')">My Saved Entries</button>
+  </div>
+</nav>
+
 <!-- MY JOURNAL SECTION -->
 <div class="my-journal-section" id="myJournalSection" style="display:none">
-  <div class="editor-section" style="padding-top:1.5rem; padding-bottom:2rem;">
-    <div class="section-eyebrow">My Saved Dream Entries</div>
+  <div class="editor-section" style="padding-top:1.5rem; padding-bottom:2.5rem;">
+    <div class="section-eyebrow">My Dream Journal</div>
+    <div class="library-controls">
+      <input class="lib-search" type="text" id="libSearch" placeholder="Search title, dream, or theme…" oninput="onLibSearchInput()">
+      <select class="lib-select" id="libSort" onchange="onLibFilter()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+      </select>
+      <select class="lib-select" id="libType" onchange="onLibFilter()">
+        <option value="">All Types</option>
+        <option>Personal Dream</option><option>Warning Dream</option><option>Instruction Dream</option>
+        <option>Encouragement Dream</option><option>Prophetic Dream</option><option>Intercession Dream</option>
+        <option>Warfare Dream</option><option>Future Dream</option><option>Confirmation Dream</option>
+        <option>Teaching Dream</option><option>Destiny Dream</option><option>Correction Dream</option>
+        <option>Calling Dream</option><option>Identity Dream</option><option>Healing Dream</option>
+        <option>Deliverance Dream</option><option>Vision</option><option>Unknown</option>
+      </select>
+    </div>
     <div class="saved-entries-list" id="savedEntriesList">
       <div class="saved-entries-empty">Loading…</div>
     </div>
+    <button class="btn-load-more" id="loadMoreBtn" style="display:none" onclick="loadMoreEntries()">Load More</button>
   </div>
 </div>
 
@@ -339,7 +386,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
     <div class="extra-pages-grid">
       <div class="f-group"><label for="xHeader">Extra Header Pages</label><select id="xHeader"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
       <div class="f-group"><label for="xDream">Extra Dream Pages</label><select id="xDream"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
-      <div class="f-group"><label for="xBrainstorm">Extra Brainstorm Pages</label><select id="xBrainstorm"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
       <div class="f-group"><label for="xKeys">Extra Keys Pages</label><select id="xKeys"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
       <div class="f-group"><label for="xInterpretation">Extra Interpretation Pages</label><select id="xInterpretation"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
       <div class="f-group"><label for="xApplication">Extra Application Pages</label><select id="xApplication"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
@@ -427,16 +473,30 @@ let authMode    = 'signin';
 sb.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user ?? null;
   renderAuthBar();
-  const sec = document.getElementById('myJournalSection');
-  if (currentUser) { loadMyJournal(); if (sec) sec.style.display = 'block'; }
-  else { if (sec) sec.style.display = 'none'; }
+  const tabNav = document.getElementById('tabNav');
+  if (currentUser) {
+    if (tabNav) tabNav.classList.add('show');
+    let lastTab = 'generator';
+    try { lastTab = sessionStorage.getItem('djTab') || 'generator'; } catch {}
+    switchTab(lastTab);
+  } else {
+    if (tabNav) tabNav.classList.remove('show');
+    switchTab('generator');
+    const sec = document.getElementById('myJournalSection');
+    if (sec) sec.style.display = 'none';
+  }
 });
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
   currentUser = session?.user ?? null;
   renderAuthBar();
-  const sec = document.getElementById('myJournalSection');
-  if (currentUser) { loadMyJournal(); if (sec) sec.style.display = 'block'; }
+  const tabNav = document.getElementById('tabNav');
+  if (currentUser) {
+    if (tabNav) tabNav.classList.add('show');
+    let lastTab = 'generator';
+    try { lastTab = sessionStorage.getItem('djTab') || 'generator'; } catch {}
+    switchTab(lastTab);
+  }
 })();
 
 // ── THEME ──────────────────────────────────────────────
@@ -1119,7 +1179,6 @@ function showPages(dataArray) {
   const addNotes        = notesStyle !== 'none';
   const xHeader         = parseInt(document.getElementById('xHeader').value)         || 0;
   const xDream          = parseInt(document.getElementById('xDream').value)           || 0;
-  const xBrainstorm     = parseInt(document.getElementById('xBrainstorm').value)     || 0;
   const xKeys           = parseInt(document.getElementById('xKeys').value)            || 0;
   const xInterpretation = parseInt(document.getElementById('xInterpretation').value) || 0;
   const xApplication    = parseInt(document.getElementById('xApplication').value)    || 0;
@@ -1133,7 +1192,6 @@ function showPages(dataArray) {
     for (let i=0; i<xHeader; i++) addPage(buildExtraPage('Dream Header', data));
     addPage(buildDreamPage(data));
     for (let i=0; i<xDream; i++) addPage(buildExtraPage('Dream Narrative', data));
-    for (let i=0; i<xBrainstorm; i++) addPage(buildExtraPage('Brainstorm', data));
     addPage(buildKeysPage(data));
     for (let i=0; i<xKeys; i++) addPage(buildExtraPage('Dream Keys', data));
     addPage(buildInterpretationPage(data));
@@ -1275,14 +1333,28 @@ window.addEventListener('resize', () => { if (document.getElementById('outputSec
 
 // ── PRINT VISIBILITY GUARD ───────────────────────────────
 window.addEventListener('beforeprint', () => {
-  const authBar = document.getElementById('authBar'); const journalSec = document.getElementById('myJournalSection');
-  if (authBar) authBar.style.setProperty('display','none','important');
+  const authBar  = document.getElementById('authBar');
+  const tabNav   = document.getElementById('tabNav');
+  const journalSec = document.getElementById('myJournalSection');
+  const editorSec  = document.getElementById('editorSection');
+  if (authBar)    authBar.style.setProperty('display','none','important');
+  if (tabNav)     tabNav.style.setProperty('display','none','important');
   if (journalSec) journalSec.style.setProperty('display','none','important');
+  if (editorSec)  editorSec.style.setProperty('display','none','important');
 });
 window.addEventListener('afterprint', () => {
-  const authBar = document.getElementById('authBar'); const journalSec = document.getElementById('myJournalSection');
+  const authBar = document.getElementById('authBar');
+  const tabNav  = document.getElementById('tabNav');
   if (authBar) authBar.style.removeProperty('display');
-  if (journalSec) { journalSec.style.removeProperty('display'); if (!currentUser) journalSec.style.display = 'none'; }
+  if (tabNav)  tabNav.style.removeProperty('display');
+  // Restore correct tab state after print
+  const myJSec = document.getElementById('myJournalSection');
+  if (!currentUser && myJSec) { myJSec.style.display = 'none'; }
+  // Re-show generator tab content
+  const gen = document.getElementById('editorSection');
+  const out = document.getElementById('outputSection');
+  if (gen) gen.style.removeProperty('display');
+  if (out) out.style.removeProperty('display');
 });
 
 // ── CLEAR ──────────────────────────────────────────────
@@ -1290,7 +1362,7 @@ function clearAll() {
   pendingPages = [];
   ['dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm','dreamActions','dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication','dreamAdditionalNotes','dreamContextSource','dreamTheme','sumDream','sumInterpretation','sumApplication','pasteNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['dreamType','dreamerInvolvement'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  ['xHeader','xDream','xBrainstorm','xKeys','xInterpretation','xApplication'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '0'; });
+  ['xHeader','xDream','xKeys','xInterpretation','xApplication'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '0'; });
   document.getElementById('notesStyle').value = 'none';
   const countEl = document.getElementById('notesPageCount'); countEl.value = '1'; countEl.disabled = true; countEl.style.opacity = '0.35';
   document.getElementById('uploadMsg').textContent = '';
@@ -1356,25 +1428,124 @@ async function saveToJournal() {
   } catch (err) { alert('Could not save: ' + (err.message || 'Unknown error')); if (btn) { btn.textContent = '💜 Save to Journal'; btn.disabled = false; } }
 }
 
+// ── JOURNAL LIBRARY STATE ─────────────────────────────────
+const PAGE_SIZE = 20;
+const journalState = { search: '', sort: 'newest', filterType: '', page: 0, hasMore: false, loading: false };
+let _libSearchTimer = null;
+
+function switchTab(tab) {
+  const gen  = document.getElementById('editorSection');
+  const out  = document.getElementById('outputSection');
+  const saved = document.getElementById('myJournalSection');
+  const btnG = document.getElementById('tabBtnGenerator');
+  const btnS = document.getElementById('tabBtnSaved');
+  if (tab === 'saved') {
+    if (gen)  gen.style.display = 'none';
+    if (out)  out.style.display = 'none';
+    if (saved) saved.style.display = 'block';
+    if (btnG) btnG.classList.remove('active');
+    if (btnS) btnS.classList.add('active');
+    try { sessionStorage.setItem('djTab', 'saved'); } catch {}
+    loadMyJournal();
+  } else {
+    if (gen)  gen.style.display = '';
+    if (out)  out.style.display = '';
+    if (saved) saved.style.display = 'none';
+    if (btnG) btnG.classList.add('active');
+    if (btnS) btnS.classList.remove('active');
+    try { sessionStorage.setItem('djTab', 'generator'); } catch {}
+  }
+}
+
+function onLibSearchInput() {
+  clearTimeout(_libSearchTimer);
+  _libSearchTimer = setTimeout(() => {
+    journalState.search = document.getElementById('libSearch')?.value.trim() || '';
+    journalState.page = 0;
+    loadMyJournal();
+  }, 400);
+}
+
+function onLibFilter() {
+  journalState.sort       = document.getElementById('libSort')?.value || 'newest';
+  journalState.filterType = document.getElementById('libType')?.value || '';
+  journalState.page = 0;
+  loadMyJournal();
+}
+
+function loadMoreEntries() {
+  journalState.page++;
+  loadMyJournal(true);
+}
+
 // ── MY JOURNAL LOADER ────────────────────────────────────
-async function loadMyJournal() {
-  if (!currentUser) return;
-  const list = document.getElementById('savedEntriesList'); if (!list) return;
-  list.innerHTML = '<div class="saved-entries-empty" style="font-style:normal;color:var(--text-light)">Loading…</div>';
-  const { data, error } = await sb.from('dream_entries').select('id, entry_date, title, dream_narrative, interpretation, raw_text, created_at').eq('user_id', currentUser.id).order('created_at', { ascending:false }).limit(50);
-  if (error) { list.innerHTML = '<div class="saved-entries-empty">Could not load entries.</div>'; return; }
-  if (!data || data.length === 0) { list.innerHTML = '<div class="saved-entries-empty">No saved entries yet — generate journal pages and click "Save to Journal."</div>'; return; }
-  list.innerHTML = '';
-  data.forEach(entry => {
-    const card = document.createElement('div'); card.className = 'saved-entry-card';
-    const savedDate = new Date(entry.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-    const preview   = (entry.dream_narrative || 'No narrative recorded').substring(0, 160);
-    card.innerHTML = `<div class="sec-date">${escAttr(entry.entry_date||'—')}</div><div class="sec-body"><div class="sec-word">${escAttr(preview)}</div><div class="sec-meta">Saved ${savedDate}${entry.title ? ' · ' + escAttr(entry.title) : ''}</div></div><div class="sec-actions"></div>`;
-    const actions = card.querySelector('.sec-actions');
-    const loadBtn = document.createElement('button'); loadBtn.className = 'sec-btn'; loadBtn.textContent = 'Load'; loadBtn.onclick = () => loadEntryIntoForm(entry); actions.appendChild(loadBtn);
-    const delBtn  = document.createElement('button'); delBtn.className  = 'sec-btn del'; delBtn.textContent = 'Delete'; delBtn.onclick = () => deleteEntry(entry.id); actions.appendChild(delBtn);
-    list.appendChild(card);
-  });
+async function loadMyJournal(append) {
+  if (!currentUser || journalState.loading) return;
+  journalState.loading = true;
+  const list = document.getElementById('savedEntriesList'); if (!list) { journalState.loading = false; return; }
+  if (!append) list.innerHTML = '<div class="saved-entries-empty" style="font-style:normal;color:var(--text-light)">Loading…</div>';
+
+  const { search, sort, filterType, page } = journalState;
+  const from = page * PAGE_SIZE;
+  const to   = from + PAGE_SIZE - 1;
+
+  let q = sb.from('dream_entries')
+    .select('id, entry_date, title, dream_narrative, dream_type, theme, raw_text, interpretation, created_at', { count: 'exact' })
+    .eq('user_id', currentUser.id);
+
+  if (search) {
+    q = q.or(`title.ilike.%${search}%,dream_narrative.ilike.%${search}%,theme.ilike.%${search}%`);
+  }
+  if (filterType) {
+    q = q.eq('dream_type', filterType);
+  }
+  const sortField = (sort === 'az' || sort === 'za') ? 'title' : 'created_at';
+  const ascending = (sort === 'oldest' || sort === 'az');
+  q = q.order(sortField, { ascending, nullsFirst: false });
+  q = q.range(from, to);
+
+  const { data, error, count } = await q;
+  journalState.loading = false;
+
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  if (error) {
+    list.innerHTML = '<div class="saved-entries-empty">Could not load entries.</div>';
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+    return;
+  }
+  if (!data || data.length === 0) {
+    if (!append) list.innerHTML = '<div class="saved-entries-empty">No saved entries yet — generate journal pages and click "Save to Journal."</div>';
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+    return;
+  }
+  if (!append) list.innerHTML = '';
+  data.forEach(entry => list.appendChild(renderEntryCard(entry)));
+
+  journalState.hasMore = count !== null ? (from + data.length) < count : data.length === PAGE_SIZE;
+  if (loadMoreBtn) loadMoreBtn.style.display = journalState.hasMore ? 'block' : 'none';
+}
+
+function renderEntryCard(entry) {
+  const card = document.createElement('div'); card.className = 'saved-entry-card';
+  const savedDate = new Date(entry.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  const preview   = (entry.dream_narrative || '').replace(/\n+/g,' ').substring(0, 180);
+  const typeBadge = entry.dream_type ? `<span class="sec-type-badge">${esc(entry.dream_type)}</span>` : '';
+  const themeMeta = entry.theme ? ` · ${esc(entry.theme)}` : '';
+  card.innerHTML = `
+    <div class="sec-date-col"><span class="sec-date">${esc(entry.entry_date||'—')}</span>${typeBadge}</div>
+    <div class="sec-body">
+      <div class="sec-title">${esc(entry.title||'Untitled Dream')}</div>
+      <div class="sec-word">${esc(preview)}</div>
+      <div class="sec-meta">Saved ${savedDate}${themeMeta}</div>
+    </div>
+    <div class="sec-actions"></div>`;
+  const actions = card.querySelector('.sec-actions');
+  const loadBtn = document.createElement('button'); loadBtn.className = 'sec-btn'; loadBtn.textContent = 'Load';
+  loadBtn.onclick = () => { loadEntryIntoForm(entry); switchTab('generator'); };
+  const delBtn  = document.createElement('button'); delBtn.className  = 'sec-btn del'; delBtn.textContent = 'Delete';
+  delBtn.onclick = () => deleteEntry(entry.id);
+  actions.appendChild(loadBtn); actions.appendChild(delBtn);
+  return card;
 }
 function loadEntryIntoForm(entry) {
   const fieldMap = { dreamDate:entry.entry_date, dreamTitle:entry.title, dreamNarrative:entry.dream_narrative, dreamInterpretation:entry.interpretation };
@@ -1406,7 +1577,7 @@ function renderAuthBar() {
   }
 }
 function toggleAuthMode() { authMode = authMode==='signin'?'signup':'signin'; renderAuthBar(); }
-function toggleMyJournal() { const sec = document.getElementById('myJournalSection'); if (!sec) return; const isHidden = sec.style.display==='none'; sec.style.display = isHidden?'block':'none'; if (isHidden) sec.scrollIntoView({ behavior:'smooth' }); }
+function toggleMyJournal() { switchTab('saved'); }
 async function doAuth() {
   const email = document.getElementById('authEmail')?.value.trim(); const password = document.getElementById('authPassword')?.value; const msg = document.getElementById('authMsg');
   if (!email||!password) { if (msg) { msg.textContent='Enter your email and password.'; msg.className='auth-msg err'; } return; }
