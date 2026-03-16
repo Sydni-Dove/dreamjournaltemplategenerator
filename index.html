@@ -108,14 +108,15 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
    JOURNAL PAGES — 8.5 × 11
 ══════════════════════════════════════════════════════ */
 .journal-page { width: 8.5in; min-height: 11in; background: var(--pg-bg); margin: 0 auto; position: relative; overflow: hidden; box-shadow: 0 8px 60px rgba(99,0,0,0.12); page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.journal-page::before { content: ''; position: absolute; top: 0; left: 0; width: 220px; height: 220px; background: radial-gradient(ellipse at top left, var(--pg-panel) 0%, transparent 72%); opacity: 0.8; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.journal-page::after  { content: ''; position: absolute; bottom: 0; right: 0; width: 280px; height: 280px; background: radial-gradient(ellipse at bottom right, var(--pg-panel) 0%, transparent 70%); opacity: 0.65; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.journal-page::before { content: ''; position: absolute; top: 0; left: 0; width: 220px; height: 220px; background: radial-gradient(ellipse at top left, var(--pg-panel) 0%, rgba(255,255,255,0) 72%); opacity: 0.8; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.journal-page::after  { content: ''; position: absolute; bottom: 0; right: 0; width: 280px; height: 280px; background: radial-gradient(ellipse at bottom right, var(--pg-panel) 0%, rgba(255,255,255,0) 70%); opacity: 0.65; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .page-inner { position: relative; z-index: 1; padding: 0.75in 0.88in 0.6in; min-height: 11in; display: flex; flex-direction: column; }
 .page-header { text-align: center; margin-bottom: 0.22in; }
 .page-brand { font-family: 'Playfair Display', serif; font-size: 0.52rem; letter-spacing: 0.48em; text-transform: uppercase; color: var(--pg-primary); margin-bottom: 0.08in; }
 .page-title { font-family: 'Playfair Display', serif; font-weight: 400; font-size: 26px; letter-spacing: 4px; text-transform: uppercase; color: var(--pg-primary); line-height: 1; }
 .page-title-rule { width: 2in; height: 1px; background: linear-gradient(to right, transparent, var(--pg-accent), transparent); margin: 0.1in auto 0; opacity: 0.65; }
 .page-subtitle { font-family: 'Lora', serif; font-size: 0.62rem; font-style: italic; color: var(--pg-primary); opacity: 0.7; margin-top: 0.05in; letter-spacing: 0.04em; }
+.header-verse { font-family: 'Lora', serif; font-size: 0.6rem; font-style: italic; color: var(--pg-accent); opacity: 0.85; margin-top: 0.1in; letter-spacing: 0.02em; text-align: center; }
 .meta-row { display: flex; border-top: 1px solid rgba(230,167,66,0.32); border-bottom: 1px solid rgba(230,167,66,0.32); margin-bottom: 0.18in; padding: 0.08in 0; flex-shrink: 0; }
 .meta-item { flex: 1; min-width: 0; padding: 0 0.1in; border-right: 1px solid rgba(99,0,0,0.1); }
 .meta-item:first-child { padding-left: 0; }
@@ -642,6 +643,51 @@ function findDateInText(text) {
   return null;
 }
 
+// ── DREAM TYPE PREDICTION ────────────────────────────────
+// Scans brainstorm, interpretation, narrative, emotions, and scriptures
+// for keyword signals and returns the best-matching dream type.
+// Only fires when dreamType is not already populated.
+function predictDreamType(data) {
+  const combined = [
+    data.dreamNarrative     || '',
+    data.dreamBrainstorm    || '',
+    data.dreamInterpretation|| '',
+    data.dreamApplication   || '',
+    data.dreamEmotions      || '',
+    data.dreamScriptures    || '',
+  ].join(' ').toLowerCase();
+
+  if (!combined.trim()) return null;
+
+  function kw(text, words) {
+    return words.reduce((n, w) => n + (text.includes(w.toLowerCase()) ? 1 : 0), 0);
+  }
+
+  const scores = {
+    'Vision':              kw(combined, ['vision','open vision','i saw','i was shown','the lord showed me','i beheld']),
+    'Warning Dream':       kw(combined, ['warning','danger','beware','flee','destruction','judgment','threat','be careful','do not','stop','consequence','alert']),
+    'Instruction Dream':   kw(combined, ['instruction','instructed','told to','commanded','obey','direction','do this','next step','follow','action to take','to-do','assignment']),
+    'Prophetic Dream':     kw(combined, ['prophetic','prophet','thus saith','the lord said','declares the lord','word of the lord','will come to pass','foretell','decree']),
+    'Encouragement Dream': kw(combined, ['encouragement','encouraged','fear not','do not be afraid','comfort','strength','keep going','you are loved','take heart','be still','hope']),
+    'Intercession Dream':  kw(combined, ['intercession','intercede','pray for','standing in the gap','intercessor','prayer burden','travail','praying on behalf']),
+    'Warfare Dream':       kw(combined, ['warfare','battle','enemy','fight','spiritual warfare','attack','armor','demon','devil','resist','rebuke','principality','stronghold']),
+    'Future Dream':        kw(combined, ['future','what is coming','coming season','prepare','preparation','ahead','next season','soon','what\'s ahead','what he is about to do']),
+    'Confirmation Dream':  kw(combined, ['confirm','confirmation','confirming','this confirms','once again','again','agrees with','this is a sign','bears witness']),
+    'Teaching Dream':      kw(combined, ['teaching','lesson','class','school','learn','understanding','revelation','knowledge','study','instructor','teacher','seer','seers']),
+    'Calling Dream':       kw(combined, ['calling','called to','assignment','ministry','gifting','appointed','set apart','vocation','purpose in god','what god has called']),
+    'Identity Dream':      kw(combined, ['identity','who you are','daughter of','son of','beloved','your name','you are','your identity','who god says you are']),
+    'Healing Dream':       kw(combined, ['healing','healed','wholeness','restoration','restore','physical healing','emotional healing','mend','recovery','made whole']),
+    'Deliverance Dream':   kw(combined, ['deliverance','freedom','set free','bondage','chains','prison','captive','liberate','breaking free','loose']),
+    'Correction Dream':    kw(combined, ['correction','repent','turn from','wrong direction','rebuke','adjust','change course','disobedience','straying']),
+    'Destiny Dream':       kw(combined, ['destiny','destined','ordained','appointed','your destiny','purpose','what god has planned','what he has for you']),
+    'Personal Dream':      kw(combined, ['personally','my own heart','my life situation','about me','my circumstances','processing my','working through']),
+  };
+
+  const sorted = Object.entries(scores).sort((a,b) => b[1]-a[1]);
+  // Require at least 2 keyword hits to make a confident prediction
+  return sorted[0][1] >= 2 ? sorted[0][0] : null;
+}
+
 // ── DREAM DATA EXTRACTION ───────────────────────────────
 function extractDreamData(raw) {
   const result = {};
@@ -917,6 +963,29 @@ function extractDreamData(raw) {
     result.dreamType = 'Vision';
   }
 
+  // ── AUTO-EXTRACT SCRIPTURES from brainstorm/interpretation ───
+  // Pulls book+chapter:verse references if dreamScriptures not already set
+  if (!result.dreamScriptures) {
+    const bibleBooks = ['genesis','exodus','leviticus','numbers','deuteronomy','joshua','judges','ruth','samuel','kings','chronicles','ezra','nehemiah','esther','job','psalm','psalms','proverbs','ecclesiastes','song','isaiah','jeremiah','lamentations','ezekiel','daniel','hosea','joel','amos','obadiah','jonah','micah','nahum','habakkuk','zephaniah','haggai','zechariah','malachi','matthew','mark','luke','john','acts','romans','corinthians','galatians','ephesians','philippians','colossians','thessalonians','timothy','titus','philemon','hebrews','james','peter','jude','revelation'];
+    const bibleRe = new RegExp('(?:(?:\\d\\s+)?(?:' + bibleBooks.join('|') + '))[\\s]+\\d+[:\\s]\\d+[\\-\\d]*', 'gi');
+    const scanText = [result.dreamBrainstorm, result.dreamInterpretation, result.dreamNarrative, result.dreamApplication].filter(Boolean).join('\n');
+    const hits = [...new Set((scanText.match(bibleRe)||[]).map(s => s.trim()))].slice(0, 8);
+    if (hits.length) result.dreamScriptures = hits.join('\n');
+  }
+
+  // ── AUTO-EXTRACT EMOTIONS from brainstorm/interpretation ─────
+  // Pulls named feelings if dreamEmotions not already set
+  if (!result.dreamEmotions) {
+    const feelWords = ['afraid','agitated','angry','anxious','ashamed','bitter','burdened','calm','confused','confident','content','curious','desperate','disappointed','doubtful','encouraged','excited','exhausted','fearful','frustrated','glad','grieved','guilty','happy','hopeful','hopeless','humbled','hurt','insecure','joyful','lost','loved','nervous','overwhelmed','panicked','peaceful','proud','rejected','relieved','sad','scared','shameful','shocked','sorrowful','surprised','thankful','troubled','uncertain','uneasy','unsure','wary','weary','worried'];
+    const feelRe = new RegExp('\\b(' + feelWords.join('|') + ')\\b', 'gi');
+    const scanText = [result.dreamBrainstorm, result.dreamInterpretation].filter(Boolean).join(' ');
+    const found = [...new Set((scanText.match(feelRe)||[]).map(s => s.toLowerCase()))];
+    if (found.length) result.dreamEmotions = found.slice(0, 8).join(', ');
+  }
+
+  // ── PREDICT DREAM TYPE from content ─────────────────────────
+  if (!result.dreamType) result.dreamType = predictDreamType(result) || '';
+
   // ── SCRIPTURE AUTO-DETECT ────────────────────────────────
   if (!result.dreamScriptures) {
     const bibleBooks = ['genesis','exodus','leviticus','numbers','deuteronomy','joshua','judges','ruth','samuel','kings','chronicles','ezra','nehemiah','esther','job','psalm','psalms','proverbs','ecclesiastes','song','isaiah','jeremiah','lamentations','ezekiel','daniel','hosea','joel','amos','obadiah','jonah','micah','nahum','habakkuk','zephaniah','haggai','zechariah','malachi','matthew','mark','luke','john','acts','romans','corinthians','galatians','ephesians','philippians','colossians','thessalonians','timothy','titus','philemon','hebrews','james','peter','jude','revelation'];
@@ -1012,6 +1081,13 @@ function generateFromForm() {
     data.dreamType = 'Vision';
     const typeEl = document.getElementById('dreamType'); if (typeEl) typeEl.value = 'Vision';
   }
+  if (!data.dreamType) {
+    const predicted = predictDreamType(data);
+    if (predicted) {
+      data.dreamType = predicted;
+      const typeEl = document.getElementById('dreamType'); if (typeEl) typeEl.value = predicted;
+    }
+  }
   showPages([data]);
 }
 
@@ -1097,7 +1173,7 @@ function prosEl(text, cls) { const el = document.createElement('div'); el.classN
 
 function buildHeaderPage(data) {
   const page = document.createElement('div'); page.className = 'journal-page';
-  page.innerHTML = `<div class="page-inner"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Dream Journal</div><div class="page-title-rule"></div></div><div class="header-fields"><div class="hf-row"><div class="hf-item hf-full"><span class="hf-label">Dream Title</span><div class="hf-value" id="hf-title"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Date</span><div class="hf-value" id="hf-date"></div></div><div class="hf-item"><span class="hf-label">Time</span><div class="hf-value" id="hf-time"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Dream Type</span><div class="hf-value" id="hf-type"></div></div><div class="hf-item"><span class="hf-label">Dreamer's Involvement</span><div class="hf-value" id="hf-inv"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Context / Source</span><div class="hf-value" id="hf-ctx"></div></div><div class="hf-item"><span class="hf-label">Theme</span><div class="hf-value" id="hf-theme"></div></div></div></div><div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8 · "He reveals deep and hidden things." — Daniel 2:22</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
+  page.innerHTML = `<div class="page-inner"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Dream Journal</div><div class="page-title-rule"></div><div class="header-verse">"He reveals deep and hidden things." — Daniel 2:22</div></div><div class="header-fields"><div class="hf-row"><div class="hf-item hf-full"><span class="hf-label">Dream Title</span><div class="hf-value" id="hf-title"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Date</span><div class="hf-value" id="hf-date"></div></div><div class="hf-item"><span class="hf-label">Time</span><div class="hf-value" id="hf-time"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Dream Type</span><div class="hf-value" id="hf-type"></div></div><div class="hf-item"><span class="hf-label">Dreamer's Involvement</span><div class="hf-value" id="hf-inv"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Context / Source</span><div class="hf-value" id="hf-ctx"></div></div><div class="hf-item"><span class="hf-label">Theme</span><div class="hf-value" id="hf-theme"></div></div></div></div><div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8 · "He reveals deep and hidden things." — Daniel 2:22</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
   page.querySelector('#hf-title').textContent = data.dreamTitle          || '';
   page.querySelector('#hf-date').textContent  = data.dreamDate           || '';
   page.querySelector('#hf-time').textContent  = data.dreamTime           || '';
