@@ -386,6 +386,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
     <div class="extra-pages-grid">
       <div class="f-group"><label for="xHeader">Extra Header Pages</label><select id="xHeader"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
       <div class="f-group"><label for="xDream">Extra Dream Pages</label><select id="xDream"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+      <div class="f-group"><label for="xBrainstorm">Extra Brainstorm Pages</label><select id="xBrainstorm"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
       <div class="f-group"><label for="xKeys">Extra Keys Pages</label><select id="xKeys"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
       <div class="f-group"><label for="xInterpretation">Extra Interpretation Pages</label><select id="xInterpretation"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
       <div class="f-group"><label for="xApplication">Extra Application Pages</label><select id="xApplication"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
@@ -1179,6 +1180,7 @@ function showPages(dataArray) {
   const addNotes        = notesStyle !== 'none';
   const xHeader         = parseInt(document.getElementById('xHeader').value)         || 0;
   const xDream          = parseInt(document.getElementById('xDream').value)           || 0;
+  const xBrainstorm     = parseInt(document.getElementById('xBrainstorm').value)      || 0;
   const xKeys           = parseInt(document.getElementById('xKeys').value)            || 0;
   const xInterpretation = parseInt(document.getElementById('xInterpretation').value) || 0;
   const xApplication    = parseInt(document.getElementById('xApplication').value)    || 0;
@@ -1192,6 +1194,7 @@ function showPages(dataArray) {
     for (let i=0; i<xHeader; i++) addPage(buildExtraPage('Dream Header', data));
     addPage(buildDreamPage(data));
     for (let i=0; i<xDream; i++) addPage(buildExtraPage('Dream Narrative', data));
+    for (let i=0; i<xBrainstorm; i++) addPage(buildExtraPage('Brainstorm', data));
     addPage(buildKeysPage(data));
     for (let i=0; i<xKeys; i++) addPage(buildExtraPage('Dream Keys', data));
     addPage(buildInterpretationPage(data));
@@ -1362,7 +1365,7 @@ function clearAll() {
   pendingPages = [];
   ['dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm','dreamActions','dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication','dreamAdditionalNotes','dreamContextSource','dreamTheme','sumDream','sumInterpretation','sumApplication','pasteNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['dreamType','dreamerInvolvement'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  ['xHeader','xDream','xKeys','xInterpretation','xApplication'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '0'; });
+  ['xHeader','xDream','xBrainstorm','xKeys','xInterpretation','xApplication'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '0'; });
   document.getElementById('notesStyle').value = 'none';
   const countEl = document.getElementById('notesPageCount'); countEl.value = '1'; countEl.disabled = true; countEl.style.opacity = '0.35';
   document.getElementById('uploadMsg').textContent = '';
