@@ -231,6 +231,23 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .sec-title { font-family: 'Playfair Display', serif; font-size: 0.86rem; color: var(--text); font-weight: 500; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .btn-load-more { font-family: 'Playfair Display', serif; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary); background: transparent; border: 1px solid rgba(99,0,0,0.3); border-radius: 8px; padding: 0.6rem 1.6rem; cursor: pointer; margin: 1rem auto 0; display: block; transition: all 0.2s; }
 .btn-load-more:hover { background: rgba(99,0,0,0.06); }
+
+/* ── EDIT MODAL ────────────────────────────────────────── */
+.edit-modal-backdrop { position: fixed; inset: 0; background: rgba(27,23,23,0.52); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+.edit-modal { background: var(--white); border-radius: 14px; width: 100%; max-width: 640px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 80px rgba(99,0,0,0.18); }
+.edit-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 1.6rem 1rem; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.edit-modal-title { font-family: 'Playfair Display', serif; font-size: 1rem; letter-spacing: 0.06em; color: var(--primary); }
+.edit-modal-close { font-size: 1rem; background: none; border: none; cursor: pointer; color: var(--text-light); padding: 0.25rem 0.5rem; border-radius: 4px; transition: color 0.2s; line-height: 1; }
+.edit-modal-close:hover { color: var(--primary); }
+.edit-modal-body { overflow-y: auto; padding: 1.2rem 1.6rem; display: flex; flex-direction: column; gap: 1rem; flex: 1; }
+.edit-modal-footer { padding: 0.9rem 1.6rem 1.2rem; border-top: 1px solid var(--line); display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; flex-shrink: 0; }
+.edit-modal-msg { font-family: 'Lora', serif; font-size: 0.78rem; font-style: italic; flex: 1; }
+.edit-modal-msg.ok  { color: #5a8a5a; }
+.edit-modal-msg.err { color: #a04040; }
+.btn-edit-save { font-family: 'Playfair Display', serif; font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--white); background: var(--primary); border: none; border-radius: 8px; padding: 0.75rem 1.8rem; cursor: pointer; transition: background 0.2s; }
+.btn-edit-save:hover { background: var(--primary-light); }
+.btn-edit-save:disabled { opacity: 0.6; cursor: not-allowed; }
+@media (max-width: 680px) { .edit-modal { max-height: 100vh; border-radius: 0; } }
 </style>
 </head>
 <body>
@@ -1493,7 +1510,7 @@ async function loadMyJournal(append) {
   const to   = from + PAGE_SIZE - 1;
 
   let q = sb.from('dream_entries')
-    .select('id, entry_date, title, dream_narrative, dream_type, theme, raw_text, interpretation, created_at', { count: 'exact' })
+    .select('id, entry_date, title, dream_narrative, dream_type, theme, context_source, symbols, actions, emotions, scriptures, interpretation, application, additional_notes, raw_text, created_at', { count: 'exact' })
     .eq('user_id', currentUser.id);
 
   if (search) {
@@ -1545,9 +1562,11 @@ function renderEntryCard(entry) {
   const actions = card.querySelector('.sec-actions');
   const loadBtn = document.createElement('button'); loadBtn.className = 'sec-btn'; loadBtn.textContent = 'Load';
   loadBtn.onclick = () => { loadEntryIntoForm(entry); switchTab('generator'); };
+  const editBtn = document.createElement('button'); editBtn.className = 'sec-btn'; editBtn.textContent = 'Edit';
+  editBtn.onclick = () => openEditModal(entry);
   const delBtn  = document.createElement('button'); delBtn.className  = 'sec-btn del'; delBtn.textContent = 'Delete';
   delBtn.onclick = () => deleteEntry(entry.id);
-  actions.appendChild(loadBtn); actions.appendChild(delBtn);
+  actions.appendChild(loadBtn); actions.appendChild(editBtn); actions.appendChild(delBtn);
   return card;
 }
 function loadEntryIntoForm(entry) {
@@ -1561,6 +1580,83 @@ async function deleteEntry(id) {
   const { error } = await sb.from('dream_entries').delete().eq('id',id).eq('user_id',currentUser.id);
   if (error) { alert('Could not delete: ' + error.message); return; }
   loadMyJournal();
+}
+
+// ── EDIT ENTRY MODAL ──────────────────────────────────────
+let _editingEntryId = null;
+
+function openEditModal(entry) {
+  _editingEntryId = entry.id;
+  // Populate all fields
+  document.getElementById('em-title').value          = entry.title              || '';
+  document.getElementById('em-date').value           = entry.entry_date         || '';
+  document.getElementById('em-theme').value          = entry.theme              || '';
+  document.getElementById('em-ctx').value            = entry.context_source     || '';
+  document.getElementById('em-narrative').value      = entry.dream_narrative    || '';
+  document.getElementById('em-brainstorm').value     = entry.brainstorm         || '';
+  document.getElementById('em-symbols').value        = entry.symbols            || '';
+  document.getElementById('em-actions').value        = entry.actions            || '';
+  document.getElementById('em-emotions').value       = entry.emotions           || '';
+  document.getElementById('em-scriptures').value     = entry.scriptures         || '';
+  document.getElementById('em-interpretation').value = entry.interpretation     || '';
+  document.getElementById('em-application').value    = entry.application        || '';
+  document.getElementById('em-notes').value          = entry.additional_notes   || '';
+  // Set dream type dropdown
+  const typeEl = document.getElementById('em-type');
+  if (typeEl) {
+    const opt = [...typeEl.options].find(o => o.value.toLowerCase() === (entry.dream_type||'').toLowerCase());
+    typeEl.value = opt ? opt.value : '';
+  }
+  const msg = document.getElementById('editModalMsg');
+  if (msg) { msg.textContent = ''; msg.className = 'edit-modal-msg'; }
+  const saveBtn = document.getElementById('editSaveBtn');
+  if (saveBtn) { saveBtn.textContent = 'Save Changes'; saveBtn.disabled = false; }
+  document.getElementById('editModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+  document.body.style.overflow = '';
+  _editingEntryId = null;
+}
+
+function closeEditModalBackdrop(e) {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+}
+
+async function saveEditedEntry() {
+  if (!_editingEntryId || !currentUser) return;
+  const msg     = document.getElementById('editModalMsg');
+  const saveBtn = document.getElementById('editSaveBtn');
+  if (saveBtn) { saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; }
+  if (msg) { msg.textContent = ''; msg.className = 'edit-modal-msg'; }
+
+  const updates = {
+    title:            document.getElementById('em-title').value.trim()          || null,
+    entry_date:       document.getElementById('em-date').value.trim()           || null,
+    dream_type:       document.getElementById('em-type').value                  || null,
+    theme:            document.getElementById('em-theme').value.trim()          || null,
+    context_source:   document.getElementById('em-ctx').value.trim()            || null,
+    dream_narrative:  document.getElementById('em-narrative').value.trim()      || null,
+    brainstorm:       document.getElementById('em-brainstorm').value.trim()     || null,
+    symbols:          document.getElementById('em-symbols').value.trim()        || null,
+    actions:          document.getElementById('em-actions').value.trim()        || null,
+    emotions:         document.getElementById('em-emotions').value.trim()       || null,
+    scriptures:       document.getElementById('em-scriptures').value.trim()     || null,
+    interpretation:   document.getElementById('em-interpretation').value.trim() || null,
+    application:      document.getElementById('em-application').value.trim()    || null,
+    additional_notes: document.getElementById('em-notes').value.trim()          || null,
+  };
+
+  const { error } = await sb.from('dream_entries').update(updates).eq('id', _editingEntryId).eq('user_id', currentUser.id);
+  if (saveBtn) { saveBtn.textContent = 'Save Changes'; saveBtn.disabled = false; }
+  if (error) {
+    if (msg) { msg.textContent = 'Could not save: ' + error.message; msg.className = 'edit-modal-msg err'; }
+    return;
+  }
+  if (msg) { msg.textContent = '✓ Saved!'; msg.className = 'edit-modal-msg ok'; }
+  setTimeout(() => { closeEditModal(); journalState.page = 0; loadMyJournal(); }, 900);
 }
 
 // ── PRINT HISTORY ─────────────────────────────────────────
@@ -1599,5 +1695,55 @@ async function signOut() { await sb.auth.signOut(); }
 // ── INIT ──────────────────────────────────────────────────
 applyPreset('dove');
 </script>
+
+<!-- EDIT ENTRY MODAL -->
+<div class="edit-modal-backdrop" id="editModal" style="display:none" onclick="closeEditModalBackdrop(event)">
+  <div class="edit-modal">
+    <div class="edit-modal-header">
+      <span class="edit-modal-title">Edit Dream Entry</span>
+      <button class="edit-modal-close" onclick="closeEditModal()" title="Close">✕</button>
+    </div>
+    <div class="edit-modal-body">
+      <div class="field-row cols-3">
+        <div class="f-group"><label for="em-title">Title</label><input type="text" id="em-title" placeholder="Dream title"></div>
+        <div class="f-group"><label for="em-date">Date</label><input type="text" id="em-date" placeholder="e.g. March 5, 2026"></div>
+        <div class="f-group">
+          <label for="em-type">Dream Type</label>
+          <select id="em-type">
+            <option value="">— Select —</option>
+            <option>Personal Dream</option><option>Warning Dream</option><option>Instruction Dream</option>
+            <option>Encouragement Dream</option><option>Prophetic Dream</option><option>Intercession Dream</option>
+            <option>Warfare Dream</option><option>Future Dream</option><option>Confirmation Dream</option>
+            <option>Teaching Dream</option><option>Destiny Dream</option><option>Correction Dream</option>
+            <option>Calling Dream</option><option>Identity Dream</option><option>Healing Dream</option>
+            <option>Deliverance Dream</option><option>Vision</option><option>Unknown</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="f-group"><label for="em-theme">Theme</label><input type="text" id="em-theme" placeholder="e.g. identity, warfare, promise, healing…"></div>
+        <div class="f-group"><label for="em-ctx">Context / Source</label><input type="text" id="em-ctx" placeholder="e.g. nap, night, after prayer…"></div>
+      </div>
+      <div class="f-group"><label for="em-narrative">Dream Narrative</label><textarea id="em-narrative" rows="7" placeholder="Write the dream exactly as it happened…"></textarea></div>
+      <div class="f-group"><label for="em-brainstorm">Brainstorm</label><textarea id="em-brainstorm" rows="4" placeholder="Initial impressions, patterns, questions…"></textarea></div>
+      <div class="field-row">
+        <div class="f-group"><label for="em-symbols">Key Symbols</label><textarea id="em-symbols" rows="3" placeholder="People, places, objects, numbers…"></textarea></div>
+        <div class="f-group"><label for="em-actions">Actions</label><textarea id="em-actions" rows="3" placeholder="Key verbs and major actions…"></textarea></div>
+      </div>
+      <div class="field-row">
+        <div class="f-group"><label for="em-emotions">Emotions</label><textarea id="em-emotions" rows="2" placeholder="Feelings during or upon waking…"></textarea></div>
+        <div class="f-group"><label for="em-scriptures">Scriptures</label><textarea id="em-scriptures" rows="2" placeholder="Referenced or impressed verses…"></textarea></div>
+      </div>
+      <div class="f-group"><label for="em-interpretation">Interpretation</label><textarea id="em-interpretation" rows="5" placeholder="The meaning God is showing through this dream…"></textarea></div>
+      <div class="f-group"><label for="em-application">Application</label><textarea id="em-application" rows="4" placeholder="How to respond and apply this dream…"></textarea></div>
+      <div class="f-group"><label for="em-notes">Additional Notes</label><textarea id="em-notes" rows="3" placeholder="Extra observations, follow-up thoughts, confirmations…"></textarea></div>
+    </div>
+    <div class="edit-modal-footer">
+      <span class="edit-modal-msg" id="editModalMsg"></span>
+      <button class="btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-edit-save" id="editSaveBtn" onclick="saveEditedEntry()">Save Changes</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
