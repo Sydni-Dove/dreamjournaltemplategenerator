@@ -139,11 +139,11 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .j-panel-body p { margin: 0 0 0.3em 0; }
 .j-panel-body p:last-child { margin-bottom: 0; }
 .j-scripture { font-family: 'Lora', serif; font-size: 0.74rem; font-style: italic; color: var(--pg-text); line-height: 1.7; padding: 0.04in 0.1in 0.04in 12px; min-height: 0.3in; height: auto; background: transparent; border: none; border-left: 1.5px solid var(--pg-accent); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
-.header-fields { display: flex; flex-direction: column; gap: 0.18in; flex: 1; justify-content: center; }
-.hf-row { display: flex; gap: 0.18in; }
-.hf-item { flex: 1; border-bottom: 1px solid rgba(230,167,66,0.45); padding-bottom: 0.06in; }
-.hf-label { font-family: 'Playfair Display', serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--pg-primary); display: block; margin-bottom: 0.06in; }
-.hf-value { font-family: 'Lora', serif; font-size: 0.8rem; color: var(--pg-text); min-height: 0.35in; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word; }
+.header-fields { display: flex; flex-direction: column; gap: 0.15in; flex: 1; justify-content: flex-start; padding-top: 0.28in; }
+.hf-row { display: flex; gap: 0.15in; }
+.hf-item { flex: 1; border-bottom: 1px solid rgba(230,167,66,0.45); padding-bottom: 0.05in; }
+.hf-label { font-family: 'Playfair Display', serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--pg-primary); display: block; margin-bottom: 0.04in; }
+.hf-value { font-family: 'Lora', serif; font-size: 0.8rem; color: var(--pg-text); min-height: 0.22in; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word; }
 .hf-full { flex: 2; }
 .summary-sections { display: flex; flex-direction: column; gap: 0.18in; flex: 1; }
 .summary-block { flex: 1; }
@@ -264,6 +264,10 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <div class="f-group"><label for="dreamTime">Time</label><input type="text" id="dreamTime" placeholder="e.g. 3:00 AM"></div>
     </div>
     <div class="field-row" style="margin-top:1.2rem;">
+      <div class="f-group"><label for="dreamContextSource">Context / Source</label><input type="text" id="dreamContextSource" placeholder="e.g. nap, night, after prayer, fasting…"></div>
+      <div class="f-group"><label for="dreamTheme">Theme</label><input type="text" id="dreamTheme" placeholder="e.g. identity, warfare, promise, healing…"></div>
+    </div>
+    <div class="field-row" style="margin-top:1.2rem;">
       <div class="f-group">
         <label for="dreamType">Dream Type</label>
         <select id="dreamType">
@@ -271,7 +275,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
           <option>Personal Dream</option><option>Warning Dream</option><option>Instruction Dream</option>
           <option>Encouragement Dream</option><option>Prophetic Dream</option><option>Intercession Dream</option>
           <option>Warfare Dream</option><option>Future Dream</option><option>Confirmation Dream</option>
-          <option>Teaching Dream</option><option>Unknown</option>
+          <option>Teaching Dream</option><option>Destiny Dream</option><option>Correction Dream</option>
+          <option>Calling Dream</option><option>Identity Dream</option><option>Healing Dream</option>
+          <option>Deliverance Dream</option><option>Vision</option><option>Unknown</option>
         </select>
       </div>
       <div class="f-group">
@@ -311,6 +317,11 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <div class="f-group"><label for="dreamInterpretation">Interpretation</label><textarea id="dreamInterpretation" rows="5" placeholder="The meaning God is showing through this dream…"></textarea></div>
       <div class="f-group"><label for="dreamApplication">Application</label><textarea id="dreamApplication" rows="5" placeholder="How to respond and apply this dream — steps, prayers, obedience, posture…"></textarea></div>
     </div>
+  </div>
+
+  <div class="form-block">
+    <div class="section-eyebrow">Additional Notes <span style="font-size:0.58rem;letter-spacing:0.1em;opacity:0.65;">(Optional — leave blank to skip)</span></div>
+    <div class="f-group"><label for="dreamAdditionalNotes">Additional Notes</label><textarea id="dreamAdditionalNotes" rows="4" placeholder="Any extra observations, follow-up thoughts, confirmations, or prayer notes…"></textarea></div>
   </div>
 
   <div class="form-block">
@@ -491,7 +502,7 @@ async function handleUpload(e) {
         await new Promise(r => setTimeout(r, 150));
         pendingPages = entries.map(entry => { const d = extractDreamData(entry.text); d._raw = entry.text; return d; });
         setMsg(`✓ ${entries.length} entries found — click Generate to create ${entries.length} journal page sets.`, 'ok');
-      } else { populateDream(combined); setMsg('✓ Fields populated. Review and edit freely.', 'ok'); }
+      } else { populateDream(combined); const _efd = extractDreamData(combined); enrichFromFilename(_efd, file.name); setField('dreamTitle', _efd.dreamTitle||''); setField('dreamDate', _efd.dreamDate||''); setMsg('✓ Fields populated. Review and edit freely.', 'ok'); }
     } else {
       const dataArray = [];
       for (let i = 0; i < files.length; i++) {
@@ -499,7 +510,7 @@ async function handleUpload(e) {
         let text = ''; try { text = await readFile(files[i]); } catch { continue; }
         if (!text.trim()) continue;
         setMsg(`🔍 Extracting entries from file ${i + 1} of ${files.length}…`, 'spin');
-        parseEntries(text).forEach(entry => { const d = extractDreamData(entry.text); d._label = files[i].name.replace(/\.[^.]+$/, ''); dataArray.push(d); });
+        parseEntries(text).forEach(entry => { const d = extractDreamData(entry.text); d._label = files[i].name.replace(/\.[^.]+$/, ''); enrichFromFilename(d, files[i].name); dataArray.push(d); });
       }
       if (!dataArray.length) { setMsg('✗ No readable content found.', 'err'); return; }
       pendingPages = dataArray;
@@ -549,21 +560,30 @@ async function readDOCX(file) { const buf = await file.arrayBuffer(); const resu
 // ── DATE HEADING DETECTION ──────────────────────────────
 function isDateHeading(line) {
   const t = line.trim();
-  if (!t || t.length > 60) return false;
+  if (!t || t.length > 80) return false;
   if (/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}(\s*[-–—:,].*)?$/i.test(t)) return true;
   if (/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?\s+\d{1,2},?\s+\d{4}(\s*[-–—:,].*)?$/i.test(t)) return true;
   if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(t)) return true;
   if (/^\d{1,2}\.\d{1,2}\.\d{2,4}(\s.*)?$/.test(t)) return true;
   if (/^\d{1,2}\.\.\d{1,2}\.\d{2,4}$/.test(t)) return true;
   if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return true;
+  if (/^(?:dream|vision)\s+\d{1,2}[\.\/]\d{1,2}[\.\/]\d{2,4}(\s.*)?$/i.test(t)) return true;
+  if (/^(?:dream|vision)\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s+\d{4}/i.test(t)) return true;
+  if (/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}$/i.test(t)) return true;
   return false;
 }
 
 function parseEntries(rawText) {
-  const lines = rawText.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  const lines = rawText.replace(/\r\n/g,'\n').replace(/\r/g,'\n')
+    .replace(/[—–]\s*[-–—]+/g, '---') // normalize em-dash combos to --- separators
+    .split('\n');
   const entries = []; let current = null;
   for (const line of lines) {
     if (isDateHeading(line)) { if (current !== null) entries.push(current); current = { text: line + '\n' }; }
+    // Numbered dream headings (Dream 1, Dream 2…) start a new entry
+    else if (/^Dream\s+\d+\s*$/i.test(line.trim()) && current !== null && current.text.trim().length > 20) {
+      entries.push(current); current = { text: line + '\n' };
+    }
     else if (current !== null) { current.text += line + '\n'; }
     else { current = { text: line + '\n' }; }
   }
@@ -585,9 +605,20 @@ function findDateInText(text) {
     const m = line.match(/^date\s*[-–—:\s]+(.+)$/i);
     if (m) {
       const val = m[1].trim();
-      // Make sure it actually looks like a date, not just any word after "Date:"
       if (/\d/.test(val)) return val;
     }
+  }
+
+  // 1b. Handle "DDate:" typo
+  for (const line of lines) {
+    const m = line.match(/^dd?ate\s*[-–—:\s]+(.+)$/i);
+    if (m && /\d/.test(m[1])) return m[1].trim();
+  }
+
+  // 1c. Extract date from "Dream M.DD.YY" or "Vision M.DD.YY" heading lines
+  for (const line of lines) {
+    const m = line.match(/^(?:dream|vision)\s+(\d{1,2}[\.\/]\d{1,2}[\.\/]\d{2,4})(\s.*)?$/i);
+    if (m) return m[1];
   }
 
   // 2. Full-text scan — returns first date found in the whole entry
@@ -603,6 +634,11 @@ function findDateInText(text) {
     const m = text.match(pattern);
     if (m) return m[0].trim();
   }
+
+  // Last: partial date — month + day, no year
+  const partialM = text.match(/(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}(?!\s*,?\s*\d{4})/i);
+  if (partialM) return partialM[0].trim();
+
   return null;
 }
 
@@ -617,8 +653,19 @@ function extractDreamData(raw) {
   const foundDate = findDateInText(text);
   if (foundDate) result.dreamDate = foundDate;
 
-  // ── TITLE — trailing label on date heading line, or explicit label ──
-  if (isDateHeading(firstLine)) {
+  // Strip iCloud/document ID lines (long numeric IDs at top of entry)
+  while (nonEmptyLines.length > 0 && /^\d{8,}$/.test(nonEmptyLines[0])) nonEmptyLines.shift();
+
+  // ── TITLE — 5 strategies ────────────────────────────────
+
+  // Strategy 1: "Dream M.DD.YY Title" or "Vision M.DD.YY Title" — Vision-date-title heading
+  if (!result.dreamTitle) {
+    const m = firstLine.match(/^(?:dream|vision)\s+\d{1,2}[\.\/]\d{1,2}[\.\/]\d{2,4}\s+(.+)$/i);
+    if (m) result.dreamTitle = m[1].trim();
+  }
+
+  // Strategy 2: date heading with trailing text ("3.8.26 The Open Door")
+  if (!result.dreamTitle && isDateHeading(firstLine)) {
     const trailMatch =
       firstLine.match(/^\d{1,2}\.\.\d{1,2}\.\d{2,4}\s+(.+)$/) ||
       firstLine.match(/^\d{1,2}\.\d{1,2}\.\d{2,4}\s+(.+)$/) ||
@@ -626,11 +673,38 @@ function extractDreamData(raw) {
       firstLine.match(/^(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2},?\s+\d{4}\s*[-–—:,]+\s*(.+)$/i);
     if (trailMatch) result.dreamTitle = trailMatch[1].replace(/^(?:title|dream)[:\s]*/i,'').trim();
   }
+
+  // Strategy 3: "Some Title Dream M.DD.YY" — title text before trailing date
+  // e.g. "Old phone Dream 11.10.19", "Tiger dream 4.18.20"
+  if (!result.dreamTitle && !isDateHeading(firstLine) && firstLine.length < 120) {
+    const m = firstLine.match(/^(.+?)\s+(\d{1,2}[\.\/]\d{1,2}[\.\/]\d{2,4})(?:\s+\d+[ap]m?)?$/i);
+    if (m) {
+      const candidate = m[1].trim();
+      if (candidate && !/^(?:dream|vision)(?:\s+narrative)?$/i.test(candidate)) {
+        result.dreamTitle = candidate;
+      }
+      if (!result.dreamDate) result.dreamDate = m[2];
+    }
+  }
+
+  // Strategy 4: "M.DD.YY Title Text" — date at start, title follows
+  if (!result.dreamTitle && !isDateHeading(firstLine)) {
+    const m = firstLine.match(/^(\d{1,2}\.\d{1,2}\.\d{2,4})\s+(.+)$/);
+    if (m && !result.dreamDate) { result.dreamDate = m[1]; result.dreamTitle = m[2].trim(); }
+  }
+
+  // Strategy 5: Explicit "Title:" label anywhere in doc
   if (!result.dreamTitle) {
     for (const line of nonEmptyLines) {
       const m = line.match(/^(?:dream\s+)?title\s*[-–—:\s]+(.+)$/i);
       if (m && m[1].trim().length > 1) { result.dreamTitle = m[1].trim(); break; }
     }
+  }
+
+  // Strategy 6: first non-empty line is title if it's short, plain, no date, no section heading
+  if (!result.dreamTitle && firstLine && firstLine.length < 100 && !isDateHeading(firstLine)) {
+    const looksLikeHeading = /^(?:dream|vision|brainstorm|interpretation|application|symbols?|actions?|emotions?|scriptures?|notes?|summary|theme|source|context|time|date)\s*:?$/i.test(firstLine);
+    if (!looksLikeHeading) result.dreamTitle = firstLine;
   }
 
   // ── SECTION HEADING DETECTION ────────────────────────────
@@ -641,64 +715,82 @@ function extractDreamData(raw) {
   // until the next heading appears.
 
   // Map of heading regex → field name (longest/most-specific first)
+  const SEP = '(?:[-–—:]+|\\s{2,})';
+  function inlineRe(label, extra) { return new RegExp('^' + label + '\\s*' + SEP + '\\s*(.+)$' + (extra||''), 'i'); }
+
   const HEADING_RULES = [
-    { re: /^dream(?:\s+narrative)?:?$/i,          field: 'dreamNarrative'      },
-    { re: /^dream\s+title:?$/i,                   field: 'dreamTitle'          },
-    { re: /^dream\s+type:?$/i,                    field: 'dreamType'           },
-    { re: /^dream\s+summary:?$/i,                 field: 'sumDream'            },
-    { re: /^brainstorm:?$/i,                      field: 'dreamBrainstorm'     },
-    { re: /^key\s+(?:symbols?|objects?):?$/i,     field: 'dreamSymbols'        },
-    { re: /^key\s+actions?:?$/i,                  field: 'dreamActions'        },
-    { re: /^(?:symbols?|objects?):?$/i,           field: 'dreamSymbols'        },
-    { re: /^actions?:?$/i,                        field: 'dreamActions'        },
-    { re: /^emotions?:?$/i,                       field: 'dreamEmotions'       },
-    { re: /^feelings?:?$/i,                       field: 'dreamEmotions'       },
-    { re: /^scriptures?:?$/i,                     field: 'dreamScriptures'     },
-    { re: /^(?:scripture\s+)?verse:?$/i,          field: 'dreamScriptures'     },
-    { re: /^interpretation(?:\s+summary)?:?$/i,   field: null                  }, // resolved below
-    { re: /^application(?:\s+summary)?:?$/i,      field: null                  }, // resolved below
-    { re: /^summary:?$/i,                         field: 'sumDream'            },
-    { re: /^(?:dreamer'?s?\s+)?involvement:?$/i,  field: 'dreamerInvolvement'  },
-    { re: /^notes?:?$/i,                          field: 'dreamBrainstorm'     },
-    { re: /^time:?$/i,                            field: 'dreamTime'           },
-    { re: /^date:?$/i,                            field: 'dreamDate'           },
+    { re: /^(?:dream|vision)(?:\s+(?:narrative|scene))?:?$/i,                                  field: 'dreamNarrative'      },
+    { re: /^dream\s+title:?$/i,                                                               field: 'dreamTitle'          },
+    { re: /^dream\s+type:?$/i,                                                                field: 'dreamType'           },
+    { re: /^dream\s+summary:?$/i,                                                             field: 'sumDream'            },
+    { re: /^brainstorm(?:ing)?(?:\s+\d.*)?:?$/i,                                              field: 'dreamBrainstorm'     },
+    { re: /^plain:?$/i,                                                                       field: 'dreamNarrative'      },
+    { re: /^key\s+(?:symbols?|objects?):?$/i,                                                 field: 'dreamSymbols'        },
+    { re: /^key\s+actions?:?$/i,                                                              field: 'dreamActions'        },
+    { re: /^(?:symbols?|objects?)(?:\/summary)?:?$/i,                                         field: 'dreamSymbols'        },
+    { re: /^actions?:?$/i,                                                                    field: 'dreamActions'        },
+    { re: /^emotions?:?$/i,                                                                   field: 'dreamEmotions'       },
+    { re: /^feelings?:?$/i,                                                                   field: 'dreamEmotions'       },
+    { re: /^scriptures?:?$/i,                                                                 field: 'dreamScriptures'     },
+    { re: /^(?:scripture\s+)?verse:?$/i,                                                      field: 'dreamScriptures'     },
+    { re: /^scripture\s+references?:?$/i,                                                     field: 'dreamScriptures'     },
+    { re: /^(?:possible\s+meaning\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?(?:\s+summary)?:?$/i, field: null          },
+    { re: /^possible\s+meaning(?:\s*\([^)]*\))?(?:\s*[\/\\]\s*interpretation(?:\s*\([^)]*\))?)?:?$/i, field: 'dreamInterpretation' },
+    { re: /^application(?:\s+summary)?:?$/i,                                                  field: null                  },
+    { re: /^summary:?$/i,                                                                     field: 'sumDream'            },
+    { re: /^(?:dreamer'?s?\s+)?involvement:?$/i,                                              field: 'dreamerInvolvement'  },
+    { re: /^context(?:\s*[\/\\]\s*source)?:?$/i,                                              field: 'dreamContextSource'  },
+    { re: /^source:?$/i,                                                                      field: 'dreamContextSource'  },
+    { re: /^theme:?$/i,                                                                       field: 'dreamTheme'          },
+    { re: /^additional\s+notes?:?$/i,                                                         field: 'dreamAdditionalNotes'},
+    { re: /^notes?:?$/i,                                                                      field: 'dreamAdditionalNotes'},
+    { re: /^time:?$/i,                                                                        field: 'dreamTime'           },
+    { re: /^d{1,2}ate:?$/i,                                                                   field: 'dreamDate'           },
   ];
 
   // Also match inline labeled format: "Brainstorm: some content" / "Actions — ran, hid"
   // These use a separator (: – — -) and have content on the same line.
   const INLINE_LABEL_RULES = [
-    { re: /^dream(?:\s+narrative)?\s*[-–—:]+\s*(.+)$/i,          field: 'dreamNarrative'      },
-    { re: /^dream\s+title\s*[-–—:]+\s*(.+)$/i,                   field: 'dreamTitle'          },
-    { re: /^dream\s+summary\s*[-–—:]+\s*(.+)$/i,                 field: 'sumDream'            },
-    { re: /^dream\s+type\s*[-–—:]+\s*(.+)$/i,                    field: 'dreamType'           },
-    { re: /^brainstorm\s*[-–—:]+\s*(.+)$/i,                      field: 'dreamBrainstorm'     },
-    { re: /^key\s+symbols?\s*[-–—:]+\s*(.+)$/i,                  field: 'dreamSymbols'        },
-    { re: /^key\s+actions?\s*[-–—:]+\s*(.+)$/i,                  field: 'dreamActions'        },
-    { re: /^symbols?\s*[-–—:]+\s*(.+)$/i,                        field: 'dreamSymbols'        },
-    { re: /^actions?\s*[-–—:]+\s*(.+)$/i,                        field: 'dreamActions'        },
-    { re: /^emotions?\s*[-–—:]+\s*(.+)$/i,                       field: 'dreamEmotions'       },
-    { re: /^feelings?\s*[-–—:]+\s*(.+)$/i,                       field: 'dreamEmotions'       },
-    { re: /^scriptures?\s*[-–—:]+\s*(.+)$/i,                     field: 'dreamScriptures'     },
-    { re: /^(?:scripture\s+)?verse\s*[-–—:]+\s*(.+)$/i,          field: 'dreamScriptures'     },
-    { re: /^interpretation\s+summary\s*[-–—:]+\s*(.+)$/i,        field: 'sumInterpretation'   },
-    { re: /^application\s+summary\s*[-–—:]+\s*(.+)$/i,           field: 'sumApplication'      },
-    { re: /^interpretation\s*[-–—:]+\s*(.+)$/i,                  field: 'dreamInterpretation' },
-    { re: /^application\s*[-–—:]+\s*(.+)$/i,                     field: 'dreamApplication'    },
-    { re: /^(?:dream\s+)?summary\s*[-–—:]+\s*(.+)$/i,            field: 'sumDream'            },
-    { re: /^(?:dreamer'?s?\s+)?involvement\s*[-–—:]+\s*(.+)$/i,  field: 'dreamerInvolvement'  },
-    { re: /^notes?\s*[-–—:]+\s*(.+)$/i,                          field: 'dreamBrainstorm'     },
-    { re: /^time\s*[-–—:]+\s*(.+)$/i,                            field: 'dreamTime'           },
-    { re: /^date\s*[-–—:\s]+(.+)$/i,                             field: 'dreamDate'           },
-    { re: /^title\s*[-–—:]+\s*(.+)$/i,                           field: 'dreamTitle'          },
-    { re: /^how\s+i\s+will\s+respond\s*[-–—:]*\s*(.*)$/i,        field: 'dreamApplication'    },
+    { re: /^plain\s*[-–—:\s]+\s*(.+)$/i,                                                    field: 'dreamNarrative'      },
+    { re: inlineRe('(?:dream|vision)(?:\\s+narrative)?'),                                    field: 'dreamNarrative'      },
+    { re: inlineRe('dream\\s+title'),                                                        field: 'dreamTitle'          },
+    { re: inlineRe('dream\\s+summary'),                                                      field: 'sumDream'            },
+    { re: inlineRe('dream\\s+type'),                                                         field: 'dreamType'           },
+    { re: inlineRe('brainstorm(?:ing)?'),                                                    field: 'dreamBrainstorm'     },
+    { re: inlineRe('key\\s+symbols?'),                                                       field: 'dreamSymbols'        },
+    { re: inlineRe('key\\s+actions?'),                                                       field: 'dreamActions'        },
+    { re: inlineRe('symbols?'),                                                              field: 'dreamSymbols'        },
+    { re: inlineRe('actions?'),                                                              field: 'dreamActions'        },
+    { re: inlineRe('emotions?'),                                                             field: 'dreamEmotions'       },
+    { re: inlineRe('feelings?'),                                                             field: 'dreamEmotions'       },
+    { re: inlineRe('scriptures?'),                                                           field: 'dreamScriptures'     },
+    { re: inlineRe('(?:scripture\\s+)?verse'),                                               field: 'dreamScriptures'     },
+    { re: inlineRe('scripture\\s+references?'),                                              field: 'dreamScriptures'     },
+    { re: inlineRe('(?:possible\\s+|long\\s+)?interpretation\\s+summary'),                  field: 'sumInterpretation'   },
+    { re: /^(?:(?:possible\s+meaning\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?)\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
+    { re: /^possible\s+meaning(?:\s*\([^)]*\))?(?:\s*[\/\\]\s*interpretation(?:\s*\([^)]*\))?)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
+    { re: inlineRe('application\\s+summary'),                                                field: 'sumApplication'      },
+    { re: inlineRe('application'),                                                           field: 'dreamApplication'    },
+    { re: inlineRe('(?:dream\\s+)?summary'),                                                 field: 'sumDream'            },
+    { re: inlineRe('(?:dreamer\'?s?\\s+)?involvement'),                                      field: 'dreamerInvolvement'  },
+    { re: inlineRe('context(?:\\s*[\\/\\\\]\\s*source)?'),                                   field: 'dreamContextSource'  },
+    { re: inlineRe('source'),                                                                field: 'dreamContextSource'  },
+    { re: inlineRe('theme'),                                                                 field: 'dreamTheme'          },
+    { re: inlineRe('additional\\s+notes?'),                                                  field: 'dreamAdditionalNotes'},
+    { re: inlineRe('notes?'),                                                                field: 'dreamAdditionalNotes'},
+    { re: /^time\s*[-–—:\s]+(.+)$/i,                                                        field: 'dreamTime'           },
+    { re: /^d{1,2}ate\s*[-–—:\s]+(.+)$/i,                                                   field: 'dreamDate'           },
+    { re: inlineRe('title'),                                                                 field: 'dreamTitle'          },
+    { re: /^how\s+i\s+will\s+respond\s*[-–—:]*\s*(.*)$/i,                                   field: 'dreamApplication'    },
   ];
 
   // Helper: resolve "interpretation summary" vs plain "interpretation"
   function resolveInterpAppField(line) {
-    if (/^interpretation\s+summary/i.test(line)) return 'sumInterpretation';
-    if (/^application\s+summary/i.test(line))    return 'sumApplication';
-    if (/^interpretation/i.test(line))           return 'dreamInterpretation';
-    if (/^application/i.test(line))              return 'dreamApplication';
+    if (/^(?:possible\s+|long\s+)?interpretation\s+summary/i.test(line)) return 'sumInterpretation';
+    if (/^application\s+summary/i.test(line))                             return 'sumApplication';
+    if (/^possible\s+meaning/i.test(line))                                return 'dreamInterpretation';
+    if (/^(?:possible\s+|long\s+)?interpretation/i.test(line))           return 'dreamInterpretation';
+    if (/^application/i.test(line))                                        return 'dreamApplication';
     return null;
   }
 
@@ -725,52 +817,104 @@ function extractDreamData(raw) {
   }
 
   // ── MAIN PARSE LOOP ──────────────────────────────────────
-  // Priority:
-  //   1. If line is a date heading → reset section, skip
-  //   2. If line is a standalone heading → switch active field, no content yet
-  //   3. If line is an inline label → switch active field, capture inline content
-  //   4. Otherwise → append to active field buffer
+  // Processes ALL lines (including blanks) to preserve paragraph structure.
+  // Blank lines within a section become paragraph breaks (\n\n).
   const buf      = {};
   let curField   = null;
+  let blanksSeen = 0;
 
-  for (const line of nonEmptyLines) {
-    // Skip date headings — they mark entry boundaries, not content
+  // Detect "Plain:" clean version block BEFORE main loop
+  let _plainNarrative = null;
+  const plainMatch = text.match(/(?:^|\n)plain:?\s*\n([\s\S]*?)(?:\n(?:brainstorm|interpretation|application|symbols?|actions?|emotions?|scriptures?)\b|$)/i);
+  if (plainMatch && plainMatch[1].trim()) _plainNarrative = plainMatch[1].trim();
+
+  const allLines = text.split('\n').map(l => l.trim());
+  // Strip doc-ID lines from top
+  let startIdx = 0;
+  while (startIdx < 3 && allLines[startIdx] && /^\d{8,}$/.test(allLines[startIdx])) startIdx++;
+
+  for (let li = startIdx; li < allLines.length; li++) {
+    const line = allLines[li];
+
+    if (!line) {
+      // Blank line — mark a paragraph break in the current field
+      blanksSeen++;
+      if (curField && buf[curField] && !buf[curField].endsWith('\n\n')) {
+        buf[curField] += '\n';
+      }
+      continue;
+    }
+    blanksSeen = 0;
+
+    // Skip date headings — entry boundaries, not content
     if (isDateHeading(line)) { curField = null; continue; }
 
-    // Standalone heading (e.g. "Brainstorm" or "Brainstorm:")
+    // Standalone heading
     const headingField = detectHeading(line);
     if (headingField) {
       curField = headingField;
-      continue; // heading line itself is not content
+      continue;
     }
 
-    // Inline label (e.g. "Actions: ran, hid, flew")
+    // Inline label
     const inlineMatch = detectInlineLabel(line);
     if (inlineMatch) {
       curField = inlineMatch.field;
-      if (inlineMatch.content) {
-        buf[curField] = (buf[curField] ? buf[curField] + '\n' : '') + inlineMatch.content;
+      if (inlineMatch.content && curField) {
+        const sep = buf[curField] ? '\n' : '';
+        buf[curField] = (buf[curField] || '') + sep + inlineMatch.content;
       }
       continue;
     }
 
-    // Regular content line — append to active field
+    // Regular content — append with separator that respects paragraph breaks
     if (curField) {
-      buf[curField] = (buf[curField] ? buf[curField] + '\n' : '') + line;
+      const sep = buf[curField] ? '\n' : '';
+      buf[curField] = (buf[curField] || '') + sep + line;
+    } else {
+      // No heading yet — collect as unlabelled (likely opening narrative)
+      const sep = buf['_unlabelled'] ? '\n' : '';
+      buf['_unlabelled'] = (buf['_unlabelled'] || '') + sep + line;
     }
   }
 
+  // Promote _unlabelled content: prepend to dreamNarrative if it exists, otherwise become it
+  if (buf['_unlabelled'] && buf['_unlabelled'].trim()) {
+    if (buf['dreamNarrative']) {
+      buf['dreamNarrative'] = buf['_unlabelled'] + '\n\n' + buf['dreamNarrative'];
+    } else {
+      buf['dreamNarrative'] = buf['_unlabelled'];
+    }
+  }
+  delete buf['_unlabelled'];
+
+  // Promote "Plain:" clean version to dreamNarrative
+  if (_plainNarrative) buf['dreamNarrative'] = _plainNarrative;
+
   // ── APPLY BUFFERED CONTENT ───────────────────────────────
-  // Only fill fields not already set (date/title set earlier take priority)
-  const fill = (field, src) => { if (src && src.trim() && !result[field]) result[field] = src.trim(); };
+  // Only protect pre-loop fields (date/title) from overwrite; content fields append
+  const PRELOOP_FIELDS = new Set(['dreamDate','dreamTitle','dreamType']);
+  const fill = (field, src) => {
+    if (!src || !src.trim()) return;
+    if (PRELOOP_FIELDS.has(field)) {
+      if (!result[field]) result[field] = src.trim();
+    } else {
+      result[field] = result[field] ? result[field] + '\n\n' + src.trim() : src.trim();
+    }
+  };
   Object.entries(buf).forEach(([k,v]) => fill(k,v));
 
   // ── DREAM TYPE: match to known values ────────────────────
   if (result.dreamType) {
-    const known = ['Personal Dream','Warning Dream','Instruction Dream','Encouragement Dream','Prophetic Dream','Intercession Dream','Warfare Dream','Future Dream','Confirmation Dream','Teaching Dream','Unknown'];
+    const known = ['Personal Dream','Warning Dream','Instruction Dream','Encouragement Dream','Prophetic Dream','Intercession Dream','Warfare Dream','Future Dream','Confirmation Dream','Teaching Dream','Destiny Dream','Correction Dream','Calling Dream','Identity Dream','Healing Dream','Deliverance Dream','Vision','Unknown'];
     const match = known.find(k => k.toLowerCase() === result.dreamType.toLowerCase());
     if (match) result.dreamType = match;
     // If no match, leave the raw value — it may still be useful
+  }
+
+  // Auto-detect Vision type from first line
+  if (!result.dreamType && /^vision\b/i.test(firstLine)) {
+    result.dreamType = 'Vision';
   }
 
   // ── SCRIPTURE AUTO-DETECT ────────────────────────────────
@@ -810,6 +954,22 @@ function extractDreamData(raw) {
   return result;
 }
 
+function enrichFromFilename(data, filename) {
+  if (!filename) return;
+  const name = filename.replace(/\.[^.]+$/, '').replace(/_/g, '.').replace(/^\s*[-–—.]+\s*/, '').trim();
+  if (!name) return;
+  if (!data.dreamDate) { const d = findDateInText(name); if (d) data.dreamDate = d; }
+  if (!data.dreamTitle) {
+    const dateRe = /\d{1,2}[\.\/\-]\d{1,2}[\.\/\-]\d{2,4}/;
+    let withoutDate = name.replace(dateRe, '');
+    if (data.dreamDate) withoutDate = withoutDate.replace(new RegExp(data.dreamDate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '');
+    withoutDate = withoutDate.replace(/\s*[-–—]\s*/g, ' ').trim();
+    const leadingLabel = withoutDate.replace(/^(?:dream|vision)\s+/i, '').trim();
+    const candidate = /^(?:dream|vision)$/i.test(withoutDate) ? '' : (leadingLabel || withoutDate);
+    if (candidate && candidate.length > 1) data.dreamTitle = candidate;
+  }
+}
+
 function populateDream(raw) {
   const data = extractDreamData(raw);
   Object.entries(data).forEach(([key, val]) => { if (val && key !== '_raw' && key !== '_label') setField(key, val); });
@@ -844,11 +1004,33 @@ function handleGenerate() {
 }
 
 function generateFromForm() {
-  const fields = ['dreamTitle','dreamDate','dreamTime','dreamType','dreamerInvolvement','dreamNarrative','dreamBrainstorm','dreamActions','dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication','sumDream','sumInterpretation','sumApplication'];
+  const fields = ['dreamTitle','dreamDate','dreamTime','dreamType','dreamerInvolvement','dreamContextSource','dreamTheme','dreamNarrative','dreamBrainstorm','dreamActions','dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication','dreamAdditionalNotes','sumDream','sumInterpretation','sumApplication'];
   const data = {};
   fields.forEach(id => { const el = document.getElementById(id); data[id] = el ? el.value.trim() : ''; });
   data._raw = document.getElementById('pasteNotes')?.value.trim() || '';
+  if (!data.dreamType && /^vision\b/i.test(data.dreamTitle)) {
+    data.dreamType = 'Vision';
+    const typeEl = document.getElementById('dreamType'); if (typeEl) typeEl.value = 'Vision';
+  }
   showPages([data]);
+}
+
+// ── AUTO PARAGRAPH BREAKER ────────────────────────────────
+// Used ONLY for Dream Narrative and Interpretation.
+// If text already has paragraph breaks (double newlines), preserve them.
+// Only applies sentence chunking when no paragraph breaks exist.
+function autoParagraph(text, sentencesPerChunk) {
+  if (!text || !text.trim()) return text;
+  if (/\n{2,}/.test(text)) return text; // already has breaks — preserve
+  const n = sentencesPerChunk || 5;
+  const marked = text.replace(/([.!?…]+)\s+(?=[A-Z"'\u201C\u2018(])/g, '$1\x00');
+  const sentences = marked.split('\x00').map(s => s.trim()).filter(Boolean);
+  if (sentences.length <= n) return text;
+  const chunks = [];
+  for (let i = 0; i < sentences.length; i += n) {
+    chunks.push(sentences.slice(i, i + n).join(' '));
+  }
+  return chunks.join('\n\n');
 }
 
 // ── PAGE RENDERER ─────────────────────────────────────────
@@ -882,6 +1064,7 @@ function showPages(dataArray) {
     for (let i=0; i<xInterpretation; i++) addPage(buildExtraPage('Interpretation', data));
     addPage(buildApplicationPage(data));
     for (let i=0; i<xApplication; i++) addPage(buildExtraPage('Application', data));
+    if (data.dreamAdditionalNotes) addPage(buildAdditionalNotesPage(data));
     if (data.sumDream || data.sumInterpretation || data.sumApplication) addPage(buildSummaryPage(data));
     if (addNotes) { for (let n=0; n<notesPageCount; n++) { addSpacer('2rem'); addPage(createNotesPage(notesStyle)); } }
     if (entryIndex < dataArray.length - 1) addSpacer('2.5rem');
@@ -899,7 +1082,7 @@ function pageShell(pageTitle, pageSubtitle) {
   const page = document.createElement('div');
   page.className = 'journal-page';
   const sub = pageSubtitle ? `<div class="page-subtitle">${esc(pageSubtitle)}</div>` : '';
-  page.innerHTML = `<div class="page-inner"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">${esc(pageTitle)}</div><div class="page-title-rule"></div>${sub}</div><div class="journal-body" id="pg-body"></div><div class="page-footer"><div class="footer-verse">"Your word is a lamp to my feet and a light to my path." — Psalm 119:105</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
+  page.innerHTML = `<div class="page-inner"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">${esc(pageTitle)}</div><div class="page-title-rule"></div>${sub}</div><div class="journal-body" id="pg-body"></div><div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8 · "He reveals deep and hidden things." — Daniel 2:22</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
   return page;
 }
 function metaRow(data) {
@@ -914,18 +1097,20 @@ function prosEl(text, cls) { const el = document.createElement('div'); el.classN
 
 function buildHeaderPage(data) {
   const page = document.createElement('div'); page.className = 'journal-page';
-  page.innerHTML = `<div class="page-inner"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Dream Journal</div><div class="page-title-rule"></div></div><div class="header-fields"><div class="hf-row"><div class="hf-item hf-full"><span class="hf-label">Dream Title</span><div class="hf-value" id="hf-title"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Date</span><div class="hf-value" id="hf-date"></div></div><div class="hf-item"><span class="hf-label">Time</span><div class="hf-value" id="hf-time"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Dream Type</span><div class="hf-value" id="hf-type"></div></div><div class="hf-item"><span class="hf-label">Dreamer's Involvement</span><div class="hf-value" id="hf-inv"></div></div></div></div><div class="page-footer"><div class="footer-verse">"Your word is a lamp to my feet and a light to my path." — Psalm 119:105</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
-  page.querySelector('#hf-title').textContent = data.dreamTitle         || '';
-  page.querySelector('#hf-date').textContent  = data.dreamDate          || '';
-  page.querySelector('#hf-time').textContent  = data.dreamTime          || '';
-  page.querySelector('#hf-type').textContent  = data.dreamType          || '';
-  page.querySelector('#hf-inv').textContent   = data.dreamerInvolvement || '';
+  page.innerHTML = `<div class="page-inner"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Dream Journal</div><div class="page-title-rule"></div></div><div class="header-fields"><div class="hf-row"><div class="hf-item hf-full"><span class="hf-label">Dream Title</span><div class="hf-value" id="hf-title"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Date</span><div class="hf-value" id="hf-date"></div></div><div class="hf-item"><span class="hf-label">Time</span><div class="hf-value" id="hf-time"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Dream Type</span><div class="hf-value" id="hf-type"></div></div><div class="hf-item"><span class="hf-label">Dreamer's Involvement</span><div class="hf-value" id="hf-inv"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Context / Source</span><div class="hf-value" id="hf-ctx"></div></div><div class="hf-item"><span class="hf-label">Theme</span><div class="hf-value" id="hf-theme"></div></div></div></div><div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8 · "He reveals deep and hidden things." — Daniel 2:22</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
+  page.querySelector('#hf-title').textContent = data.dreamTitle          || '';
+  page.querySelector('#hf-date').textContent  = data.dreamDate           || '';
+  page.querySelector('#hf-time').textContent  = data.dreamTime           || '';
+  page.querySelector('#hf-type').textContent  = data.dreamType           || '';
+  page.querySelector('#hf-inv').textContent   = data.dreamerInvolvement  || '';
+  page.querySelector('#hf-ctx').textContent   = data.dreamContextSource  || '';
+  page.querySelector('#hf-theme').textContent = data.dreamTheme          || '';
   return page;
 }
 function buildDreamPage(data) {
   const page = pageShell('Dream', data.dreamTitle||''); const body = page.querySelector('#pg-body');
   body.appendChild(metaRow(data));
-  const narr = document.createElement('div'); narr.className = 'j-narrative'; narr.style.flex = '2 0 auto'; setParaText(narr, data.dreamNarrative||'');
+  const narr = document.createElement('div'); narr.className = 'j-narrative'; narr.style.flex = '2 0 auto'; setParaText(narr, autoParagraph(data.dreamNarrative||'', 5));
   body.appendChild(secWrap('Dream Narrative', narr));
   body.appendChild(secWrap('Brainstorm', prosEl(data.dreamBrainstorm||'', 'medium')));
   return page;
@@ -945,7 +1130,7 @@ function buildKeysPage(data) {
 function buildInterpretationPage(data) {
   const page = pageShell('Interpretation', data.dreamTitle||''); const body = page.querySelector('#pg-body');
   body.appendChild(metaRow(data));
-  const el = prosEl(data.dreamInterpretation||'', 'large'); el.style.flex = '1';
+  const el = prosEl(autoParagraph(data.dreamInterpretation||'', 5), 'large'); el.style.flex = '1';
   body.appendChild(secWrap('Dream Interpretation', el)); return page;
 }
 function buildApplicationPage(data) {
@@ -953,6 +1138,12 @@ function buildApplicationPage(data) {
   body.appendChild(metaRow(data));
   const el = prosEl(data.dreamApplication||'', 'large'); el.style.flex = '1';
   body.appendChild(secWrap('Dream Application', el)); return page;
+}
+function buildAdditionalNotesPage(data) {
+  const page = pageShell('Additional Notes', data.dreamTitle||''); const body = page.querySelector('#pg-body');
+  body.appendChild(metaRow(data));
+  const el = prosEl(data.dreamAdditionalNotes||'', 'large'); el.style.flex = '1';
+  body.appendChild(secWrap('Additional Notes', el)); return page;
 }
 function buildSummaryPage(data) {
   const page = pageShell('Summary', data.dreamTitle||''); const body = page.querySelector('#pg-body');
@@ -972,7 +1163,7 @@ function buildExtraPage(sectionLabel, data) {
 function createNotesPage(style) {
   const page = document.createElement('div'); page.className = 'journal-page';
   const notesBodyHTML = style === 'lined' ? `<div class="notes-body lined">${Array.from({length:32},()=>'<div class="notes-line"></div>').join('')}</div>` : `<div class="notes-body blank"></div>`;
-  page.innerHTML = `<div class="page-inner notes"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Notes</div><div class="page-title-rule"></div></div>${notesBodyHTML}<div class="page-footer"><div class="footer-verse">"Your word is a lamp to my feet and a light to my path." — Psalm 119:105</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
+  page.innerHTML = `<div class="page-inner notes"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Notes</div><div class="page-title-rule"></div></div>${notesBodyHTML}<div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8 · "He reveals deep and hidden things." — Daniel 2:22</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
   return page;
 }
 
@@ -1021,7 +1212,7 @@ window.addEventListener('afterprint', () => {
 // ── CLEAR ──────────────────────────────────────────────
 function clearAll() {
   pendingPages = [];
-  ['dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm','dreamActions','dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication','sumDream','sumInterpretation','sumApplication','pasteNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm','dreamActions','dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication','dreamAdditionalNotes','dreamContextSource','dreamTheme','sumDream','sumInterpretation','sumApplication','pasteNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['dreamType','dreamerInvolvement'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['xHeader','xDream','xBrainstorm','xKeys','xInterpretation','xApplication'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '0'; });
   document.getElementById('notesStyle').value = 'none';
@@ -1075,6 +1266,9 @@ async function saveToJournal() {
       dream_narrative: d.dreamNarrative||null, interpretation: d.dreamInterpretation||null,
       application: d.dreamApplication||null, symbols: d.dreamSymbols||null,
       scriptures: d.dreamScriptures||null, dream_type: d.dreamType||null, raw_text: d._raw||null,
+      context_source: d.dreamContextSource||null,
+      theme: d.dreamTheme||null,
+      additional_notes: d.dreamAdditionalNotes||null,
     }));
     const { data, error } = await sb.from('dream_entries').insert(rows).select();
     if (error) throw error;
