@@ -27,6 +27,7 @@
   --pg-text:       #1B1717;
   --pg-accent:     #E6A742;
   --pg-panel:      #F2DFD8;
+  --pg-decor:      #F9E8DC;
   --pg-bg:         #FDFDFD;
 }
 body { font-family: 'Lora', serif; background: var(--soft-bg); color: var(--text); min-height: 100vh; }
@@ -108,7 +109,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
    JOURNAL PAGES — 8.5 × 11
 ══════════════════════════════════════════════════════ */
 .journal-page { width: 8.5in; min-height: 11in; background: var(--pg-bg); margin: 0 auto; position: relative; overflow: hidden; box-shadow: 0 8px 60px rgba(99,0,0,0.12); page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.journal-page::before { content: ''; position: absolute; top: 0; left: 0; width: 200px; height: 200px; background: radial-gradient(ellipse at top left, var(--pg-panel) 0%, rgba(255,255,255,0) 75%); opacity: 0.45; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.journal-page::before { content: ''; position: absolute; top: 0; left: 0; width: 200px; height: 200px; background: radial-gradient(ellipse at top left, var(--pg-decor) 0%, rgba(255,255,255,0) 75%); opacity: 0.45; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .journal-page::after  { display: none; content: none; background: none; }
 .page-inner { position: relative; z-index: 1; padding: 0.75in 0.88in 0.6in; min-height: 11in; display: flex; flex-direction: column; }
 .page-header { text-align: center; margin-bottom: 0.22in; }
@@ -155,6 +156,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .page-inner.notes { padding: 0.5in 0.88in 0.4in; }
 .notes-body { flex: 1; padding: 0.08in 0 0; overflow: hidden; }
 .notes-body.lined .notes-line { height: 0.28125in; border-bottom: 1px solid rgba(99,0,0,0.15); box-sizing: border-box; }
+.notes-body.dotted { background-image: radial-gradient(circle, var(--pg-accent) 1.2px, transparent 1.2px); background-size: 0.25in 0.25in; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
 /* ── RESPONSIVE ───────────────────────────────────────── */
 @media (max-width: 680px) {
@@ -467,7 +469,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <div class="f-group">
         <label for="pageStyle">Writing Area Style</label>
         <select id="pageStyle">
-          <option value="clean">Clean</option>
+          <option value="clean">Blank</option>
           <option value="lined">Lined</option>
           <option value="dotted">Dotted</option>
         </select>
@@ -480,7 +482,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
     <div class="field-row">
       <div class="f-group">
         <label for="notesStyle">Notes Page Style</label>
-        <select id="notesStyle" onchange="onNotesStyleChange()"><option value="none">None</option><option value="lined">Lined</option><option value="blank">Blank</option></select>
+        <select id="notesStyle" onchange="onNotesStyleChange()"><option value="none">None</option><option value="lined">Lined</option><option value="dotted">Dotted</option><option value="blank">Blank</option></select>
       </div>
       <div class="f-group">
         <label for="notesPageCount">Number of Notes Pages</label>
@@ -512,6 +514,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <div class="color-picker-group"><label for="cpText">Body Text</label><input type="color" id="cpText" value="#1B1717" oninput="applyCustomColors()"></div>
       <div class="color-picker-group"><label for="cpAccent">Divider / Accent</label><input type="color" id="cpAccent" value="#E6A742" oninput="applyCustomColors()"></div>
       <div class="color-picker-group"><label for="cpPanel">Panel Background</label><input type="color" id="cpPanel" value="#F2DFD8" oninput="applyCustomColors()"></div>
+      <div class="color-picker-group"><label for="cpDecor">Corner Tint</label><input type="color" id="cpDecor" value="#F9E8DC" oninput="applyCustomColors()"></div>
       <div class="color-picker-group"><label for="cpBg">Page Background</label><input type="color" id="cpBg" value="#FDFDFD" oninput="applyCustomColors()"></div>
     </div>
   </div>
@@ -592,17 +595,17 @@ sb.auth.onAuthStateChange((event, session) => {
 
 // ── THEME ──────────────────────────────────────────────
 const PRESETS = {
-  dove:      { primary:'#630000', text:'#1B1717', accent:'#E6A742', panel:'#F2DFD8', bg:'#FDFDFD' },
-  neutral:   { primary:'#4A4A4A', text:'#1B1717', accent:'#C9A46C', panel:'#F7F5F2', bg:'#FFFFFF' },
-  gold:      { primary:'#5A2A27', text:'#1B1717', accent:'#D4A24C', panel:'#F7F1E8', bg:'#FFFFFF' },
-  purple:    { primary:'#6B3FA0', text:'#1B1717', accent:'#C5A44D', panel:'#F0EBF8', bg:'#FFFFFF' },
-  pink:      { primary:'#8B2252', text:'#1B1717', accent:'#E8A0C0', panel:'#FDF0F5', bg:'#FFFFFF' },
-  orange:    { primary:'#A83E10', text:'#1B1717', accent:'#E09060', panel:'#FDF0E6', bg:'#FFFFFF' },
-  black:     { primary:'#1A1A1A', text:'#1A1A1A', accent:'#888888', panel:'#F2F2F2', bg:'#FFFFFF' },
-  brown:     { primary:'#5C3317', text:'#1B1717', accent:'#C9A46C', panel:'#F5ECD9', bg:'#FFFFFF' },
-  blue:      { primary:'#1A4A7A', text:'#1B1717', accent:'#5C9ED6', panel:'#EEF4FB', bg:'#FFFFFF' },
-  green:     { primary:'#2A5C3A', text:'#1B1717', accent:'#7CBF8A', panel:'#EEF5EF', bg:'#FFFFFF' },
-  masculine: { primary:'#1E3A4A', text:'#1B1717', accent:'#7E9BAA', panel:'#EDF1F3', bg:'#FFFFFF' },
+  dove:      { primary:'#630000', text:'#1B1717', accent:'#E6A742', panel:'#F2DFD8', decor:'#F9E8DC', bg:'#FDFDFD' },
+  neutral:   { primary:'#4A4A4A', text:'#1B1717', accent:'#C9A46C', panel:'#F7F5F2', decor:'#F0EDE8', bg:'#FFFFFF' },
+  gold:      { primary:'#5A2A27', text:'#1B1717', accent:'#D4A24C', panel:'#F7F1E8', decor:'#F5EDD8', bg:'#FFFFFF' },
+  purple:    { primary:'#6B3FA0', text:'#1B1717', accent:'#C5A44D', panel:'#F0EBF8', decor:'#EDE5F5', bg:'#FFFFFF' },
+  pink:      { primary:'#8B2252', text:'#1B1717', accent:'#E8A0C0', panel:'#FDF0F5', decor:'#FCEAF3', bg:'#FFFFFF' },
+  orange:    { primary:'#A83E10', text:'#1B1717', accent:'#E09060', panel:'#FDF0E6', decor:'#FDE8D8', bg:'#FFFFFF' },
+  black:     { primary:'#1A1A1A', text:'#1A1A1A', accent:'#888888', panel:'#F2F2F2', decor:'#EBEBEB', bg:'#FFFFFF' },
+  brown:     { primary:'#5C3317', text:'#1B1717', accent:'#C9A46C', panel:'#F5ECD9', decor:'#F5E8D0', bg:'#FFFFFF' },
+  blue:      { primary:'#1A4A7A', text:'#1B1717', accent:'#5C9ED6', panel:'#EEF4FB', decor:'#E5EFF8', bg:'#FFFFFF' },
+  green:     { primary:'#2A5C3A', text:'#1B1717', accent:'#7CBF8A', panel:'#EEF5EF', decor:'#E5F0E8', bg:'#FFFFFF' },
+  masculine: { primary:'#1E3A4A', text:'#1B1717', accent:'#7E9BAA', panel:'#EDF1F3', decor:'#E5EDF2', bg:'#FFFFFF' },
 };
 function applyPreset(key) {
   const p = PRESETS[key]; if (!p) return;
@@ -610,6 +613,7 @@ function applyPreset(key) {
   document.getElementById('cpText').value    = p.text;
   document.getElementById('cpAccent').value  = p.accent;
   document.getElementById('cpPanel').value   = p.panel;
+  document.getElementById('cpDecor').value   = p.decor;
   document.getElementById('cpBg').value      = p.bg;
   applyCustomColors();
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
@@ -621,6 +625,7 @@ function applyCustomColors() {
   r.style.setProperty('--pg-text',    document.getElementById('cpText').value);
   r.style.setProperty('--pg-accent',  document.getElementById('cpAccent').value);
   r.style.setProperty('--pg-panel',   document.getElementById('cpPanel').value);
+  r.style.setProperty('--pg-decor',   document.getElementById('cpDecor').value);
   r.style.setProperty('--pg-bg',      document.getElementById('cpBg').value);
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
 }
@@ -1438,7 +1443,7 @@ function buildExtraPage(sectionLabel, data) {
 }
 function createNotesPage(style) {
   const page = document.createElement('div'); page.className = 'journal-page';
-  const notesBodyHTML = style === 'lined' ? `<div class="notes-body lined">${Array.from({length:32},()=>'<div class="notes-line"></div>').join('')}</div>` : `<div class="notes-body blank"></div>`;
+  const notesBodyHTML = style === 'lined' ? `<div class="notes-body lined">${Array.from({length:32},()=>'<div class="notes-line"></div>').join('')}</div>` : style === 'dotted' ? `<div class="notes-body dotted"></div>` : `<div class="notes-body blank"></div>`;
   page.innerHTML = `<div class="page-inner notes"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Notes</div><div class="page-title-rule"></div></div>${notesBodyHTML}<div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
   return page;
 }
@@ -1530,7 +1535,7 @@ async function saveAsPDF() {
   if (btn) { btn.textContent = 'Preparing…'; btn.disabled = true; }
   try {
     const root = document.documentElement; const cs = getComputedStyle(root);
-    const vars = ['--pg-primary','--pg-text','--pg-accent','--pg-panel','--pg-bg'].map(v => `${v}: ${cs.getPropertyValue(v).trim()};`).join(' ');
+    const vars = ['--pg-primary','--pg-text','--pg-accent','--pg-panel','--pg-decor','--pg-bg'].map(v => `${v}: ${cs.getPropertyValue(v).trim()};`).join(' ');
     const rawCSS    = document.querySelector('style').textContent;
     const css       = `:root { ${vars} }\n` + rawCSS;
     const pagesHTML = container.innerHTML;
