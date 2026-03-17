@@ -1780,27 +1780,41 @@ async function logPrintHistory(_action, _entryIds, _pageCount) { /* no-op */ }
 function renderAuthBar() {
   const inner = document.getElementById('authInner'); if (!inner) return;
   if (currentUser) {
-    inner.innerHTML = `<span class="auth-label">Signed in as</span><span class="auth-email-label">${escAttr(currentUser.email)}</span><span class="auth-sep">·</span><button class="auth-link" onclick="toggleMyJournal()">My Journal</button><span class="auth-sep">·</span><button class="auth-btn ghost" onclick="signOut()">Sign Out</button>`;
+    inner.innerHTML = `<span class="auth-label">Signed in as</span><span class="auth-email-label">${escAttr(currentUser.email)}</span><span class="auth-sep">·</span><button class="auth-link" id="myJournalBtn">My Journal</button><span class="auth-sep">·</span><button class="auth-btn ghost" id="signOutBtn">Sign Out</button>`;
+    document.getElementById('myJournalBtn')?.addEventListener('click', () => switchTab('saved'));
+    document.getElementById('signOutBtn')?.addEventListener('click', signOut);
   } else {
-    inner.innerHTML = `<span class="auth-label">${authMode==='signup'?'Create account:':'Sign in to save entries:'}</span><input class="auth-input" type="email" id="authEmail" placeholder="your@email.com" autocomplete="email"><input class="auth-input" type="password" id="authPassword" placeholder="Password" autocomplete="${authMode==='signup'?'new-password':'current-password'}"><button class="auth-btn" onclick="doAuth()">${authMode==='signup'?'Create Account':'Sign In'}</button><button class="auth-link" onclick="toggleAuthMode()">${authMode==='signup'?'Already have an account?':'Create account'}</button><span class="auth-msg" id="authMsg"></span>`;
-    setTimeout(() => { const pw = document.getElementById('authPassword'); if (pw) pw.addEventListener('keydown', e => { if (e.key==='Enter') doAuth(); }); }, 0);
+    inner.innerHTML = `<span class="auth-label">${authMode==='signup'?'Create account:':'Sign in to save entries:'}</span><input class="auth-input" type="email" id="authEmail" placeholder="your@email.com" autocomplete="email"><input class="auth-input" type="password" id="authPassword" placeholder="Password" autocomplete="${authMode==='signup'?'new-password':'current-password'}"><button class="auth-btn" id="signInBtn">${authMode==='signup'?'Create Account':'Sign In'}</button><button class="auth-link" id="toggleAuthBtn">${authMode==='signup'?'Already have an account?':'Create account'}</button><span class="auth-msg" id="authMsg"></span>`;
+    document.getElementById('signInBtn')?.addEventListener('click', handleLogin);
+    document.getElementById('toggleAuthBtn')?.addEventListener('click', toggleAuthMode);
+    document.getElementById('authPassword')?.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
   }
 }
+
 function toggleAuthMode() { authMode = authMode==='signin'?'signup':'signin'; renderAuthBar(); }
 function toggleMyJournal() { switchTab('saved'); }
-async function doAuth() {
-  const email = document.getElementById('authEmail')?.value.trim(); const password = document.getElementById('authPassword')?.value; const msg = document.getElementById('authMsg');
-  if (!email||!password) { if (msg) { msg.textContent='Enter your email and password.'; msg.className='auth-msg err'; } return; }
-  if (msg) { msg.textContent=authMode==='signup'?'Creating account…':'Signing in…'; msg.className='auth-msg'; }
-  if (authMode==='signup') {
+
+// Dedicated sign-in handler — called by signInBtn click and Enter key
+async function handleLogin() {
+  const email    = document.getElementById('authEmail')?.value.trim();
+  const password = document.getElementById('authPassword')?.value;
+  const msg      = document.getElementById('authMsg');
+  if (!email || !password) {
+    if (msg) { msg.textContent = 'Enter your email and password.'; msg.className = 'auth-msg err'; }
+    return;
+  }
+  if (msg) { msg.textContent = authMode === 'signup' ? 'Creating account…' : 'Signing in…'; msg.className = 'auth-msg'; }
+  if (authMode === 'signup') {
     const { error } = await sb.auth.signUp({ email, password });
-    if (error) { if (msg) { msg.textContent=error.message; msg.className='auth-msg err'; } }
-    else { if (msg) { msg.textContent='Check your inbox to confirm your account, then sign in.'; msg.className='auth-msg ok'; } authMode='signin'; }
+    if (error) { if (msg) { msg.textContent = error.message; msg.className = 'auth-msg err'; } }
+    else { if (msg) { msg.textContent = 'Check your inbox to confirm your account, then sign in.'; msg.className = 'auth-msg ok'; } authMode = 'signin'; renderAuthBar(); }
   } else {
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) { if (msg) { msg.textContent=error.message; msg.className='auth-msg err'; } }
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { if (msg) { msg.textContent = error.message; msg.className = 'auth-msg err'; } return; }
+    console.log('Login success', data);
   }
 }
+
 async function signOut() { await sb.auth.signOut(); }
 
 // ── INIT ──────────────────────────────────────────────────
