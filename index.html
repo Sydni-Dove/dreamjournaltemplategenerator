@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dream Journal Generator — Dove Expressions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -108,7 +108,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
    JOURNAL PAGES — 8.5 × 11
 ══════════════════════════════════════════════════════ */
 .journal-page { width: 8.5in; min-height: 11in; background: var(--pg-bg); margin: 0 auto; position: relative; overflow: hidden; box-shadow: 0 8px 60px rgba(99,0,0,0.12); page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.journal-page::before { display: none; content: none; background: none; }
+.journal-page::before { content: ''; position: absolute; top: 0; left: 0; width: 200px; height: 200px; background: radial-gradient(ellipse at top left, var(--pg-panel) 0%, rgba(255,255,255,0) 75%); opacity: 0.45; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .journal-page::after  { display: none; content: none; background: none; }
 .page-inner { position: relative; z-index: 1; padding: 0.75in 0.88in 0.6in; min-height: 11in; display: flex; flex-direction: column; }
 .page-header { text-align: center; margin-bottom: 0.22in; }
@@ -172,7 +172,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .output-section { display: block !important; max-width: none; margin: 0; padding: 0; overflow: visible; }
   .journal-page { width: 8.5in !important; min-height: 11in !important; box-shadow: none !important; margin: 0 !important; transform: none !important; margin-bottom: 0 !important; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .journal-page:last-child { page-break-after: avoid; break-after: avoid; }
-  .journal-page::before, .journal-page::after { display: none !important; content: none !important; background: none !important; }
+  .journal-page::after { display: none !important; content: none !important; background: none !important; }
   .page-inner { height: 11in !important; min-height: unset !important; overflow: hidden !important; }
   .journal-body { flex: 1 !important; min-height: 0 !important; overflow: hidden !important; }
   .j-narrative, .j-prose.medium, .j-prose.large, .j-scripture { min-height: 0 !important; }
@@ -249,6 +249,31 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-edit-save:hover { background: var(--primary-light); }
 .btn-edit-save:disabled { opacity: 0.6; cursor: not-allowed; }
 @media (max-width: 680px) { .edit-modal { max-height: 100vh; border-radius: 0; } }
+
+/* ── COVER PAGE ─────────────────────────────────────────── */
+.cover-page .page-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #fff; overflow: hidden; }
+/* Top watercolor sunrise — peach/gold tones, subtle */
+.cover-page .cover-wash-top { position: absolute; top: 0; left: 0; right: 0; height: 3.5in; background: radial-gradient(ellipse 70% 60% at 75% 5%, rgba(230,167,66,0.17) 0%, transparent 68%), radial-gradient(ellipse 55% 50% at 18% 8%, rgba(242,218,200,0.5) 0%, transparent 65%), radial-gradient(ellipse 60% 45% at 50% 0%, rgba(255,195,160,0.22) 0%, transparent 60%); pointer-events: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* Bottom blush fade */
+.cover-page .cover-wash-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 2.2in; background: radial-gradient(ellipse 55% 45% at 12% 100%, rgba(242,218,200,0.38) 0%, transparent 65%), radial-gradient(ellipse 40% 35% at 88% 100%, rgba(230,167,66,0.1) 0%, transparent 60%); pointer-events: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* Center content */
+.cover-page .cover-inner { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; width: 100%; text-align: center; padding: 0 1in; }
+.cover-page .cover-eyebrow { font-family: 'Raleway', sans-serif; font-size: 0.5rem; font-weight: 400; letter-spacing: 0.58em; text-transform: uppercase; color: #C9A45A; margin-bottom: 0.35in; }
+.cover-page .cover-dream { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 5.6rem; letter-spacing: 0.2em; color: #6B0F1A; line-height: 1; text-transform: uppercase; }
+.cover-page .cover-ornament { display: flex; align-items: center; gap: 0.5rem; margin: 0.2in 0 0.16in; }
+.cover-page .cover-orn-line { width: 0.72in; height: 1px; background: linear-gradient(to right, transparent, #C9A45A, transparent); }
+.cover-page .cover-orn-gem { font-size: 0.48rem; letter-spacing: 0.35em; color: #C9A45A; }
+.cover-page .cover-journal { font-family: 'Raleway', sans-serif; font-weight: 300; font-size: 1.05rem; letter-spacing: 0.7em; text-transform: uppercase; color: #6B0F1A; margin-left: 0.7em; }
+.cover-page .cover-rule { width: 1.6in; height: 1px; background: linear-gradient(to right, transparent, #C9A45A 30%, #C9A45A 70%, transparent); margin-top: 0.36in; opacity: 0.7; }
+/* Brand line pinned to bottom */
+.cover-page .cover-brand-wrap { position: absolute; bottom: 0.44in; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; z-index: 1; gap: 0.1in; }
+.cover-page .cover-brand-tick { width: 0.45in; height: 1px; background: linear-gradient(to right, transparent, #C9A45A, transparent); }
+.cover-page .cover-brand-name { font-family: 'Raleway', sans-serif; font-weight: 400; font-size: 0.46rem; letter-spacing: 0.45em; text-transform: uppercase; color: #9B7860; }
+/* Cover page never shows journal-page::before tint */
+.cover-page::before { display: none !important; }
+@media print {
+  .cover-page .cover-wash-top, .cover-page .cover-wash-bottom { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
 </style>
 </head>
 <body>
@@ -1188,6 +1213,32 @@ function autoParagraph(text, sentencesPerChunk) {
 }
 
 // ── PAGE RENDERER ─────────────────────────────────────────
+function buildCoverPage() {
+  const page = document.createElement('div');
+  page.className = 'journal-page cover-page';
+  page.innerHTML = `
+    <div class="page-inner">
+      <div class="cover-wash-top"></div>
+      <div class="cover-wash-bottom"></div>
+      <div class="cover-inner">
+        <div class="cover-eyebrow">Dream Journal</div>
+        <div class="cover-dream">Dream</div>
+        <div class="cover-ornament">
+          <div class="cover-orn-line"></div>
+          <div class="cover-orn-gem">✦ ✦ ✦</div>
+          <div class="cover-orn-line"></div>
+        </div>
+        <div class="cover-journal">Journal</div>
+        <div class="cover-rule"></div>
+      </div>
+      <div class="cover-brand-wrap">
+        <div class="cover-brand-tick"></div>
+        <div class="cover-brand-name">Dove Expressions</div>
+      </div>
+    </div>`;
+  return page;
+}
+
 function showPages(dataArray) {
   lastGeneratedData = dataArray;
   const container = document.getElementById('pagesContainer');
@@ -1202,6 +1253,13 @@ function showPages(dataArray) {
   const xInterpretation = parseInt(document.getElementById('xInterpretation').value) || 0;
   const xApplication    = parseInt(document.getElementById('xApplication').value)    || 0;
   let totalPages = 0;
+
+  // Cover page — appears once before all entries
+  container.appendChild(buildCoverPage());
+  totalPages++;
+  const coverSpacer = document.createElement('div');
+  coverSpacer.className = 'page-spacer'; coverSpacer.style.height = '2.5rem';
+  container.appendChild(coverSpacer);
 
   dataArray.forEach((data, entryIndex) => {
     const addPage = pg => { container.appendChild(pg); totalPages++; };
@@ -1414,7 +1472,7 @@ async function saveAsPDF() {
     const pagesHTML = container.innerHTML;
     const pw = window.open('', '_blank');
     if (!pw) { alert('Pop-up blocked. Please allow pop-ups for this page and try again.'); return; }
-    pw.document.write(`<!DOCTYPE html>\n<html lang="en"><head>\n<meta charset="UTF-8">\n<title>Dream Journal — Dove Expressions</title>\n<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">\n<style>\n${css}\nbody { background: white; margin: 0; padding: 0; }\n</style>\n</head><body>\n<div id="pages">${pagesHTML}</div>\n<script>\n  document.fonts.ready.then(function() {\n    setTimeout(function() { window.print(); }, 400);\n  });\n<\/script>\n</body></html>`);
+    pw.document.write(`<!DOCTYPE html>\n<html lang="en"><head>\n<meta charset="UTF-8">\n<title>Dream Journal — Dove Expressions</title>\n<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">\n<style>\n${css}\nbody { background: white; margin: 0; padding: 0; }\n</style>\n</head><body>\n<div id="pages">${pagesHTML}</div>\n<script>\n  document.fonts.ready.then(function() {\n    setTimeout(function() { window.print(); }, 400);\n  });\n<\/script>\n</body></html>`);
     pw.document.close();
     const pageCount = document.querySelectorAll('.journal-page').length;
     logPrintHistory('pdf', window._lastSavedEntryIds || [], pageCount);
