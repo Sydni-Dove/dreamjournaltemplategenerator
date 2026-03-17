@@ -269,13 +269,26 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
 /* ── PAGE STYLE: DOTTED ───────────────────────────────── */
+/* One seamless dot grid on the full writing body — header/meta are outside journal-body so unaffected */
+.ps-dotted .journal-body {
+  background-image: radial-gradient(circle, var(--pg-accent) 1px, transparent 1px);
+  background-size: 18px 18px;
+  background-position: 0 0;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+/* Clear individual element backgrounds so dots show through uninterrupted */
 .ps-dotted .j-narrative,
 .ps-dotted .j-prose,
 .ps-dotted .j-panel-body,
-.ps-dotted .j-scripture {
-  background-image: radial-gradient(circle, rgba(99,0,0,0.12) 1px, transparent 1px);
-  background-size: 18px 18px;
-  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+.ps-dotted .j-scripture,
+.ps-dotted .j-panel {
+  background-image: none;
+  background-color: transparent;
+}
+/* Mask structured metadata rows so dots don't bleed into header fields */
+.ps-dotted .meta-row,
+.ps-dotted .hf-row {
+  background: var(--pg-bg);
 }
 
 /* ── COVER PAGE ─────────────────────────────────────────── */
