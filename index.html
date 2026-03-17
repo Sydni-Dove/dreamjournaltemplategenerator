@@ -507,7 +507,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <button class="preset-btn" onclick="applyPreset('green')" id="preset-green">Green</button>
       <button class="preset-btn" onclick="applyPreset('brown')" id="preset-brown">Brown</button>
       <button class="preset-btn" onclick="applyPreset('black')" id="preset-black">Black</button>
-      <button class="preset-btn" onclick="applyPreset('masculine')" id="preset-masculine">Masculine</button>
     </div>
     <div class="color-pickers-grid">
       <div class="color-picker-group"><label for="cpPrimary">Primary Heading</label><input type="color" id="cpPrimary" value="#630000" oninput="applyCustomColors()"></div>
@@ -605,7 +604,6 @@ const PRESETS = {
   brown:     { primary:'#5C3317', text:'#1B1717', accent:'#C9A46C', panel:'#F5ECD9', decor:'#F5E8D0', bg:'#FFFFFF' },
   blue:      { primary:'#1A4A7A', text:'#1B1717', accent:'#5C9ED6', panel:'#EEF4FB', decor:'#E5EFF8', bg:'#FFFFFF' },
   green:     { primary:'#2A5C3A', text:'#1B1717', accent:'#7CBF8A', panel:'#EEF5EF', decor:'#E5F0E8', bg:'#FFFFFF' },
-  masculine: { primary:'#1E3A4A', text:'#1B1717', accent:'#7E9BAA', panel:'#EDF1F3', decor:'#E5EDF2', bg:'#FFFFFF' },
 };
 function applyPreset(key) {
   const p = PRESETS[key]; if (!p) return;
