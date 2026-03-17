@@ -128,12 +128,12 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .j-sec-head { display: flex; align-items: center; gap: 0.1in; margin-bottom: 0.08in; min-width: 0; }
 .j-sec-label { font-family: 'Playfair Display', serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--pg-primary); white-space: nowrap; flex-shrink: 0; }
 .j-sec-rule { flex: 1; min-width: 0.1in; height: 1px; background: linear-gradient(to right, var(--pg-accent), transparent); opacity: 0.55; }
-.j-narrative { font-family: 'Lora', serif; font-size: 0.92rem; font-style: italic; color: var(--pg-text); line-height: 1.82; padding: 0.04in 0 0.04in 14px; min-height: 0.45in; height: auto; border-left: 3px solid var(--pg-primary); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
+.j-narrative { font-family: 'Lora', serif; font-size: 0.92rem; font-style: italic; color: var(--pg-text); line-height: 1.82; padding: 0.04in 0 0.04in 14px; min-height: 2in; height: auto; border-left: 3px solid var(--pg-primary); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
 .j-narrative p, .j-prose p, .j-scripture p { margin: 0 0 0.45em 0; }
 .j-narrative p:last-child, .j-prose p:last-child, .j-scripture p:last-child { margin-bottom: 0; }
 .j-prose { font-family: 'Lora', serif; font-size: 0.88rem; color: var(--pg-text); line-height: 1.86; padding: 0.04in 0.04in 0.04in 12px; height: auto; background: transparent; border: none; border-left: 1.5px solid rgba(99,0,0,0.2); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
-.j-prose.medium { min-height: 0.7in; }
-.j-prose.large  { min-height: 1.6in; }
+.j-prose.medium { min-height: 1.5in; }
+.j-prose.large  { min-height: 2in; }
 .j-panel-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.1in; flex: 1; }
 .j-panel { background: var(--pg-panel); border-radius: 4px; padding: 0.1in 0.12in; display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .j-panel-label { font-family: 'Playfair Display', serif; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--pg-primary); margin-bottom: 0.05in; border-bottom: 1px solid rgba(230,167,66,0.4); padding-bottom: 0.04in; }
@@ -269,27 +269,20 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
 /* ── PAGE STYLE: DOTTED ───────────────────────────────── */
-/* One seamless dot grid on the full writing body — header/meta are outside journal-body so unaffected */
-.ps-dotted .journal-body {
+/* Dots applied per writing section — header, metadata, and titles stay clean */
+.ps-dotted .j-narrative,
+.ps-dotted .j-prose,
+.ps-dotted .j-panel-body,
+.ps-dotted .j-interpretation {
   background-image: radial-gradient(circle, var(--pg-accent) 1px, transparent 1px);
   background-size: 18px 18px;
   background-position: 0 0;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-/* Clear individual element backgrounds so dots show through uninterrupted */
-.ps-dotted .j-narrative,
-.ps-dotted .j-prose,
-.ps-dotted .j-panel-body,
-.ps-dotted .j-scripture,
-.ps-dotted .j-panel {
-  background-image: none;
-  background-color: transparent;
-}
-/* Mask structured metadata rows so dots don't bleed into header fields */
-.ps-dotted .meta-row,
-.ps-dotted .hf-row {
-  background: var(--pg-bg);
-}
+.ps-dotted .j-narrative  { min-height: 2in; }
+.ps-dotted .j-prose       { min-height: 1.5in; }
+.ps-dotted .j-panel-body  { min-height: 1.5in; }
+.ps-dotted .j-interpretation { min-height: 1.5in; }
 
 /* ── COVER PAGE ─────────────────────────────────────────── */
 .cover-page .page-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #fff; overflow: hidden; }
@@ -1985,6 +1978,26 @@ async function handleLogin() {
 }
 
 async function signOut() { await sb.auth.signOut(); }
+
+// ── URL PARAM LOADER ──────────────────────────────────────
+// Detects entry data passed from the Dove Expressions journal app via URL params.
+// Supported params: dreamTitle, dreamDate, dreamTime, dreamType, dreamerInvolvement,
+//   dreamTheme, dreamNarrative, dreamBrainstorm, dreamSymbols, dreamEmotions,
+//   dreamScriptures, dreamInterpretation, dreamApplication
+(function loadFromURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const fieldIds = ['dreamTitle','dreamDate','dreamTime','dreamType','dreamerInvolvement',
+    'dreamContextSource','dreamTheme','dreamNarrative','dreamBrainstorm','dreamActions',
+    'dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication'];
+  let loaded = 0;
+  fieldIds.forEach(id => {
+    const val = params.get(id);
+    if (val) { setField(id, val); loaded++; }
+  });
+  if (loaded > 0) {
+    setMsg('Entry loaded from journal app — review fields then click Generate Template.', 'ok');
+  }
+})();
 
 // ── INIT ──────────────────────────────────────────────────
 applyPreset('dove');
