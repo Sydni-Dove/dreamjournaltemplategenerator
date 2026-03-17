@@ -287,12 +287,11 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       </select>
       <select class="lib-select" id="libType" onchange="onLibFilter()">
         <option value="">All Types</option>
-        <option>Personal Dream</option><option>Warning Dream</option><option>Instruction Dream</option>
-        <option>Encouragement Dream</option><option>Prophetic Dream</option><option>Intercession Dream</option>
-        <option>Warfare Dream</option><option>Future Dream</option><option>Confirmation Dream</option>
-        <option>Teaching Dream</option><option>Destiny Dream</option><option>Correction Dream</option>
-        <option>Calling Dream</option><option>Identity Dream</option><option>Healing Dream</option>
-        <option>Deliverance Dream</option><option>Vision</option><option>Unknown</option>
+        <option value="direction">Direction</option>
+        <option value="warning">Warning</option>
+        <option value="encouragement">Encouragement</option>
+        <option value="revelation">Revelation</option>
+        <option value="prophetic">Prophetic</option>
       </select>
     </div>
     <div class="saved-entries-list" id="savedEntriesList">
@@ -1422,6 +1421,78 @@ async function saveAsPDF() {
   finally { if (btn) { btn.innerHTML = orig; btn.disabled = false; } }
 }
 
+// ── DREAMS TABLE — FIELD MAPPING HELPERS ─────────────────
+// Generator type labels → dreams.dream_type enum (direction|warning|encouragement|revelation|prophetic)
+const DREAM_TYPE_TO_ENUM = {
+  'Warning Dream':      'warning',
+  'Prophetic Dream':    'prophetic',  'Destiny Dream':      'prophetic',
+  'Calling Dream':      'prophetic',  'Future Dream':       'prophetic',  'Confirmation Dream': 'prophetic',
+  'Encouragement Dream':'encouragement', 'Healing Dream':   'encouragement', 'Identity Dream': 'encouragement',
+  'Instruction Dream':  'direction',  'Teaching Dream':     'direction',  'Correction Dream':   'direction',
+  'Personal Dream':     'revelation', 'Intercession Dream': 'revelation', 'Warfare Dream':     'revelation',
+  'Deliverance Dream':  'revelation', 'Vision':             'revelation',
+};
+const DREAM_ENUM_LABELS = {
+  'direction':'Direction', 'warning':'Warning', 'encouragement':'Encouragement',
+  'revelation':'Revelation', 'prophetic':'Prophetic',
+};
+
+// Parse any date string → ISO YYYY-MM-DD, or null
+function parseDateToISO(str) {
+  if (!str) return null;
+  const s = String(str).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const dot = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})$/);
+  if (dot) {
+    const [, m, d, y] = dot;
+    const yr = y.length === 2 ? (parseInt(y) > 50 ? '19' : '20') + y : y;
+    return `${yr}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  const p = new Date(s);
+  return isNaN(p.getTime()) ? null : p.toISOString().split('T')[0];
+}
+
+// Pack unmapped generator fields into JSON → stored in dreams.reflection
+function packExtras(d) {
+  const x = {};
+  if (d.dreamType)            x.dream_type_label   = d.dreamType;
+  if (d.dreamSymbols)         x.symbols            = d.dreamSymbols;
+  if (d.dreamEmotions)        x.emotions           = d.dreamEmotions;
+  if (d.dreamScriptures)      x.scriptures         = d.dreamScriptures;
+  if (d.dreamContextSource)   x.context_source     = d.dreamContextSource;
+  if (d.dreamTheme)           x.theme              = d.dreamTheme;
+  if (d.dreamAdditionalNotes) x.additional_notes   = d.dreamAdditionalNotes;
+  if (d._raw)                 x.raw_text           = d._raw;
+  return Object.keys(x).length ? JSON.stringify(x) : null;
+}
+
+// Unpack extras from dreams.reflection
+function unpackExtras(entry) {
+  try { return entry.reflection ? JSON.parse(entry.reflection) : {}; } catch { return {}; }
+}
+
+// Get full display label for a dream entry (prefers stored label over enum)
+function getDreamTypeLabel(entry) {
+  const x = unpackExtras(entry);
+  if (x.dream_type_label) return x.dream_type_label;
+  return DREAM_ENUM_LABELS[entry.dream_type] || entry.dream_type || '';
+}
+
+// Extract plain text from dreams.brainstorm (jsonb stored as {text:"..."})
+function getBrainstormText(val) {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object' && val.text) return val.text;
+  return '';
+}
+
+// Convert dreams.actions (text[]) to newline-separated string
+function getActionsText(val) {
+  if (!val) return '';
+  if (Array.isArray(val)) return val.join('\n');
+  return String(val);
+}
+
 // ── SAVE TO JOURNAL ──────────────────────────────────────
 async function saveToJournal() {
   if (!currentUser) { const bar = document.getElementById('authBar'); if (bar) bar.scrollIntoView({ behavior:'smooth' }); return; }
@@ -1430,20 +1501,24 @@ async function saveToJournal() {
   if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
   try {
     const rows = lastGeneratedData.map(d => ({
-      user_id: currentUser.id, entry_date: d.dreamDate||null, title: d.dreamTitle||null,
-      dream_narrative: d.dreamNarrative||null, interpretation: d.dreamInterpretation||null,
-      application: d.dreamApplication||null, symbols: d.dreamSymbols||null,
-      scriptures: d.dreamScriptures||null, dream_type: d.dreamType||null, raw_text: d._raw||null,
-      context_source: d.dreamContextSource||null,
-      theme: d.dreamTheme||null,
-      additional_notes: d.dreamAdditionalNotes||null,
+      user_id:        currentUser.id,
+      title:          d.dreamTitle || 'Untitled Dream',
+      date:           parseDateToISO(d.dreamDate) || new Date().toISOString().split('T')[0],
+      dream_type:     DREAM_TYPE_TO_ENUM[d.dreamType] || null,
+      dreamer_role:   d.dreamerInvolvement || null,
+      narrative:      d.dreamNarrative     || null,
+      brainstorm:     d.dreamBrainstorm ? { text: d.dreamBrainstorm } : {},
+      interpretation: d.dreamInterpretation || null,
+      application:    d.dreamApplication   || null,
+      actions:        d.dreamActions ? d.dreamActions.split(/\n|,/).map(s => s.trim()).filter(Boolean) : [],
+      reflection:     packExtras(d),
+      status:         'recorded',
     }));
-    const { data, error } = await sb.from('dream_entries').insert(rows).select();
+    const { data, error } = await sb.from('dreams').insert(rows).select();
     if (error) throw error;
     window._lastSavedEntryIds = (data||[]).map(e => e.id);
     if (btn) { btn.textContent = '✓ Saved!'; }
     setTimeout(() => { if (btn) { btn.textContent = '💜 Save to Journal'; btn.disabled = false; } }, 2500);
-    const sec = document.getElementById('myJournalSection'); if (sec) sec.style.display = 'block';
     loadMyJournal();
   } catch (err) { alert('Could not save: ' + (err.message || 'Unknown error')); if (btn) { btn.textContent = '💜 Save to Journal'; btn.disabled = false; } }
 }
@@ -1509,12 +1584,12 @@ async function loadMyJournal(append) {
   const from = page * PAGE_SIZE;
   const to   = from + PAGE_SIZE - 1;
 
-  let q = sb.from('dream_entries')
-    .select('id, entry_date, title, dream_narrative, dream_type, theme, context_source, symbols, actions, emotions, scriptures, interpretation, application, additional_notes, raw_text, created_at', { count: 'exact' })
+  let q = sb.from('dreams')
+    .select('id, date, title, narrative, dream_type, dreamer_role, brainstorm, interpretation, application, actions, reflection, created_at', { count: 'exact' })
     .eq('user_id', currentUser.id);
 
   if (search) {
-    q = q.or(`title.ilike.%${search}%,dream_narrative.ilike.%${search}%,theme.ilike.%${search}%`);
+    q = q.or(`title.ilike.%${search}%,narrative.ilike.%${search}%,reflection.ilike.%${search}%`);
   }
   if (filterType) {
     q = q.eq('dream_type', filterType);
@@ -1546,13 +1621,15 @@ async function loadMyJournal(append) {
 }
 
 function renderEntryCard(entry) {
-  const card = document.createElement('div'); card.className = 'saved-entry-card';
+  const card      = document.createElement('div'); card.className = 'saved-entry-card';
   const savedDate = new Date(entry.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-  const preview   = (entry.dream_narrative || '').replace(/\n+/g,' ').substring(0, 180);
-  const typeBadge = entry.dream_type ? `<span class="sec-type-badge">${esc(entry.dream_type)}</span>` : '';
-  const themeMeta = entry.theme ? ` · ${esc(entry.theme)}` : '';
+  const preview   = (entry.narrative || '').replace(/\n+/g,' ').substring(0, 180);
+  const typeLabel = getDreamTypeLabel(entry);
+  const typeBadge = typeLabel ? `<span class="sec-type-badge">${esc(typeLabel)}</span>` : '';
+  const extras    = unpackExtras(entry);
+  const themeMeta = extras.theme ? ` · ${esc(extras.theme)}` : '';
   card.innerHTML = `
-    <div class="sec-date-col"><span class="sec-date">${esc(entry.entry_date||'—')}</span>${typeBadge}</div>
+    <div class="sec-date-col"><span class="sec-date">${esc(entry.date||'—')}</span>${typeBadge}</div>
     <div class="sec-body">
       <div class="sec-title">${esc(entry.title||'Untitled Dream')}</div>
       <div class="sec-word">${esc(preview)}</div>
@@ -1569,15 +1646,34 @@ function renderEntryCard(entry) {
   actions.appendChild(loadBtn); actions.appendChild(editBtn); actions.appendChild(delBtn);
   return card;
 }
+
 function loadEntryIntoForm(entry) {
-  const fieldMap = { dreamDate:entry.entry_date, dreamTitle:entry.title, dreamNarrative:entry.dream_narrative, dreamInterpretation:entry.interpretation };
-  Object.entries(fieldMap).forEach(([id,val]) => setField(id, val||''));
-  if (entry.raw_text) { const el = document.getElementById('pasteNotes'); if (el) el.value = entry.raw_text; }
+  const extras = unpackExtras(entry);
+  const fields = {
+    dreamTitle:           entry.title,
+    dreamDate:            entry.date,
+    dreamNarrative:       entry.narrative,
+    dreamBrainstorm:      getBrainstormText(entry.brainstorm),
+    dreamInterpretation:  entry.interpretation,
+    dreamApplication:     entry.application,
+    dreamActions:         getActionsText(entry.actions),
+    dreamerInvolvement:   entry.dreamer_role,
+    dreamType:            getDreamTypeLabel(entry),
+    dreamSymbols:         extras.symbols         || '',
+    dreamEmotions:        extras.emotions        || '',
+    dreamScriptures:      extras.scriptures      || '',
+    dreamContextSource:   extras.context_source  || '',
+    dreamTheme:           extras.theme           || '',
+    dreamAdditionalNotes: extras.additional_notes|| '',
+  };
+  Object.entries(fields).forEach(([id, val]) => setField(id, val||''));
+  if (extras.raw_text) { const el = document.getElementById('pasteNotes'); if (el) el.value = extras.raw_text; }
   document.getElementById('editorSection').scrollIntoView({ behavior:'smooth' });
 }
+
 async function deleteEntry(id) {
   if (!confirm('Delete this dream entry? This cannot be undone.')) return;
-  const { error } = await sb.from('dream_entries').delete().eq('id',id).eq('user_id',currentUser.id);
+  const { error } = await sb.from('dreams').delete().eq('id', id).eq('user_id', currentUser.id);
   if (error) { alert('Could not delete: ' + error.message); return; }
   loadMyJournal();
 }
@@ -1587,24 +1683,25 @@ let _editingEntryId = null;
 
 function openEditModal(entry) {
   _editingEntryId = entry.id;
-  // Populate all fields
-  document.getElementById('em-title').value          = entry.title              || '';
-  document.getElementById('em-date').value           = entry.entry_date         || '';
-  document.getElementById('em-theme').value          = entry.theme              || '';
-  document.getElementById('em-ctx').value            = entry.context_source     || '';
-  document.getElementById('em-narrative').value      = entry.dream_narrative    || '';
-  document.getElementById('em-brainstorm').value     = entry.brainstorm         || '';
-  document.getElementById('em-symbols').value        = entry.symbols            || '';
-  document.getElementById('em-actions').value        = entry.actions            || '';
-  document.getElementById('em-emotions').value       = entry.emotions           || '';
-  document.getElementById('em-scriptures').value     = entry.scriptures         || '';
-  document.getElementById('em-interpretation').value = entry.interpretation     || '';
-  document.getElementById('em-application').value    = entry.application        || '';
-  document.getElementById('em-notes').value          = entry.additional_notes   || '';
-  // Set dream type dropdown
+  const extras = unpackExtras(entry);
+  document.getElementById('em-title').value          = entry.title                  || '';
+  document.getElementById('em-date').value           = entry.date                   || '';
+  document.getElementById('em-theme').value          = extras.theme                 || '';
+  document.getElementById('em-ctx').value            = extras.context_source        || '';
+  document.getElementById('em-narrative').value      = entry.narrative              || '';
+  document.getElementById('em-brainstorm').value     = getBrainstormText(entry.brainstorm);
+  document.getElementById('em-symbols').value        = extras.symbols               || '';
+  document.getElementById('em-actions').value        = getActionsText(entry.actions);
+  document.getElementById('em-emotions').value       = extras.emotions              || '';
+  document.getElementById('em-scriptures').value     = extras.scriptures            || '';
+  document.getElementById('em-interpretation').value = entry.interpretation         || '';
+  document.getElementById('em-application').value    = entry.application            || '';
+  document.getElementById('em-notes').value          = extras.additional_notes      || '';
+  // Set dream type dropdown — use the full label stored in extras
+  const typeLabel = extras.dream_type_label || DREAM_ENUM_LABELS[entry.dream_type] || '';
   const typeEl = document.getElementById('em-type');
   if (typeEl) {
-    const opt = [...typeEl.options].find(o => o.value.toLowerCase() === (entry.dream_type||'').toLowerCase());
+    const opt = [...typeEl.options].find(o => o.value.toLowerCase() === typeLabel.toLowerCase());
     typeEl.value = opt ? opt.value : '';
   }
   const msg = document.getElementById('editModalMsg');
@@ -1632,24 +1729,40 @@ async function saveEditedEntry() {
   if (saveBtn) { saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; }
   if (msg) { msg.textContent = ''; msg.className = 'edit-modal-msg'; }
 
+  const typeLabel     = document.getElementById('em-type').value.trim();
+  const themeVal      = document.getElementById('em-theme').value.trim();
+  const ctxVal        = document.getElementById('em-ctx').value.trim();
+  const symbolsVal    = document.getElementById('em-symbols').value.trim();
+  const emotionsVal   = document.getElementById('em-emotions').value.trim();
+  const scripturesVal = document.getElementById('em-scriptures').value.trim();
+  const notesVal      = document.getElementById('em-notes').value.trim();
+  const actionsRaw    = document.getElementById('em-actions').value.trim();
+  const brainstormRaw = document.getElementById('em-brainstorm').value.trim();
+
+  // Rebuild reflection JSON with all unmapped fields
+  const extras = {};
+  if (typeLabel)     extras.dream_type_label  = typeLabel;
+  if (symbolsVal)    extras.symbols           = symbolsVal;
+  if (emotionsVal)   extras.emotions          = emotionsVal;
+  if (scripturesVal) extras.scriptures        = scripturesVal;
+  if (ctxVal)        extras.context_source    = ctxVal;
+  if (themeVal)      extras.theme             = themeVal;
+  if (notesVal)      extras.additional_notes  = notesVal;
+
   const updates = {
-    title:            document.getElementById('em-title').value.trim()          || null,
-    entry_date:       document.getElementById('em-date').value.trim()           || null,
-    dream_type:       document.getElementById('em-type').value                  || null,
-    theme:            document.getElementById('em-theme').value.trim()          || null,
-    context_source:   document.getElementById('em-ctx').value.trim()            || null,
-    dream_narrative:  document.getElementById('em-narrative').value.trim()      || null,
-    brainstorm:       document.getElementById('em-brainstorm').value.trim()     || null,
-    symbols:          document.getElementById('em-symbols').value.trim()        || null,
-    actions:          document.getElementById('em-actions').value.trim()        || null,
-    emotions:         document.getElementById('em-emotions').value.trim()       || null,
-    scriptures:       document.getElementById('em-scriptures').value.trim()     || null,
-    interpretation:   document.getElementById('em-interpretation').value.trim() || null,
-    application:      document.getElementById('em-application').value.trim()    || null,
-    additional_notes: document.getElementById('em-notes').value.trim()          || null,
+    title:          document.getElementById('em-title').value.trim()          || null,
+    date:           parseDateToISO(document.getElementById('em-date').value)  || null,
+    dream_type:     DREAM_TYPE_TO_ENUM[typeLabel] || null,
+    narrative:      document.getElementById('em-narrative').value.trim()      || null,
+    brainstorm:     brainstormRaw ? { text: brainstormRaw } : {},
+    interpretation: document.getElementById('em-interpretation').value.trim() || null,
+    application:    document.getElementById('em-application').value.trim()    || null,
+    actions:        actionsRaw ? actionsRaw.split(/\n|,/).map(s => s.trim()).filter(Boolean) : [],
+    reflection:     Object.keys(extras).length ? JSON.stringify(extras) : null,
+    updated_at:     new Date().toISOString(),
   };
 
-  const { error } = await sb.from('dream_entries').update(updates).eq('id', _editingEntryId).eq('user_id', currentUser.id);
+  const { error } = await sb.from('dreams').update(updates).eq('id', _editingEntryId).eq('user_id', currentUser.id);
   if (saveBtn) { saveBtn.textContent = 'Save Changes'; saveBtn.disabled = false; }
   if (error) {
     if (msg) { msg.textContent = 'Could not save: ' + error.message; msg.className = 'edit-modal-msg err'; }
@@ -1660,10 +1773,8 @@ async function saveEditedEntry() {
 }
 
 // ── PRINT HISTORY ─────────────────────────────────────────
-async function logPrintHistory(action, entryIds, pageCount) {
-  if (!currentUser) return;
-  await sb.from('print_history').insert({ user_id:currentUser.id, entry_ids:entryIds||[], action, page_count:pageCount||null });
-}
+// print_history table not present in this project — intentional no-op
+async function logPrintHistory(_action, _entryIds, _pageCount) { /* no-op */ }
 
 // ── AUTH HELPERS ─────────────────────────────────────────
 function renderAuthBar() {
