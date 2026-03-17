@@ -495,9 +495,17 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   <div class="form-block">
     <div class="section-eyebrow">Theme Customizer</div>
     <div class="theme-presets">
-      <button class="preset-btn active" onclick="applyPreset('dove')" id="preset-dove">Dove Expressions Burgundy</button>
-      <button class="preset-btn" onclick="applyPreset('neutral')" id="preset-neutral">Soft Neutral</button>
-      <button class="preset-btn" onclick="applyPreset('gold')" id="preset-gold">Warm Gold</button>
+      <button class="preset-btn active" onclick="applyPreset('dove')" id="preset-dove">Burgundy</button>
+      <button class="preset-btn" onclick="applyPreset('neutral')" id="preset-neutral">Neutral</button>
+      <button class="preset-btn" onclick="applyPreset('gold')" id="preset-gold">Gold</button>
+      <button class="preset-btn" onclick="applyPreset('purple')" id="preset-purple">Purple</button>
+      <button class="preset-btn" onclick="applyPreset('pink')" id="preset-pink">Pink</button>
+      <button class="preset-btn" onclick="applyPreset('orange')" id="preset-orange">Orange</button>
+      <button class="preset-btn" onclick="applyPreset('blue')" id="preset-blue">Blue</button>
+      <button class="preset-btn" onclick="applyPreset('green')" id="preset-green">Green</button>
+      <button class="preset-btn" onclick="applyPreset('brown')" id="preset-brown">Brown</button>
+      <button class="preset-btn" onclick="applyPreset('black')" id="preset-black">Black</button>
+      <button class="preset-btn" onclick="applyPreset('masculine')" id="preset-masculine">Masculine</button>
     </div>
     <div class="color-pickers-grid">
       <div class="color-picker-group"><label for="cpPrimary">Primary Heading</label><input type="color" id="cpPrimary" value="#630000" oninput="applyCustomColors()"></div>
@@ -584,9 +592,17 @@ sb.auth.onAuthStateChange((event, session) => {
 
 // ── THEME ──────────────────────────────────────────────
 const PRESETS = {
-  dove:    { primary:'#630000', text:'#1B1717', accent:'#E6A742', panel:'#F2DFD8', bg:'#FDFDFD' },
-  neutral: { primary:'#4A4A4A', text:'#1B1717', accent:'#C9A46C', panel:'#F7F5F2', bg:'#FFFFFF' },
-  gold:    { primary:'#5A2A27', text:'#1B1717', accent:'#D4A24C', panel:'#F7F1E8', bg:'#FFFFFF' },
+  dove:      { primary:'#630000', text:'#1B1717', accent:'#E6A742', panel:'#F2DFD8', bg:'#FDFDFD' },
+  neutral:   { primary:'#4A4A4A', text:'#1B1717', accent:'#C9A46C', panel:'#F7F5F2', bg:'#FFFFFF' },
+  gold:      { primary:'#5A2A27', text:'#1B1717', accent:'#D4A24C', panel:'#F7F1E8', bg:'#FFFFFF' },
+  purple:    { primary:'#6B3FA0', text:'#1B1717', accent:'#C5A44D', panel:'#F0EBF8', bg:'#FFFFFF' },
+  pink:      { primary:'#8B2252', text:'#1B1717', accent:'#E8A0C0', panel:'#FDF0F5', bg:'#FFFFFF' },
+  orange:    { primary:'#A83E10', text:'#1B1717', accent:'#E09060', panel:'#FDF0E6', bg:'#FFFFFF' },
+  black:     { primary:'#1A1A1A', text:'#1A1A1A', accent:'#888888', panel:'#F2F2F2', bg:'#FFFFFF' },
+  brown:     { primary:'#5C3317', text:'#1B1717', accent:'#C9A46C', panel:'#F5ECD9', bg:'#FFFFFF' },
+  blue:      { primary:'#1A4A7A', text:'#1B1717', accent:'#5C9ED6', panel:'#EEF4FB', bg:'#FFFFFF' },
+  green:     { primary:'#2A5C3A', text:'#1B1717', accent:'#7CBF8A', panel:'#EEF5EF', bg:'#FFFFFF' },
+  masculine: { primary:'#1E3A4A', text:'#1B1717', accent:'#7E9BAA', panel:'#EDF1F3', bg:'#FFFFFF' },
 };
 function applyPreset(key) {
   const p = PRESETS[key]; if (!p) return;
