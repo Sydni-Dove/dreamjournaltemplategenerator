@@ -1796,22 +1796,52 @@ function toggleMyJournal() { switchTab('saved'); }
 
 // Dedicated sign-in handler — called by signInBtn click and Enter key
 async function handleLogin() {
+  // Read credentials — email trimmed, password untrimmed (identical for both flows)
   const email    = document.getElementById('authEmail')?.value.trim();
   const password = document.getElementById('authPassword')?.value;
-  const msg      = document.getElementById('authMsg');
-  if (!email || !password) {
-    if (msg) { msg.textContent = 'Enter your email and password.'; msg.className = 'auth-msg err'; }
-    return;
-  }
-  if (msg) { msg.textContent = authMode === 'signup' ? 'Creating account…' : 'Signing in…'; msg.className = 'auth-msg'; }
+
+  // Always fetches a fresh #authMsg reference (survives renderAuthBar re-render)
+  const showMsg = (text, type) => {
+    const el = document.getElementById('authMsg');
+    if (el) { el.textContent = text; el.className = 'auth-msg' + (type ? ' ' + type : ''); }
+  };
+
+  if (!email || !password) { showMsg('Enter your email and password.', 'err'); return; }
+
   if (authMode === 'signup') {
-    const { error } = await sb.auth.signUp({ email, password });
-    if (error) { if (msg) { msg.textContent = error.message; msg.className = 'auth-msg err'; } }
-    else { if (msg) { msg.textContent = 'Check your inbox to confirm your account, then sign in.'; msg.className = 'auth-msg ok'; } authMode = 'signin'; renderAuthBar(); }
+    console.log('[signup] email:', email, '| password length:', password.length);
+    showMsg('Creating account…', '');
+    const { data, error } = await sb.auth.signUp({ email, password });
+    console.log('[signup] data:', data, '| error:', error);
+    if (error) {
+      showMsg(error.message, 'err');
+    } else {
+      // Switch to sign-in mode and repopulate fields so user doesn't have to retype
+      authMode = 'signin';
+      renderAuthBar();
+      const eEl = document.getElementById('authEmail');
+      const pEl = document.getElementById('authPassword');
+      if (eEl) eEl.value = email;
+      if (pEl) pEl.value = password;
+      if (data?.session) {
+        // Email confirmation is OFF — session returned immediately
+        showMsg('Account created — you are now signed in.', 'ok');
+      } else {
+        // Email confirmation is ON — user must confirm before signing in
+        showMsg('Account created! Confirm your email, then sign in.', 'ok');
+      }
+    }
   } else {
+    console.log('[signin] email:', email, '| password length:', password.length);
+    showMsg('Signing in…', '');
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) { if (msg) { msg.textContent = error.message; msg.className = 'auth-msg err'; } return; }
-    console.log('Login success', data);
+    console.log('[signin] data:', data, '| error:', error);
+    if (error) {
+      // Show the exact Supabase error — do not rewrite it
+      showMsg(error.message, 'err');
+      return;
+    }
+    console.log('[signin] success:', data?.user?.email);
   }
 }
 
