@@ -250,6 +250,32 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-edit-save:disabled { opacity: 0.6; cursor: not-allowed; }
 @media (max-width: 680px) { .edit-modal { max-height: 100vh; border-radius: 0; } }
 
+/* ── PAGE STYLE: LINED ────────────────────────────────── */
+.ps-lined .j-narrative,
+.ps-lined .j-prose,
+.ps-lined .j-panel-body,
+.ps-lined .j-scripture {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(1.82em - 1px),
+    rgba(99,0,0,0.09) calc(1.82em - 1px),
+    transparent 1.82em
+  );
+  background-size: 100% 1.82em;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+/* ── PAGE STYLE: DOTTED ───────────────────────────────── */
+.ps-dotted .j-narrative,
+.ps-dotted .j-prose,
+.ps-dotted .j-panel-body,
+.ps-dotted .j-scripture {
+  background-image: radial-gradient(circle, rgba(99,0,0,0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
 /* ── COVER PAGE ─────────────────────────────────────────── */
 .cover-page .page-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #fff; overflow: hidden; }
 /* Top watercolor sunrise — peach/gold tones, subtle */
@@ -432,6 +458,20 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <div class="f-group"><label for="xKeys">Extra Keys Pages</label><select id="xKeys"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
       <div class="f-group"><label for="xInterpretation">Extra Interpretation Pages</label><select id="xInterpretation"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
       <div class="f-group"><label for="xApplication">Extra Application Pages</label><select id="xApplication"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+    </div>
+  </div>
+
+  <div class="form-block">
+    <div class="section-eyebrow">Page Style</div>
+    <div class="field-row">
+      <div class="f-group">
+        <label for="pageStyle">Writing Area Style</label>
+        <select id="pageStyle">
+          <option value="clean">Clean</option>
+          <option value="lined">Lined</option>
+          <option value="dotted">Dotted</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -1221,7 +1261,6 @@ function buildCoverPage() {
       <div class="cover-wash-top"></div>
       <div class="cover-wash-bottom"></div>
       <div class="cover-inner">
-        <div class="cover-eyebrow">Dream Journal</div>
         <div class="cover-dream">Dream</div>
         <div class="cover-ornament">
           <div class="cover-orn-line"></div>
@@ -1252,33 +1291,42 @@ function showPages(dataArray) {
   const xKeys           = parseInt(document.getElementById('xKeys').value)            || 0;
   const xInterpretation = parseInt(document.getElementById('xInterpretation').value) || 0;
   const xApplication    = parseInt(document.getElementById('xApplication').value)    || 0;
+  const pageStyleEl     = document.getElementById('pageStyle');
+  const pageStyle       = pageStyleEl ? pageStyleEl.value : 'clean'; // 'clean' | 'lined' | 'dotted'
   let totalPages = 0;
 
-  // Cover page — appears once before all entries
+  // Cover page — appears once before all entries (always clean, no lines on cover)
   container.appendChild(buildCoverPage());
   totalPages++;
   const coverSpacer = document.createElement('div');
   coverSpacer.className = 'page-spacer'; coverSpacer.style.height = '2.5rem';
   container.appendChild(coverSpacer);
 
+  // Helper: apply page style to a page (skip cover + header/metadata pages)
+  const applyStyle = (pg, isWritingPage) => {
+    if (isWritingPage && pageStyle === 'lined') pg.classList.add('ps-lined');
+    else if (isWritingPage && pageStyle === 'dotted') pg.classList.add('ps-dotted');
+    return pg;
+  };
+
   dataArray.forEach((data, entryIndex) => {
     const addPage = pg => { container.appendChild(pg); totalPages++; };
     const addSpacer = h => { const s = document.createElement('div'); s.className = 'page-spacer'; s.style.cssText = `height:${h};`; container.appendChild(s); };
 
-    addPage(buildHeaderPage(data));
+    addPage(buildHeaderPage(data)); // metadata page — no lines
     for (let i=0; i<xHeader; i++) addPage(buildExtraPage('Dream Header', data));
-    addPage(buildDreamPage(data));
-    for (let i=0; i<xDream; i++) addPage(buildExtraPage('Dream Narrative', data));
-    for (let i=0; i<xBrainstorm; i++) addPage(buildExtraPage('Brainstorm', data));
-    addPage(buildKeysPage(data));
-    for (let i=0; i<xKeys; i++) addPage(buildExtraPage('Dream Keys', data));
-    addPage(buildInterpretationPage(data));
-    for (let i=0; i<xInterpretation; i++) addPage(buildExtraPage('Interpretation', data));
-    addPage(buildApplicationPage(data));
-    for (let i=0; i<xApplication; i++) addPage(buildExtraPage('Application', data));
-    if (data.dreamAdditionalNotes) addPage(buildAdditionalNotesPage(data));
+    addPage(applyStyle(buildDreamPage(data), true));
+    for (let i=0; i<xDream; i++) addPage(applyStyle(buildExtraPage('Dream Narrative', data), true));
+    for (let i=0; i<xBrainstorm; i++) addPage(applyStyle(buildExtraPage('Brainstorm', data), true));
+    addPage(applyStyle(buildKeysPage(data), true));
+    for (let i=0; i<xKeys; i++) addPage(applyStyle(buildExtraPage('Dream Keys', data), true));
+    addPage(applyStyle(buildInterpretationPage(data), true));
+    for (let i=0; i<xInterpretation; i++) addPage(applyStyle(buildExtraPage('Interpretation', data), true));
+    addPage(applyStyle(buildApplicationPage(data), true));
+    for (let i=0; i<xApplication; i++) addPage(applyStyle(buildExtraPage('Application', data), true));
+    if (data.dreamAdditionalNotes) addPage(applyStyle(buildAdditionalNotesPage(data), true));
     if (data.sumDream || data.sumInterpretation || data.sumApplication) addPage(buildSummaryPage(data));
-    if (addNotes) { for (let n=0; n<notesPageCount; n++) { addSpacer('2rem'); addPage(createNotesPage(notesStyle)); } }
+    if (addNotes) { for (let n=0; n<notesPageCount; n++) { addSpacer('2rem'); addPage(applyStyle(createNotesPage(notesStyle), true)); } }
     if (entryIndex < dataArray.length - 1) addSpacer('2.5rem');
   });
 
