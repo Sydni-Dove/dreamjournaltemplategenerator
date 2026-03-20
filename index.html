@@ -506,8 +506,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
         <label for="printSize">Inner Page Layout</label>
         <select id="printSize" onchange="updateLayoutSize()">
           <option value="letter">Letter (8.5 × 11 in)</option>
+          <option value="a4">A4 (210 × 297 mm)</option>
           <option value="halfletter">Half Letter (5.5 × 8.5 in)</option>
-          <option value="a5">A5 (5.83 × 8.27 in)</option>
+          <option value="a5">A5 (148 × 210 mm)</option>
         </select>
       </div>
     </div>
@@ -634,7 +635,7 @@ const PRESETS = {
   dove:      { primary:'#630000', text:'#1B1717', accent:'#E6A742', panel:'#F2DFD8', decor:'#F9E8DC', bg:'#FDFDFD' },
   neutral:   { primary:'#4A4A4A', text:'#1B1717', accent:'#C9A46C', panel:'#F7F5F2', decor:'#F0EDE8', bg:'#FFFFFF' },
   gold:      { primary:'#5A2A27', text:'#1B1717', accent:'#D4A24C', panel:'#F7F1E8', decor:'#F5EDD8', bg:'#FFFFFF' },
-  purple:    { primary:'#7E4C21', text:'#1B1717', accent:'#C5A44D', panel:'#F5EDE0', decor:'#F2E4CC', bg:'#FFFFFF' },
+  purple:    { primary:'#7D3F7C', text:'#1B1717', accent:'#C5A44D', panel:'#F5EDE0', decor:'#F2E4CC', bg:'#FFFFFF' },
   pink:      { primary:'#8B2252', text:'#1B1717', accent:'#E8A0C0', panel:'#FDF0F5', decor:'#FCEAF3', bg:'#FFFFFF' },
   orange:    { primary:'#A83E10', text:'#1B1717', accent:'#E09060', panel:'#FDF0E6', decor:'#FDE8D8', bg:'#FFFFFF' },
   black:     { primary:'#1A1A1A', text:'#1A1A1A', accent:'#888888', panel:'#F2F2F2', decor:'#EBEBEB', bg:'#FFFFFF' },
@@ -1519,8 +1520,9 @@ function escAttr(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'
 // Inner page layout sizes — @page always stays US Letter (8.5×11).
 const LAYOUT_SIZES = {
   letter:     { w: '8.5in',  h: '11in',   lines: 32 },
+  a4:         { w: '210mm',  h: '297mm',  lines: 36 },
   halfletter: { w: '5.5in',  h: '8.5in',  lines: 24 },
-  a5:         { w: '5.83in', h: '8.27in', lines: 24 },
+  a5:         { w: '148mm',  h: '210mm',  lines: 24 },
 };
 let _layoutStyleEl = null;
 function updateLayoutSize() {
@@ -1532,10 +1534,10 @@ function updateLayoutSize() {
     document.head.appendChild(_layoutStyleEl);
   }
   _layoutStyleEl.textContent = `
-    .journal-page { width: ${s.w} !important; height: ${s.h} !important; min-height: ${s.h} !important; }
+    .journal-page { width: ${s.w} !important; height: auto !important; min-height: ${s.h} !important; }
     .page-inner { min-height: ${s.h} !important; }
     @media print {
-      .journal-page { width: ${s.w} !important; height: ${s.h} !important; }
+      .journal-page { width: ${s.w} !important; height: ${s.h} !important; min-height: unset !important; }
       .page-inner { height: ${s.h} !important; min-height: unset !important; overflow: hidden !important; }
     }
   `;
@@ -2073,6 +2075,15 @@ async function signOut() { await sb.auth.signOut(); }
   });
   if (loaded > 0) {
     setMsg('Entry loaded from journal app — review fields then click Generate Template.', 'ok');
+  }
+})();
+
+// ── SSO HASH CLEANUP ─────────────────────────────────
+// When the journal app passes session tokens via URL hash, the Supabase SDK
+// auto-detects and uses them. Clean up the hash so it doesn't stay in the URL.
+(function clearAuthHash() {
+  if (window.location.hash && window.location.hash.includes('access_token=')) {
+    history.replaceState(null, '', window.location.pathname + window.location.search);
   }
 })();
 
