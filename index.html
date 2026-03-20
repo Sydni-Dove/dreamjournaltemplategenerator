@@ -24,6 +24,7 @@
   --text-soft:     #6b5050;
   --text-light:    #9e8080;
   --pg-primary:    #630000;
+  --pg-primary-rgb: 99, 0, 0;
   --pg-text:       #1B1717;
   --pg-accent:     #E6A742;
   --pg-panel:      #F2DFD8;
@@ -106,9 +107,16 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-save-journal:hover { background: rgba(99,0,0,0.06); }
 
 /* ══════════════════════════════════════════════════════
-   JOURNAL PAGES — 8.5 × 11
+   JOURNAL SHEET — always 8.5 × 11 US Letter (print container)
+   Centers the inner journal page for smaller layout sizes.
 ══════════════════════════════════════════════════════ */
-.journal-page { width: 8.5in; min-height: 11in; background: var(--pg-bg); margin: 0 auto; position: relative; overflow: hidden; box-shadow: 0 8px 60px rgba(99,0,0,0.12); page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.journal-sheet { width: 8.5in; height: 11in; background: white; margin: 0 auto; display: flex; align-items: center; justify-content: center; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.journal-sheet:last-child { page-break-after: avoid; break-after: avoid; }
+
+/* ══════════════════════════════════════════════════════
+   JOURNAL PAGES — inner layout (default 8.5 × 11, resized by updateLayoutSize)
+══════════════════════════════════════════════════════ */
+.journal-page { width: 8.5in; height: 11in; min-height: 11in; background: var(--pg-bg); position: relative; overflow: hidden; box-shadow: 0 8px 60px rgba(99,0,0,0.12); flex-shrink: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .journal-page::before { content: ''; position: absolute; top: 0; left: 0; width: 200px; height: 200px; background: radial-gradient(ellipse at top left, var(--pg-decor) 0%, rgba(255,255,255,0) 75%); opacity: 0.45; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .journal-page::after  { display: none; content: none; background: none; }
 .page-inner { position: relative; z-index: 1; padding: 0.75in 0.88in 0.6in; min-height: 11in; display: flex; flex-direction: column; }
@@ -131,7 +139,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .j-narrative { font-family: 'Lora', serif; font-size: 0.92rem; font-style: italic; color: var(--pg-text); line-height: 1.82; padding: 0.04in 0 0.04in 14px; min-height: 2in; height: auto; border-left: 3px solid var(--pg-primary); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
 .j-narrative p, .j-prose p, .j-scripture p { margin: 0 0 0.45em 0; }
 .j-narrative p:last-child, .j-prose p:last-child, .j-scripture p:last-child { margin-bottom: 0; }
-.j-prose { font-family: 'Lora', serif; font-size: 0.88rem; color: var(--pg-text); line-height: 1.86; padding: 0.04in 0.04in 0.04in 12px; height: auto; background: transparent; border: none; border-left: 1.5px solid rgba(99,0,0,0.2); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
+.j-prose { font-family: 'Lora', serif; font-size: 0.88rem; color: var(--pg-text); line-height: 1.86; padding: 0.04in 0.04in 0.04in 12px; height: auto; background: transparent; border: none; border-left: 1.5px solid rgba(var(--pg-primary-rgb), 0.22); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
 .j-prose.medium { min-height: 1.5in; }
 .j-prose.large  { min-height: 2in; }
 .j-panel-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.1in; flex: 1; }
@@ -155,8 +163,14 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .footer-brand { font-family: 'Playfair Display', serif; font-size: 0.48rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--pg-primary); text-align: right; opacity: 0.6; line-height: 1.6; }
 .page-inner.notes { padding: 0.5in 0.88in 0.4in; }
 .notes-body { flex: 1; padding: 0.08in 0 0; overflow: hidden; }
-.notes-body.lined .notes-line { height: 0.28125in; border-bottom: 1px solid rgba(99,0,0,0.15); box-sizing: border-box; }
+.notes-body.lined .notes-line { height: 0.28125in; border-bottom: 1px solid rgba(var(--pg-primary-rgb), 0.15); box-sizing: border-box; }
 .notes-body.dotted { background-image: radial-gradient(circle, var(--pg-accent) 1.2px, transparent 1.2px); background-size: 0.25in 0.25in; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+/* ── GENERATOR NAV ────────────────────────────────────── */
+.gen-nav { display: flex; justify-content: center; gap: 0.55rem; padding: 0.65rem 1.5rem; background: var(--white); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.gen-nav-link { font-family: 'Playfair Display', serif; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-soft); text-decoration: none; padding: 0.38rem 1rem; border-radius: 20px; border: 1px solid transparent; transition: color 0.2s, border-color 0.2s, background 0.2s; }
+.gen-nav-link:hover { color: var(--primary); border-color: rgba(99,0,0,0.28); background: rgba(99,0,0,0.04); }
+.gen-nav-link.is-active { color: var(--primary); border-color: rgba(99,0,0,0.4); background: rgba(99,0,0,0.07); font-weight: 600; }
 
 /* ── RESPONSIVE ───────────────────────────────────────── */
 @media (max-width: 680px) {
@@ -167,15 +181,17 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── PRINT ────────────────────────────────────────────── */
 @media print {
+  /* Always print on US Letter — inner page size is set by updateLayoutSize() */
   @page { size: 8.5in 11in; margin: 0; }
   body { background: white !important; }
-  .site-header, .editor-section, .output-controls, .auth-bar, .my-journal-section, .tab-nav { display: none !important; }
+  .site-header, .gen-nav, .editor-section, .output-controls, .auth-bar, .my-journal-section, .tab-nav { display: none !important; }
   .page-spacer { display: none !important; }
   .output-section { display: block !important; max-width: none; margin: 0; padding: 0; overflow: visible; }
-  .journal-page { width: 8.5in !important; min-height: 11in !important; box-shadow: none !important; margin: 0 !important; transform: none !important; margin-bottom: 0 !important; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .journal-page:last-child { page-break-after: avoid; break-after: avoid; }
+  .journal-sheet { width: 8.5in !important; height: 11in !important; box-shadow: none !important; margin: 0 !important; background: white !important; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .journal-sheet:last-child { page-break-after: avoid; break-after: avoid; }
+  .journal-page { box-shadow: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .journal-page::after { display: none !important; content: none !important; background: none !important; }
-  .page-inner { height: 11in !important; min-height: unset !important; overflow: hidden !important; }
+  .page-inner { min-height: unset !important; overflow: hidden !important; }
   .journal-body { flex: 1 !important; min-height: 0 !important; overflow: hidden !important; }
   .j-narrative, .j-prose.medium, .j-prose.large, .j-scripture { min-height: 0 !important; }
 }
@@ -261,7 +277,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
     to bottom,
     transparent 0,
     transparent calc(1.82em - 1px),
-    rgba(99,0,0,0.09) calc(1.82em - 1px),
+    rgba(var(--pg-primary-rgb),0.09) calc(1.82em - 1px),
     transparent 1.82em
   );
   background-size: 100% 1.82em;
@@ -319,6 +335,12 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   <div class="thin-rule"></div>
   <p class="subtitle">Capture, interpret, and apply every dream God gives you.</p>
 </header>
+<!-- GENERATOR NAV -->
+<nav class="gen-nav">
+  <span class="gen-nav-link is-active">Dream Journal</span>
+  <a class="gen-nav-link" href="https://prophetic-word-journal.vercel.app/" target="_blank" rel="noopener">Prophetic Word</a>
+  <a class="gen-nav-link" href="https://dove-expressions-journal-app.vercel.app/my-journal" target="_blank" rel="noopener">← Back to App</a>
+</nav>
 
 <!-- AUTH BAR -->
 <div class="auth-bar" id="authBar">
@@ -480,6 +502,14 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
           <option value="dotted">Dotted</option>
         </select>
       </div>
+      <div class="f-group">
+        <label for="printSize">Inner Page Layout</label>
+        <select id="printSize" onchange="updateLayoutSize()">
+          <option value="letter">Letter (8.5 × 11 in)</option>
+          <option value="halfletter">Half Letter (5.5 × 8.5 in)</option>
+          <option value="a5">A5 (5.83 × 8.27 in)</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -624,9 +654,15 @@ function applyPreset(key) {
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('preset-' + key); if (btn) btn.classList.add('active');
 }
+function hexToRgb(hex) {
+  const h = hex.replace('#','');
+  return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);
+}
 function applyCustomColors() {
   const r = document.documentElement;
-  r.style.setProperty('--pg-primary', document.getElementById('cpPrimary').value);
+  const primary = document.getElementById('cpPrimary').value;
+  r.style.setProperty('--pg-primary',     primary);
+  r.style.setProperty('--pg-primary-rgb', hexToRgb(primary));
   r.style.setProperty('--pg-text',    document.getElementById('cpText').value);
   r.style.setProperty('--pg-accent',  document.getElementById('cpAccent').value);
   r.style.setProperty('--pg-panel',   document.getElementById('cpPanel').value);
@@ -1280,6 +1316,8 @@ function autoParagraph(text, sentencesPerChunk) {
 
 // ── PAGE RENDERER ─────────────────────────────────────────
 function buildCoverPage() {
+  const sheet = document.createElement('div');
+  sheet.className = 'journal-sheet';
   const page = document.createElement('div');
   page.className = 'journal-page cover-page';
   page.innerHTML = `
@@ -1301,7 +1339,8 @@ function buildCoverPage() {
         <div class="cover-brand-name">Dove Expressions</div>
       </div>
     </div>`;
-  return page;
+  sheet.appendChild(page);
+  return sheet;
 }
 
 function showPages(dataArray) {
@@ -1365,11 +1404,14 @@ function showPages(dataArray) {
 
 // ── PAGE BUILDERS ─────────────────────────────────────────
 function pageShell(pageTitle, pageSubtitle) {
+  const sheet = document.createElement('div');
+  sheet.className = 'journal-sheet';
   const page = document.createElement('div');
   page.className = 'journal-page';
   const sub = pageSubtitle ? `<div class="page-subtitle">${esc(pageSubtitle)}</div>` : '';
   page.innerHTML = `<div class="page-inner"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">${esc(pageTitle)}</div><div class="page-title-rule"></div>${sub}</div><div class="journal-body" id="pg-body"></div><div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
-  return page;
+  sheet.appendChild(page);
+  return sheet;
 }
 function metaRow(data) {
   const div = document.createElement('div'); div.className = 'meta-row';
@@ -1382,6 +1424,7 @@ function secWrap(label, el) { const d = document.createElement('div'); d.appendC
 function prosEl(text, cls) { const el = document.createElement('div'); el.className = 'j-prose ' + (cls||''); setParaText(el, text); return el; }
 
 function buildHeaderPage(data) {
+  const sheet = document.createElement('div'); sheet.className = 'journal-sheet';
   const page = document.createElement('div'); page.className = 'journal-page';
   page.innerHTML = `<div class="page-inner"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Dream Journal</div><div class="page-title-rule"></div><div class="header-verse">"He reveals deep and hidden things." — Daniel 2:22</div></div><div class="header-fields"><div class="hf-row"><div class="hf-item hf-full"><span class="hf-label">Dream Title</span><div class="hf-value" id="hf-title"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Date</span><div class="hf-value" id="hf-date"></div></div><div class="hf-item"><span class="hf-label">Time</span><div class="hf-value" id="hf-time"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Dream Type</span><div class="hf-value" id="hf-type"></div></div><div class="hf-item"><span class="hf-label">Dreamer's Involvement</span><div class="hf-value" id="hf-inv"></div></div></div><div class="hf-row"><div class="hf-item"><span class="hf-label">Context / Source</span><div class="hf-value" id="hf-ctx"></div></div><div class="hf-item"><span class="hf-label">Theme</span><div class="hf-value" id="hf-theme"></div></div></div></div><div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
   page.querySelector('#hf-title').textContent = data.dreamTitle          || '';
@@ -1391,7 +1434,8 @@ function buildHeaderPage(data) {
   page.querySelector('#hf-inv').textContent   = data.dreamerInvolvement  || '';
   page.querySelector('#hf-ctx').textContent   = data.dreamContextSource  || '';
   page.querySelector('#hf-theme').textContent = data.dreamTheme          || '';
-  return page;
+  sheet.appendChild(page);
+  return sheet;
 }
 function buildDreamPage(data) {
   const page = pageShell('Dream', data.dreamTitle||''); const body = page.querySelector('#pg-body');
@@ -1447,10 +1491,14 @@ function buildExtraPage(sectionLabel, data) {
   body.appendChild(secWrap(sectionLabel, el)); return page;
 }
 function createNotesPage(style) {
+  const sheet = document.createElement('div'); sheet.className = 'journal-sheet';
   const page = document.createElement('div'); page.className = 'journal-page';
-  const notesBodyHTML = style === 'lined' ? `<div class="notes-body lined">${Array.from({length:32},()=>'<div class="notes-line"></div>').join('')}</div>` : style === 'dotted' ? `<div class="notes-body dotted"></div>` : `<div class="notes-body blank"></div>`;
+  const layoutKey = document.getElementById('printSize')?.value || 'letter';
+  const lineCount = (LAYOUT_SIZES[layoutKey] || LAYOUT_SIZES.letter).lines;
+  const notesBodyHTML = style === 'lined' ? `<div class="notes-body lined">${Array.from({length:lineCount},()=>'<div class="notes-line"></div>').join('')}</div>` : style === 'dotted' ? `<div class="notes-body dotted"></div>` : `<div class="notes-body blank"></div>`;
   page.innerHTML = `<div class="page-inner notes"><div class="page-header"><div class="page-brand">Dove Expressions</div><div class="page-title">Notes</div><div class="page-title-rule"></div></div>${notesBodyHTML}<div class="page-footer"><div class="footer-verse">"Do not interpretations belong to God?" — Genesis 40:8</div><div class="footer-brand">Dove Expressions<br>doveexpressions.org</div></div></div>`;
-  return page;
+  sheet.appendChild(page);
+  return sheet;
 }
 
 // ── PARAGRAPH TEXT RENDERER ────────────────────────────
@@ -1467,17 +1515,43 @@ function setParaText(el, text) {
 function esc(s)     { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-// ── SCALING ────────────────────────────────────────────
+// ── LAYOUT SIZE ─────────────────────────────────────────
+// Inner page layout sizes — @page always stays US Letter (8.5×11).
+const LAYOUT_SIZES = {
+  letter:     { w: '8.5in',  h: '11in',   lines: 32 },
+  halfletter: { w: '5.5in',  h: '8.5in',  lines: 24 },
+  a5:         { w: '5.83in', h: '8.27in', lines: 24 },
+};
+let _layoutStyleEl = null;
+function updateLayoutSize() {
+  const key = (document.getElementById('printSize')?.value) || 'letter';
+  const s = LAYOUT_SIZES[key] || LAYOUT_SIZES.letter;
+  if (!_layoutStyleEl) {
+    _layoutStyleEl = document.createElement('style');
+    _layoutStyleEl.id = 'dynamic-layout-size';
+    document.head.appendChild(_layoutStyleEl);
+  }
+  _layoutStyleEl.textContent = `
+    .journal-page { width: ${s.w} !important; height: ${s.h} !important; min-height: ${s.h} !important; }
+    .page-inner { min-height: ${s.h} !important; }
+    @media print {
+      .journal-page { width: ${s.w} !important; height: ${s.h} !important; }
+      .page-inner { height: ${s.h} !important; min-height: unset !important; overflow: hidden !important; }
+    }
+  `;
+}
+
+// ── SCALING (screen preview only) ──────────────────────
 function scaleJournalToFit() {
-  const pages = [...document.querySelectorAll('.journal-page')];
+  const sheets = [...document.querySelectorAll('.journal-sheet')];
   const sec = document.getElementById('outputSection');
   const available = sec.clientWidth;
-  pages.forEach(page => {
-    page.style.transform = ''; page.style.marginBottom = '';
-    if (available > 0 && available < page.offsetWidth) {
-      const scale = available / page.offsetWidth;
-      page.style.transformOrigin = 'top left'; page.style.transform = `scale(${scale})`;
-      page.style.marginBottom = `${page.offsetHeight * scale - page.offsetHeight}px`;
+  sheets.forEach(sheet => {
+    sheet.style.transform = ''; sheet.style.marginBottom = '';
+    if (available > 0 && available < sheet.offsetWidth) {
+      const scale = available / sheet.offsetWidth;
+      sheet.style.transformOrigin = 'top left'; sheet.style.transform = `scale(${scale})`;
+      sheet.style.marginBottom = `${sheet.offsetHeight * scale - sheet.offsetHeight}px`;
     }
   });
 }
@@ -1542,7 +1616,8 @@ async function saveAsPDF() {
     const root = document.documentElement; const cs = getComputedStyle(root);
     const vars = ['--pg-primary','--pg-text','--pg-accent','--pg-panel','--pg-decor','--pg-bg'].map(v => `${v}: ${cs.getPropertyValue(v).trim()};`).join(' ');
     const rawCSS    = document.querySelector('style').textContent;
-    const css       = `:root { ${vars} }\n` + rawCSS;
+    const layoutCSS = document.getElementById('dynamic-layout-size')?.textContent || '';
+    const css       = `:root { ${vars} }\n` + rawCSS + '\n' + layoutCSS;
     const pagesHTML = container.innerHTML;
     const pw = window.open('', '_blank');
     if (!pw) { alert('Pop-up blocked. Please allow pop-ups for this page and try again.'); return; }
@@ -1737,7 +1812,8 @@ async function loadMyJournal(append) {
 
   const loadMoreBtn = document.getElementById('loadMoreBtn');
   if (error) {
-    list.innerHTML = '<div class="saved-entries-empty">Could not load entries.</div>';
+    console.error('[loadMyJournal] Supabase error:', error);
+    list.innerHTML = `<div class="saved-entries-empty">Could not load entries: ${error.message || error.code || 'unknown error'}. Check console for details.</div>`;
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
     return;
   }
@@ -2002,6 +2078,7 @@ async function signOut() { await sb.auth.signOut(); }
 
 // ── INIT ──────────────────────────────────────────────────
 applyPreset('dove');
+updateLayoutSize();
 </script>
 
 <!-- EDIT ENTRY MODAL -->
