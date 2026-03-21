@@ -104,7 +104,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .how-it-works .hiw-note { grid-column: 1 / -1; font-family: 'Lora', serif; font-size: 0.75rem; font-style: italic; color: var(--text-light); margin-top: 0.4rem; border-top: 1px solid rgba(99,0,0,0.1); padding-top: 0.8rem; }
 
 /* ── OUTPUT ───────────────────────────────────────────── */
-.output-section { max-width: 820px; margin: 0 auto 4rem; padding: 0; display: none; overflow-x: auto; }
+.output-section { max-width: 820px; margin: 0 auto 4rem; padding: 0 0 2rem; display: none; overflow-x: auto; }
 .output-section.show { display: block; }
 .output-controls { display: flex; gap: 0.9rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; padding: 0 1.5rem; }
 .btn-print { font-family: 'Lato', sans-serif; font-size: 0.88rem; font-weight: 700; color: var(--white); background: var(--primary); border: none; border-radius: 100px; padding: 0.7rem 2.4rem; cursor: pointer; transition: background 0.2s, transform 0.15s; }
@@ -122,7 +122,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 /* ══════════════════════════════════════════════════════
    JOURNAL PAGES — inner layout (default 8.5 × 11, resized by updateLayoutSize)
 ══════════════════════════════════════════════════════ */
-.journal-page { width: 8.5in; height: 11in; background: var(--pg-bg); position: relative; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.journal-page { width: 8.5in; height: 11in; background: var(--pg-bg); position: relative; overflow: hidden; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .journal-page::before { content: ''; position: absolute; top: 0; left: 0; width: 200px; height: 200px; background: radial-gradient(ellipse at top left, var(--pg-decor) 0%, rgba(255,255,255,0) 75%); opacity: 0.45; pointer-events: none; z-index: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .journal-page::after  { display: none; content: none; background: none; }
 .page-inner { position: relative; z-index: 1; padding: 0.75in 0.88in 0.6in; display: flex; flex-direction: column; }
@@ -197,9 +197,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .journal-sheet:last-child { page-break-after: avoid; break-after: avoid; }
   .journal-page { box-shadow: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .journal-page::after { display: none !important; content: none !important; background: none !important; }
-  .page-inner { min-height: unset !important; overflow: hidden !important; }
-  .journal-body { flex: 1 !important; min-height: 0 !important; overflow: hidden !important; }
-  .j-narrative, .j-prose.medium, .j-prose.large, .j-scripture { min-height: 0 !important; }
+  .page-inner { min-height: unset !important; overflow: hidden !important; box-sizing: border-box !important; }
+  .journal-body { flex: 1 1 0 !important; min-height: 0 !important; overflow: hidden !important; }
+  .j-narrative, .j-prose, .j-prose.medium, .j-prose.large, .j-scripture, .j-panel-body { min-height: 0 !important; overflow: hidden !important; }
 }
 
 /* ── AUTH BAR ─────────────────────────────────────────── */
@@ -641,7 +641,7 @@ const PRESETS = {
   dove:      { primary:'#630000', text:'#1B1717', accent:'#E6A742', panel:'#F2DFD8', decor:'#F9E8DC', bg:'#FDFDFD' },
   neutral:   { primary:'#4A4A4A', text:'#1B1717', accent:'#C9A46C', panel:'#F7F5F2', decor:'#F0EDE8', bg:'#FFFFFF' },
   gold:      { primary:'#5A2A27', text:'#1B1717', accent:'#D4A24C', panel:'#F7F1E8', decor:'#F5EDD8', bg:'#FFFFFF' },
-  purple:    { primary:'#7D3F7C', text:'#1B1717', accent:'#C5A44D', panel:'#F5EDE0', decor:'#F2E4CC', bg:'#FFFFFF' },
+  purple:    { primary:'#6F5B7E', text:'#1B1717', accent:'#9B7BB0', panel:'#EDE5F5', decor:'#E4D9F0', bg:'#FAFAFA' },
   pink:      { primary:'#8B2252', text:'#1B1717', accent:'#E8A0C0', panel:'#FDF0F5', decor:'#FCEAF3', bg:'#FFFFFF' },
   orange:    { primary:'#A83E10', text:'#1B1717', accent:'#E09060', panel:'#FDF0E6', decor:'#FDE8D8', bg:'#FFFFFF' },
   black:     { primary:'#1A1A1A', text:'#1A1A1A', accent:'#888888', panel:'#F2F2F2', decor:'#EBEBEB', bg:'#FFFFFF' },
@@ -1367,12 +1367,7 @@ function showPages(dataArray) {
   const pageStyle       = pageStyleEl ? pageStyleEl.value : 'clean'; // 'clean' | 'lined' | 'dotted'
   let totalPages = 0;
 
-  // Cover page — appears once before all entries (always clean, no lines on cover)
-  container.appendChild(buildCoverPage());
-  totalPages++;
-  const coverSpacer = document.createElement('div');
-  coverSpacer.className = 'page-spacer'; coverSpacer.style.height = '2.5rem';
-  container.appendChild(coverSpacer);
+  // Cover page removed — first page is immediately usable content
 
   // Helper: apply page style to a page (skip cover + header/metadata pages)
   const applyStyle = (pg, isWritingPage) => {
