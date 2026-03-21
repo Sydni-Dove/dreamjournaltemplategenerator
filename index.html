@@ -200,7 +200,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   /* Always print on US Letter — inner page size is set by updateLayoutSize() */
   @page { size: 8.5in 11in; margin: 0; }
   body { background: white !important; }
-  .site-header, .gen-nav, .editor-section, .output-controls, .auth-bar, .my-journal-section, .tab-nav { display: none !important; }
+  .site-header, .gen-nav, .editor-section, .output-controls, .auth-bar, .my-journal-section, .tab-nav, .app-footer { display: none !important; }
   .page-spacer { display: none !important; }
   .output-section { display: block !important; max-width: none; margin: 0; padding: 0; overflow: visible; }
   .journal-sheet { width: 8.5in !important; height: 11in !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; margin: 0 !important; background: white !important; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -1584,7 +1584,26 @@ function splitContentToFit(content, cssClass, maxH, widthPx) {
   const paragraphs = content.split(/\n{2,}/).filter(p => p.trim());
   if (paragraphs.length <= 1) {
     const lines = content.split('\n');
-    if (lines.length <= 1) { document.body.removeChild(probe); return [content]; }
+    if (lines.length <= 1) {
+      // Single line (no newlines) — word-level binary-search splitting
+      const words = content.split(' ');
+      if (words.length <= 1) { document.body.removeChild(probe); return [content]; }
+      const chunks = [];
+      let start = 0;
+      while (start < words.length) {
+        let lo = 1, hi = words.length - start, bestFit = 1;
+        while (lo <= hi) {
+          const mid = (lo + hi) >> 1;
+          setParaText(probe, words.slice(start, start + mid).join(' '));
+          if (probe.offsetHeight <= maxH) { bestFit = mid; lo = mid + 1; }
+          else { hi = mid - 1; }
+        }
+        chunks.push(words.slice(start, start + bestFit).join(' '));
+        start += bestFit;
+      }
+      document.body.removeChild(probe);
+      return chunks.length > 1 ? chunks : [content];
+    }
     const chunks = []; let batch = [];
     for (const line of lines) {
       batch.push(line);
@@ -1877,9 +1896,7 @@ async function saveAsPDF() {
     const pw = window.open('', '_blank');
     if (!pw) { alert('Pop-up blocked. Please allow pop-ups for this page and try again.'); return; }
     pw.document.write(`<!DOCTYPE html>\n<html lang="en"><head>\n<meta charset="UTF-8">\n<title>Dream Journal — Dove Expressions</title>\n<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">\n<style>\n${css}\nbody { background: white; margin: 0; padding: 0; }\n</style>\n</head><body>\n<div id="pages">${pagesHTML}</div>\n<script>\n  document.fonts.ready.then(function() {\n    setTimeout(function() { window.print(); }, 400);\n  });\n<\/script>\n
-<footer class="app-footer">Powered by Dove Expressions</footer>
-</body></html>`);
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">\n<style>\n${css}\nbody { background: white; margin: 0; padding: 0; }\n</style>\n</head><body>\n<div id="pages">${pagesHTML}</div>\n<script>\n  document.fonts.ready.then(function() {\n    setTimeout(function() { window.print(); }, 400);\n  });\n<\/script>\n</body></html>`);
     pw.document.close();
     const pageCount = document.querySelectorAll('.journal-page').length;
     logPrintHistory('pdf', window._lastSavedEntryIds || [], pageCount);
