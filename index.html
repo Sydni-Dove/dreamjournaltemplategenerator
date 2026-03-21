@@ -40,7 +40,7 @@
 body { font-family: 'Lato', sans-serif; background: var(--soft-bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
 /* ── SITE HEADER ──────────────────────────────────────── */
-.site-header { text-align: left; padding: 2rem 2rem 1.6rem; background: linear-gradient(135deg, #ffffff 0%, #fdf5f0 55%, #fdf0e4 100%); border-bottom: 1px solid var(--pale-pink); position: relative; overflow: hidden; }
+.site-header { text-align: left; padding: 2rem 2rem 1.6rem; background: linear-gradient(135deg, #ffffff 0%, #fdf5f0 55%, #fdf0e4 100%); border-bottom: 1px solid var(--pale-pink); position: relative; overflow: visible; }
 .site-header::before { content: ''; position: absolute; top: 0; right: 0; width: 220px; height: 100%; background: linear-gradient(to left, rgba(217,121,4,0.08), transparent); pointer-events: none; }
 .site-header .brand-tag { font-family: 'Lato', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; background: linear-gradient(to right, var(--ui-accent), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.45rem; }
 .site-header h1 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: clamp(2rem, 4vw, 2.9rem); background: linear-gradient(to right, var(--ui-accent), var(--coral), var(--sunrise)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.15; margin-bottom: 0.4rem; }
@@ -192,7 +192,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 @media screen and (min-width: 681px) and (max-width: 816px) { .output-section { overflow-x: hidden; } }
 @media (max-width: 699px) {
-  .output-section { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-left: 0.5rem; padding-right: 0.5rem; }
+  /* CSS zoom shrinks sheets to fit — no horizontal scroll needed. overflow-x: clip prevents
+     the brief pre-zoom flash of full-width (8.5in) sheets from triggering a mobile viewport rescale. */
+  .output-section { overflow-x: clip; padding-left: 0; padding-right: 0; max-width: 100vw; }
 }
 
 /* ── PRINT ────────────────────────────────────────────── */
@@ -1012,7 +1014,7 @@ function extractDreamData(raw) {
     { re: /^dream\s+title:?$/i,                                                               field: 'dreamTitle'          },
     { re: /^dream\s+type:?$/i,                                                                field: 'dreamType'           },
     { re: /^dream\s+summary:?$/i,                                                             field: 'sumDream'            },
-    { re: /^brainstorm(?:ing)?(?:\s+\d.*)?:?$/i,                                              field: 'dreamBrainstorm'     },
+    { re: /^brainstorm(?:ing)?(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+\d.*)?:?$/i,                    field: 'dreamBrainstorm'     },
     { re: /^plain:?$/i,                                                                       field: 'dreamNarrative'      },
     { re: /^key\s+(?:symbols?|objects?):?$/i,                                                 field: 'dreamSymbols'        },
     { re: /^key\s+actions?:?$/i,                                                              field: 'dreamActions'        },
@@ -1023,7 +1025,7 @@ function extractDreamData(raw) {
     { re: /^scriptures?:?$/i,                                                                 field: 'dreamScriptures'     },
     { re: /^(?:scripture\s+)?verse:?$/i,                                                      field: 'dreamScriptures'     },
     { re: /^scripture\s+references?:?$/i,                                                     field: 'dreamScriptures'     },
-    { re: /^(?:possible\s+meaning\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?(?:\s+summary)?:?$/i, field: null          },
+    { re: /^(?:(?:possible\s+meaning\s*[\/\\]?\s*)|(?:long\s+))?interpretation(?:\s*\([^)]*\))?(?:\s+summary)?:?$/i, field: null },
     { re: /^possible\s+meaning(?:\s*\([^)]*\))?(?:\s*[\/\\]\s*interpretation(?:\s*\([^)]*\))?)?:?$/i, field: 'dreamInterpretation' },
     { re: /^application(?:\s+summary)?:?$/i,                                                  field: null                  },
     { re: /^summary:?$/i,                                                                     field: 'sumDream'            },
@@ -1045,7 +1047,7 @@ function extractDreamData(raw) {
     { re: inlineRe('dream\\s+title'),                                                        field: 'dreamTitle'          },
     { re: inlineRe('dream\\s+summary'),                                                      field: 'sumDream'            },
     { re: inlineRe('dream\\s+type'),                                                         field: 'dreamType'           },
-    { re: inlineRe('brainstorm(?:ing)?'),                                                    field: 'dreamBrainstorm'     },
+    { re: /^brainstorm(?:ing)?(?:\s*[\/\\]\s*\w[\w\s]*)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i,    field: 'dreamBrainstorm'     },
     { re: inlineRe('key\\s+symbols?'),                                                       field: 'dreamSymbols'        },
     { re: inlineRe('key\\s+actions?'),                                                       field: 'dreamActions'        },
     { re: inlineRe('symbols?'),                                                              field: 'dreamSymbols'        },
@@ -1422,7 +1424,9 @@ function showPages(dataArray) {
 
     for (let i=0; i<xDream; i++) addPage(applyStyle(buildExtraPage('Dream Narrative', data), true));
     for (let i=0; i<xBrainstorm; i++) addPage(applyStyle(buildExtraPage('Brainstorm', data), true));
-    addPage(applyStyle(buildKeysPage(data), true));
+    const keysSheet = applyStyle(buildKeysPage(data), true);
+    addPage(keysSheet);
+    paginateKeysPage(container, keysSheet, data, pageStyle);
     for (let i=0; i<xKeys; i++) addPage(applyStyle(buildExtraPage('Dream Keys', data), true));
 
     // Interpretation page with overflow → continuation
@@ -1452,6 +1456,9 @@ function showPages(dataArray) {
   const totalPages = container.querySelectorAll('.journal-page').length;
   const printBtn = document.getElementById('printBtn');
   if (printBtn) printBtn.textContent = totalPages > 1 ? `🖨️ Print All ${totalPages} Pages` : '🖨️ Print / Save as PDF';
+  // Pre-apply zoom estimate before the section becomes fully visible to prevent
+  // the brief flash of full-width (8.5in) sheets triggering a mobile viewport rescale.
+  scaleJournalToFit();
   requestAnimationFrame(() => requestAnimationFrame(() => { scaleJournalToFit(); sec.scrollIntoView({ behavior:'smooth', block:'start' }); }));
 }
 
@@ -1505,7 +1512,10 @@ function buildKeysPage(data) {
   [{ label:'Actions', val:data.dreamActions||'' },{ label:'Key Symbols', val:data.dreamSymbols||'' },{ label:'Emotions', val:data.dreamEmotions||'' },{ label:'Scriptures', val:data.dreamScriptures||'' }].forEach(({ label, val }) => {
     const panel = document.createElement('div'); panel.className = 'j-panel';
     const lbl = document.createElement('div'); lbl.className = 'j-panel-label'; lbl.textContent = label;
-    const bd  = document.createElement('div'); bd.className  = 'j-panel-body';  setParaText(bd, val);
+    const bd  = document.createElement('div'); bd.className  = 'j-panel-body';
+    // min-height:0 lets the panel body report its true scrollHeight for overflow detection
+    bd.style.minHeight = '0';
+    setParaText(bd, val);
     panel.appendChild(lbl); panel.appendChild(bd); grid.appendChild(panel);
   });
   body.appendChild(grid); return page;
@@ -1741,29 +1751,59 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
     added++;
   }
 
+  // Continuation pages have no meta row — so they have more vertical space.
+  // We split content for the first page (small maxH), then re-split the remainder
+  // with the larger continuation maxH so those pages fill up properly.
+  const contNarrMaxH     = Math.max(bodyAvailH - narrHeadH - 24, 60);
+  const contBsMaxH       = Math.max(bodyAvailH - brainstormHeadH - 24, 60);
+
   if (narrFullH <= bodyAvailH - metaH - narrHeadH - 24) {
     // Narrative fits — only Brainstorm overflows
     if (!brainstormContent || !brainstormEl) return 0;
     const availForBrainstorm = Math.max(bodyAvailH - metaH - narrHeadH - narrFullH - brainstormHeadH - 24, 60);
-    const chunks = splitContentToFit(brainstormContent, 'j-prose medium', availForBrainstorm, bodyW);
-    if (chunks.length <= 1) return 0;
-    setParaText(brainstormEl, chunks[0]);
-    for (let i = 1; i < chunks.length; i++) addCont('Brainstorm', chunks[i], 'j-prose medium');
+    const firstBsChunks = splitContentToFit(brainstormContent, 'j-prose medium', availForBrainstorm, bodyW);
+    if (firstBsChunks.length <= 1) return 0;
+    setParaText(brainstormEl, firstBsChunks[0]);
+    // Re-split remaining brainstorm for full-height continuation pages (no meta row)
+    const remainingBs = firstBsChunks.slice(1).join('\n\n');
+    const contBsChunks = splitContentToFit(remainingBs, 'j-prose medium', contBsMaxH, bodyW);
+    for (const chunk of contBsChunks) addCont('Brainstorm', chunk, 'j-prose medium');
   } else {
-    // Narrative overflows
+    // Narrative overflows — split for first page, then re-split remainder for continuation pages
     const availForNarr = Math.max(bodyAvailH - metaH - narrHeadH - 24, 60);
-    const narrChunks = splitContentToFit(narrContent, 'j-narrative', availForNarr, bodyW);
-    if (narrEl) setParaText(narrEl, narrChunks[0]);
+    const firstNarrChunks = splitContentToFit(narrContent, 'j-narrative', availForNarr, bodyW);
+    if (narrEl) setParaText(narrEl, firstNarrChunks[0]);
     // Hide Brainstorm from first page — will appear on continuation pages
     const brainstormWrapper = brainstormEl ? brainstormEl.closest('div') : null;
     if (brainstormWrapper && brainstormWrapper !== bodyEl) brainstormWrapper.style.display = 'none';
 
-    for (let i = 1; i < narrChunks.length; i++) addCont('Dream Narrative', narrChunks[i], 'j-narrative');
+    if (firstNarrChunks.length > 1) {
+      // Re-split remaining narrative with larger continuation-page maxH
+      const remainingNarr = firstNarrChunks.slice(1).join('\n\n');
+      const contNarrChunks = splitContentToFit(remainingNarr, 'j-narrative', contNarrMaxH, bodyW);
+      // Merge a tiny trailing chunk (≤8 words) into the previous chunk to prevent near-blank pages
+      if (contNarrChunks.length >= 2) {
+        const last = contNarrChunks[contNarrChunks.length - 1];
+        if (last && last.trim().split(/\s+/).length <= 8) {
+          const prev = contNarrChunks[contNarrChunks.length - 2];
+          contNarrChunks.splice(contNarrChunks.length - 2, 2, prev + '\n\n' + last);
+        }
+      }
+      for (const chunk of contNarrChunks) addCont('Dream Narrative', chunk, 'j-narrative');
+    }
 
     if (brainstormContent) {
-      const contBodyH = bodyAvailH; // continuation pages have same layout
-      const brainstormChunks = splitContentToFit(brainstormContent, 'j-prose medium', Math.max(contBodyH - narrHeadH - 24, 60), bodyW);
-      brainstormChunks.forEach((chunk, i) => addCont(i === 0 ? 'Brainstorm' : 'Brainstorm', chunk, 'j-prose medium'));
+      // Brainstorm continuation pages also use full-height maxH
+      const brainstormChunks = splitContentToFit(brainstormContent, 'j-prose medium', contBsMaxH, bodyW);
+      // Same tiny-chunk merge for brainstorm
+      if (brainstormChunks.length >= 2) {
+        const last = brainstormChunks[brainstormChunks.length - 1];
+        if (last && last.trim().split(/\s+/).length <= 8) {
+          const prev = brainstormChunks[brainstormChunks.length - 2];
+          brainstormChunks.splice(brainstormChunks.length - 2, 2, prev + '\n\n' + last);
+        }
+      }
+      for (const chunk of brainstormChunks) addCont('Brainstorm', chunk, 'j-prose medium');
     }
   }
   return added;
@@ -1787,19 +1827,111 @@ function paginateSingleSection(container, sheet, content, cssClass, sectionLabel
   const metaH = (bodyEl.querySelector('.meta-row') || {offsetHeight: 0}).offsetHeight;
   const secHeadH = (bodyEl.querySelector('.j-sec-head') || {offsetHeight: 0}).offsetHeight;
   const availForContent = Math.max(bodyAvailH - metaH - secHeadH - 24, 80);
+  // Continuation pages have no meta row — use a larger maxH so they fill up properly
+  const contMaxH = Math.max(bodyAvailH - secHeadH - 24, 80);
+  const contentW = contentEl.offsetWidth || bodyW;
 
-  const chunks = splitContentToFit(content, cssClass, availForContent, contentEl.offsetWidth || bodyW);
-  if (chunks.length <= 1) return 0;
+  const firstChunks = splitContentToFit(content, cssClass, availForContent, contentW);
+  if (firstChunks.length <= 1) return 0;
 
-  setParaText(contentEl, chunks[0]);
+  setParaText(contentEl, firstChunks[0]);
+  // Re-split the remaining content at the larger continuation-page maxH
+  const remainingContent = firstChunks.slice(1).join('\n\n');
+  const contChunks = splitContentToFit(remainingContent, cssClass, contMaxH, contentW);
+  // Merge a tiny trailing chunk (≤8 words) into the previous chunk to prevent near-blank pages
+  if (contChunks.length >= 2) {
+    const last = contChunks[contChunks.length - 1];
+    if (last && last.trim().split(/\s+/).length <= 8) {
+      const prev = contChunks[contChunks.length - 2];
+      contChunks.splice(contChunks.length - 2, 2, prev + '\n\n' + last);
+    }
+  }
   let added = 0;
-  for (let i = 1; i < chunks.length; i++) {
+  for (const chunk of contChunks) {
     const sp = document.createElement('div'); sp.className = 'page-spacer'; sp.style.height = '2.5rem';
     container.appendChild(sp);
-    container.appendChild(buildDreamContinuationPage(sectionLabel, chunks[i], cssClass, pageStyle));
+    container.appendChild(buildDreamContinuationPage(sectionLabel, chunk, cssClass, pageStyle));
     added++;
   }
   return added;
+}
+
+// Paginate the Dream Keys page (2×2 panel grid).
+// If any panel's content exceeds its allocated space, truncates the panel on the
+// first page and appends a continuation page with the overflow as stacked sections.
+function paginateKeysPage(container, keysSheet, data, pageStyle) {
+  const page = keysSheet.querySelector('.journal-page');
+  const bodyEl = page.querySelector('#pg-body') || page.querySelector('.journal-body');
+  if (!bodyEl) return;
+
+  const panelData = [
+    { label: 'Actions',     content: data.dreamActions    || '' },
+    { label: 'Key Symbols', content: data.dreamSymbols    || '' },
+    { label: 'Emotions',    content: data.dreamEmotions   || '' },
+    { label: 'Scriptures',  content: data.dreamScriptures || '' }
+  ];
+
+  const panels = bodyEl.querySelectorAll('.j-panel');
+  const overflowChunks = []; // { label, remaining }
+
+  panels.forEach((panel, i) => {
+    if (i >= panelData.length || !panelData[i].content) return;
+    const labelEl = panel.querySelector('.j-panel-label');
+    const bodyDiv = panel.querySelector('.j-panel-body');
+    if (!bodyDiv) return;
+
+    // Available height inside the panel body (panel height minus label minus padding)
+    const labelH  = labelEl ? labelEl.offsetHeight : 0;
+    const panelAvailH = Math.max(panel.clientHeight - labelH - 20, 60);
+    const contentW    = bodyDiv.offsetWidth || panel.offsetWidth || 300;
+
+    const chunks = splitContentToFit(panelData[i].content, 'j-panel-body', panelAvailH, contentW);
+    if (chunks.length <= 1) return; // fits — no overflow
+
+    // Truncate the panel on the first page to what fits
+    setParaText(bodyDiv, chunks[0]);
+
+    // Collect the overflow
+    const remaining = chunks.slice(1).join('\n\n');
+    if (remaining.trim()) overflowChunks.push({ label: panelData[i].label, remaining });
+  });
+
+  if (overflowChunks.length === 0) return;
+
+  // Build one or more continuation pages, each using paginateSingleSection logic
+  // Render overflow as stacked labeled sections on a plain continuation page
+  const contContent = overflowChunks.map(c => c.label.toUpperCase() + '\n' + c.remaining).join('\n\n');
+  const sp = document.createElement('div'); sp.className = 'page-spacer'; sp.style.height = '2.5rem';
+  container.appendChild(sp);
+
+  // Use the same continuation-page builder; content goes in as j-prose medium
+  const firstContSheet = buildDreamContinuationPage('Dream Keys', '', 'j-prose medium', pageStyle);
+  const contBodyEl = firstContSheet.querySelector('[data-cont]');
+  setParaText(contBodyEl, contContent);
+  container.appendChild(firstContSheet);
+
+  // Measure whether this continuation page itself overflows and paginate it too
+  requestAnimationFrame(() => {
+    const contPage   = firstContSheet.querySelector('.journal-page');
+    const contJBody  = contPage ? (contPage.querySelector('.journal-body') || contPage.querySelector('[data-cont]')?.parentElement) : null;
+    if (!contJBody) return;
+    const avH  = contJBody.offsetHeight;
+    const scrH = contJBody.scrollHeight;
+    if (scrH <= avH + 8) return;
+    // Overflow on the continuation page — split further
+    const contW  = contBodyEl ? (contBodyEl.offsetWidth || 700) : 700;
+    const contMaxH = Math.max(avH - 40, 80);
+    const moreChunks = splitContentToFit(contContent, 'j-prose medium', contMaxH, contW);
+    if (moreChunks.length <= 1) return;
+    setParaText(contBodyEl, moreChunks[0]);
+    const extra = moreChunks.slice(1).join('\n\n');
+    const extraChunks = splitContentToFit(extra, 'j-prose medium', contMaxH, contW);
+    extraChunks.forEach(chunk => {
+      const sp2 = document.createElement('div'); sp2.className = 'page-spacer'; sp2.style.height = '2.5rem';
+      container.appendChild(sp2);
+      container.appendChild(buildDreamContinuationPage('Dream Keys', chunk, 'j-prose medium', pageStyle));
+    });
+  });
 }
 
 // ── LAYOUT SIZE ─────────────────────────────────────────
@@ -1843,9 +1975,11 @@ function scaleJournalToFit() {
   // Use CSS zoom (not transform: scale) for all viewports.
   // zoom renders at full native resolution — no GPU compositing layer, no blurry output.
   // zoom also changes layout dimensions, so no negative marginBottom compensation needed.
+  // Fall back to window.innerWidth when the section is hidden (clientWidth = 0)
+  // so we can pre-apply an initial zoom estimate before showing the section.
   const sheets = [...document.querySelectorAll('.journal-sheet')];
   const sec = document.getElementById('outputSection');
-  const available = sec.clientWidth;
+  const available = sec.clientWidth || Math.min(window.innerWidth, 820);
   sheets.forEach(sheet => {
     sheet.style.zoom = '';
     sheet.style.transform = '';
