@@ -37,7 +37,7 @@
   --pg-decor:      #F9E8DC;
   --pg-bg:         #FDFDFD;
 }
-body { font-family: 'Lato', sans-serif; background: var(--soft-bg); color: var(--text); min-height: 100vh; }
+body { font-family: 'Lato', sans-serif; background: var(--soft-bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
 /* ── SITE HEADER ──────────────────────────────────────── */
 .site-header { text-align: left; padding: 2rem 2rem 1.6rem; background: linear-gradient(135deg, #ffffff 0%, #fdf5f0 55%, #fdf0e4 100%); border-bottom: 1px solid var(--pale-pink); position: relative; overflow: hidden; }
@@ -191,6 +191,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .journal-page { width: 100%; min-height: auto; }
 }
 @media screen and (min-width: 681px) and (max-width: 816px) { .output-section { overflow-x: hidden; } }
+@media (max-width: 699px) {
+  .output-section { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-left: 0.5rem; padding-right: 0.5rem; }
+}
 
 /* ── PRINT ────────────────────────────────────────────── */
 @media print {
@@ -348,9 +351,10 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   letter-spacing: 0.04em;
   border-top: 1px solid var(--pale-pink);
   background: var(--white);
-  margin-top: 2rem;
+  margin-top: auto;
 }
 @media print { .app-footer { display: none !important; } }
+.btn-generate, .btn-save, .btn-save-journal, .btn-print, .btn-ghost { -webkit-font-smoothing: antialiased; }
 </style>
 </head>
 <body>
@@ -1784,6 +1788,16 @@ function updateLayoutSize() {
 
 // ── SCALING (screen preview only) ──────────────────────
 function scaleJournalToFit() {
+  // On narrow mobile viewports, skip transform scaling — WebKit renders sub-0.5 scales blurry.
+  // The output section CSS handles horizontal scroll instead.
+  if (window.innerWidth < 700) {
+    document.querySelectorAll('.journal-sheet').forEach(sheet => {
+      sheet.style.transform = '';
+      sheet.style.marginBottom = '';
+    });
+    return;
+  }
+
   const sheets = [...document.querySelectorAll('.journal-sheet')];
   const sec = document.getElementById('outputSection');
   const available = sec.clientWidth;
