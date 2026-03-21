@@ -102,6 +102,23 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 .color-picker-group { display: flex; flex-direction: column; gap: 0.4rem; }
 .color-picker-group label { font-size: 0.58rem; }
+/* Custom swatch overlay: the native input[type=color] on iOS Safari renders its swatch
+   at browser-controlled quality which can look blurry. We hide the native swatch visually
+   and overlay a crisp integer-pixel div that mirrors the selected color. The input sits
+   underneath (opacity:0, full-size) so clicking the overlay still opens the native picker. */
+.color-swatch-wrap { position: relative; width: 100%; height: 36px; }
+.color-swatch-wrap input[type="color"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; z-index: 2;
+  -webkit-appearance: none; appearance: none;
+}
+.color-swatch-display {
+  position: absolute; inset: 0; width: 100%; height: 36px;
+  border-radius: 4px; border: 1px solid var(--line);
+  background: #630000; /* updated by JS to match input value */
+  pointer-events: none; z-index: 1;
+  image-rendering: crisp-edges;
+}
 
 /* ── HOW IT WORKS ─────────────────────────────────────── */
 .how-it-works { background: var(--pale-pink); border: none; border-radius: 0.75rem; padding: 1.6rem 2rem; margin-top: 2.8rem; }
@@ -601,12 +618,12 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <button class="preset-btn" onclick="applyPreset('black')" id="preset-black">Black</button>
     </div>
     <div class="color-pickers-grid">
-      <div class="color-picker-group"><label for="cpPrimary">Primary Heading</label><input type="color" id="cpPrimary" value="#630000" oninput="applyCustomColors()"></div>
-      <div class="color-picker-group"><label for="cpText">Body Text</label><input type="color" id="cpText" value="#1B1717" oninput="applyCustomColors()"></div>
-      <div class="color-picker-group"><label for="cpAccent">Divider / Accent</label><input type="color" id="cpAccent" value="#E6A742" oninput="applyCustomColors()"></div>
-      <div class="color-picker-group"><label for="cpPanel">Panel Background</label><input type="color" id="cpPanel" value="#F2DFD8" oninput="applyCustomColors()"></div>
-      <div class="color-picker-group"><label for="cpDecor">Corner Tint</label><input type="color" id="cpDecor" value="#F9E8DC" oninput="applyCustomColors()"></div>
-      <div class="color-picker-group"><label for="cpBg">Page Background</label><input type="color" id="cpBg" value="#FDFDFD" oninput="applyCustomColors()"></div>
+      <div class="color-picker-group"><label for="cpPrimary">Primary Heading</label><div class="color-swatch-wrap"><input type="color" id="cpPrimary" value="#630000" oninput="applyCustomColors();syncSwatch(this)"><div class="color-swatch-display" style="background:#630000"></div></div></div>
+      <div class="color-picker-group"><label for="cpText">Body Text</label><div class="color-swatch-wrap"><input type="color" id="cpText" value="#1B1717" oninput="applyCustomColors();syncSwatch(this)"><div class="color-swatch-display" style="background:#1B1717"></div></div></div>
+      <div class="color-picker-group"><label for="cpAccent">Divider / Accent</label><div class="color-swatch-wrap"><input type="color" id="cpAccent" value="#E6A742" oninput="applyCustomColors();syncSwatch(this)"><div class="color-swatch-display" style="background:#E6A742"></div></div></div>
+      <div class="color-picker-group"><label for="cpPanel">Panel Background</label><div class="color-swatch-wrap"><input type="color" id="cpPanel" value="#F2DFD8" oninput="applyCustomColors();syncSwatch(this)"><div class="color-swatch-display" style="background:#F2DFD8"></div></div></div>
+      <div class="color-picker-group"><label for="cpDecor">Corner Tint</label><div class="color-swatch-wrap"><input type="color" id="cpDecor" value="#F9E8DC" oninput="applyCustomColors();syncSwatch(this)"><div class="color-swatch-display" style="background:#F9E8DC"></div></div></div>
+      <div class="color-picker-group"><label for="cpBg">Page Background</label><div class="color-swatch-wrap"><input type="color" id="cpBg" value="#FDFDFD" oninput="applyCustomColors();syncSwatch(this)"><div class="color-swatch-display" style="background:#FDFDFD"></div></div></div>
     </div>
   </div>
 
@@ -698,6 +715,16 @@ const PRESETS = {
   blue:      { primary:'#1A4A7A', text:'#1B1717', accent:'#5C9ED6', panel:'#EEF4FB', decor:'#E5EFF8', bg:'#FFFFFF' },
   green:     { primary:'#2A5C3A', text:'#1B1717', accent:'#7CBF8A', panel:'#EEF5EF', decor:'#E5F0E8', bg:'#FFFFFF' },
 };
+// Sync the crisp overlay div to match the current input value.
+// Called on every color input change and after preset loads.
+function syncSwatch(inputEl) {
+  const display = inputEl && inputEl.parentElement && inputEl.parentElement.querySelector('.color-swatch-display');
+  if (display) display.style.background = inputEl.value;
+}
+function syncAllSwatches() {
+  document.querySelectorAll('.color-swatch-wrap input[type="color"]').forEach(syncSwatch);
+}
+
 function applyPreset(key) {
   const p = PRESETS[key]; if (!p) return;
   document.getElementById('cpPrimary').value = p.primary;
@@ -707,6 +734,7 @@ function applyPreset(key) {
   document.getElementById('cpDecor').value   = p.decor;
   document.getElementById('cpBg').value      = p.bg;
   applyCustomColors();
+  syncAllSwatches(); // keep crisp overlay divs in sync with new preset colors
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('preset-' + key); if (btn) btn.classList.add('active');
 }
@@ -2024,14 +2052,26 @@ function scaleJournalToFit() {
   const sheets = [...document.querySelectorAll('.journal-sheet')];
   const sec = document.getElementById('outputSection');
   const available = sec.clientWidth || Math.min(window.innerWidth, 820);
+  let scale = 1;
   sheets.forEach(sheet => {
     sheet.style.zoom = '';
     sheet.style.transform = '';
     sheet.style.marginBottom = '';
     if (available > 0 && available < sheet.offsetWidth) {
-      const scale = available / sheet.offsetWidth;
+      scale = available / sheet.offsetWidth;
       sheet.style.zoom = String(scale);
     }
+  });
+  // Page spacers sit between .journal-sheet elements and are NOT inside a zoomed sheet,
+  // so they stay at full size while sheets shrink — making the gap look disproportionately large.
+  // Scale them by the same factor so the gap stays proportional on mobile.
+  document.querySelectorAll('#outputSection .page-spacer').forEach(sp => {
+    if (!sp.dataset.baseH) {
+      // Record the natural height once, before any scaling touches it.
+      sp.dataset.baseH = String(sp.offsetHeight > 0 ? sp.offsetHeight : 40);
+    }
+    const baseH = parseFloat(sp.dataset.baseH) || 40;
+    sp.style.height = scale < 1 ? `${Math.max(4, Math.round(baseH * scale))}px` : '';
   });
 }
 window.addEventListener('resize', () => { if (document.getElementById('outputSection').classList.contains('show')) scaleJournalToFit(); });
