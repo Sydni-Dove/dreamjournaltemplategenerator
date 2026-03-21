@@ -203,7 +203,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .site-header, .gen-nav, .editor-section, .output-controls, .auth-bar, .my-journal-section, .tab-nav, .app-footer { display: none !important; }
   .page-spacer { display: none !important; }
   .output-section { display: block !important; max-width: none; margin: 0; padding: 0; overflow: visible; }
-  .journal-sheet { width: 8.5in !important; height: 11in !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; margin: 0 !important; background: white !important; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .journal-sheet { width: 8.5in !important; height: 11in !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: none !important; margin: 0 !important; background: white !important; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; zoom: 1 !important; transform: none !important; }
   .journal-sheet:last-child { page-break-after: avoid; break-after: avoid; }
   .journal-page { box-shadow: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .journal-page::after { display: none !important; content: none !important; background: none !important; }
@@ -1576,33 +1576,40 @@ function escAttr(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'
 function splitContentToFit(content, cssClass, maxH, widthPx) {
   if (!content || !content.trim()) return [''];
   const probe = document.createElement('div'); probe.className = cssClass;
-  probe.style.cssText = `position:fixed;visibility:hidden;top:-9999px;left:-9999px;width:${widthPx}px;height:auto;overflow:visible;`;
+  // min-height:0 prevents inherited CSS min-height (e.g. .j-narrative { min-height: 2in })
+  // from inflating probe measurements and causing content to be clipped on page 1.
+  probe.style.cssText = `position:fixed;visibility:hidden;top:-9999px;left:-9999px;width:${widthPx}px;height:auto;overflow:visible;min-height:0;`;
   document.body.appendChild(probe);
   setParaText(probe, content);
   if (probe.offsetHeight <= maxH) { document.body.removeChild(probe); return [content]; }
+
+  // Word-level binary-search split — shared helper used by all three paths below.
+  function wordSplit(text) {
+    const words = text.trim().split(/\s+/);
+    if (words.length <= 1) return [text];
+    const result = [];
+    let start = 0;
+    while (start < words.length) {
+      let lo = 1, hi = words.length - start, bestFit = 1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        setParaText(probe, words.slice(start, start + mid).join(' '));
+        if (probe.offsetHeight <= maxH) { bestFit = mid; lo = mid + 1; }
+        else { hi = mid - 1; }
+      }
+      result.push(words.slice(start, start + bestFit).join(' '));
+      start += bestFit;
+    }
+    return result.length > 1 ? result : [text];
+  }
 
   const paragraphs = content.split(/\n{2,}/).filter(p => p.trim());
   if (paragraphs.length <= 1) {
     const lines = content.split('\n');
     if (lines.length <= 1) {
-      // Single line (no newlines) — word-level binary-search splitting
-      const words = content.split(' ');
-      if (words.length <= 1) { document.body.removeChild(probe); return [content]; }
-      const chunks = [];
-      let start = 0;
-      while (start < words.length) {
-        let lo = 1, hi = words.length - start, bestFit = 1;
-        while (lo <= hi) {
-          const mid = (lo + hi) >> 1;
-          setParaText(probe, words.slice(start, start + mid).join(' '));
-          if (probe.offsetHeight <= maxH) { bestFit = mid; lo = mid + 1; }
-          else { hi = mid - 1; }
-        }
-        chunks.push(words.slice(start, start + bestFit).join(' '));
-        start += bestFit;
-      }
+      const wc = wordSplit(content);
       document.body.removeChild(probe);
-      return chunks.length > 1 ? chunks : [content];
+      return wc;
     }
     const chunks = []; let batch = [];
     for (const line of lines) {
@@ -1614,14 +1621,40 @@ function splitContentToFit(content, cssClass, maxH, widthPx) {
     }
     if (batch.length) chunks.push(batch.join('\n'));
     document.body.removeChild(probe);
-    return chunks.length > 1 ? chunks : [content];
+    return chunks.length > 1 ? chunks : wordSplit(content);
   }
+
+  // Multi-paragraph path — with word-level fallback when a single paragraph overflows.
+  // Previously, an overflowing lone paragraph was pushed unsplit onto page 1 and clipped;
+  // the continuation page then started at the NEXT paragraph boundary, skipping text.
   const chunks = []; let batch = [];
   for (const para of paragraphs) {
     const test = [...batch, para];
     setParaText(probe, test.join('\n\n'));
-    if (probe.offsetHeight > maxH && batch.length > 0) {
-      chunks.push(batch.join('\n\n')); batch = [para];
+    if (probe.offsetHeight > maxH) {
+      if (batch.length > 0) {
+        // Commit what fits, then evaluate the new paragraph alone.
+        chunks.push(batch.join('\n\n'));
+        batch = [];
+        setParaText(probe, para);
+        if (probe.offsetHeight <= maxH) {
+          batch = [para];
+        } else {
+          // Single paragraph exceeds page — split it by words.
+          const wc = wordSplit(para);
+          if (wc.length > 1) {
+            for (let i = 0; i < wc.length - 1; i++) chunks.push(wc[i]);
+            batch = [wc[wc.length - 1]];
+          } else { chunks.push(para); batch = []; }
+        }
+      } else {
+        // First paragraph already overflows — split it by words.
+        const wc = wordSplit(para);
+        if (wc.length > 1) {
+          for (let i = 0; i < wc.length - 1; i++) chunks.push(wc[i]);
+          batch = [wc[wc.length - 1]];
+        } else { chunks.push(para); batch = []; }
+      }
     } else { batch = test; }
   }
   if (batch.length) chunks.push(batch.join('\n\n'));
@@ -1633,7 +1666,7 @@ function splitContentToFit(content, cssClass, maxH, widthPx) {
 function measureContentH(content, cssClass, widthPx) {
   if (!content || !content.trim()) return 0;
   const probe = document.createElement('div'); probe.className = cssClass;
-  probe.style.cssText = `position:fixed;visibility:hidden;top:-9999px;left:-9999px;width:${widthPx}px;height:auto;overflow:visible;`;
+  probe.style.cssText = `position:fixed;visibility:hidden;top:-9999px;left:-9999px;width:${widthPx}px;height:auto;overflow:visible;min-height:0;`;
   setParaText(probe, content);
   document.body.appendChild(probe);
   const h = probe.offsetHeight;
@@ -1807,25 +1840,19 @@ function updateLayoutSize() {
 
 // ── SCALING (screen preview only) ──────────────────────
 function scaleJournalToFit() {
-  // On narrow mobile viewports, skip transform scaling — WebKit renders sub-0.5 scales blurry.
-  // The output section CSS handles horizontal scroll instead.
-  if (window.innerWidth < 700) {
-    document.querySelectorAll('.journal-sheet').forEach(sheet => {
-      sheet.style.transform = '';
-      sheet.style.marginBottom = '';
-    });
-    return;
-  }
-
+  // Use CSS zoom (not transform: scale) for all viewports.
+  // zoom renders at full native resolution — no GPU compositing layer, no blurry output.
+  // zoom also changes layout dimensions, so no negative marginBottom compensation needed.
   const sheets = [...document.querySelectorAll('.journal-sheet')];
   const sec = document.getElementById('outputSection');
   const available = sec.clientWidth;
   sheets.forEach(sheet => {
-    sheet.style.transform = ''; sheet.style.marginBottom = '';
+    sheet.style.zoom = '';
+    sheet.style.transform = '';
+    sheet.style.marginBottom = '';
     if (available > 0 && available < sheet.offsetWidth) {
       const scale = available / sheet.offsetWidth;
-      sheet.style.transformOrigin = 'top center'; sheet.style.transform = `scale(${scale})`;
-      sheet.style.marginBottom = `${sheet.offsetHeight * scale - sheet.offsetHeight}px`;
+      sheet.style.zoom = String(scale);
     }
   });
 }
