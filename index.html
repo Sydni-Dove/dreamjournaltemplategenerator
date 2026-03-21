@@ -75,7 +75,7 @@ body { font-family: 'Lato', sans-serif; background: var(--soft-bg); color: var(-
 .f-group { display: flex; flex-direction: column; gap: 0.35rem; }
 label { font-family: 'Lato', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-mid); }
 input[type="text"], select { font-family: 'Lato', sans-serif; font-size: 0.9rem; color: var(--text); background: white; border: 1px solid var(--pale-pink); border-radius: 0.5rem; padding: 0.55rem 0.75rem; width: 100%; outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none; appearance: none; }
-input[type="color"] { padding: 0.15rem 0.15rem; height: 2.2rem; cursor: pointer; border-radius: 4px; border: 1px solid var(--line); background: white; width: 100%; }
+input[type="color"] { padding: 2px; height: 36px; cursor: pointer; border-radius: 4px; border: 1px solid var(--line); background: white; width: 100%; box-sizing: border-box; }
 input[type="text"]:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,0,0,0.1); }
 textarea { font-family: 'Lato', sans-serif; font-size: 0.9rem; color: var(--text); background: white; border: 1px solid var(--pale-pink); border-radius: 0.5rem; padding: 0.65rem 0.9rem; width: 100%; outline: none; transition: border-color 0.2s, box-shadow 0.2s; resize: vertical; line-height: 1.6; }
 textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,0,0,0.1); }
@@ -95,7 +95,11 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .preset-btn { font-family: 'Lato', sans-serif; font-size: 0.8rem; font-weight: 500; border: 1px solid rgba(99,0,0,0.2); border-radius: 100px; padding: 0.35rem 0.9rem; cursor: pointer; background: var(--pale-pink); color: var(--text); transition: all 0.2s; }
 .preset-btn:hover, .preset-btn.active { border-color: var(--primary); color: var(--white); background: var(--primary); }
 .color-pickers-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
-@media (max-width: 620px) { .color-pickers-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 620px) {
+  .color-pickers-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  /* Force integer-pixel rendering on color swatches to prevent mobile blur */
+  input[type="color"] { height: 36px; padding: 2px; border-radius: 3px; }
+}
 .color-picker-group { display: flex; flex-direction: column; gap: 0.4rem; }
 .color-picker-group label { font-size: 0.58rem; }
 
@@ -189,6 +193,18 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 @media (max-width: 680px) {
   .field-row, .field-row.cols-3, .field-row.cols-4 { grid-template-columns: 1fr; }
   .journal-page { width: 100%; min-height: auto; }
+  /* ── Saved-entry card: wrap action buttons to a second row so the title has room ── */
+  .saved-entry-card { flex-wrap: wrap; }
+  .sec-body { flex: 1 1 0; min-width: 0; }
+  .sec-actions {
+    width: 100%;
+    flex-shrink: 0;
+    justify-content: flex-start;
+    border-top: 1px solid rgba(242,223,216,0.8);
+    padding-top: 0.4rem;
+    margin-top: 0.15rem;
+    flex-wrap: wrap;
+  }
 }
 @media screen and (min-width: 681px) and (max-width: 816px) { .output-section { overflow-x: hidden; } }
 @media (max-width: 699px) {
@@ -1684,6 +1700,29 @@ function measureContentH(content, cssClass, widthPx) {
   return h;
 }
 
+// Measure the actual available body height on a continuation page.
+// Continuation pages have a smaller header than page 1 (no subtitle, smaller title),
+// so their journal-body is taller than page 1's bodyAvailH. Using this measured
+// height prevents under-filling continuation pages.
+// Cache: keyed by pageStyle string so each style variant is measured once per
+// layout size. Cleared by clearContBodyHCache() whenever the layout size changes.
+const _contBodyHCache = {};
+function clearContBodyHCache() { Object.keys(_contBodyHCache).forEach(k => delete _contBodyHCache[k]); }
+
+function measureContBodyH(pageStyle) {
+  const key = pageStyle || 'none';
+  if (_contBodyHCache[key]) return _contBodyHCache[key];
+  const probe = buildDreamContinuationPage('', '', 'j-narrative', pageStyle);
+  probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;pointer-events:none;';
+  document.body.appendChild(probe);
+  const bodyEl = probe.querySelector('.journal-body');
+  const h = bodyEl ? bodyEl.offsetHeight : 0;
+  document.body.removeChild(probe);
+  const result = h > 60 ? h : 0; // 0 = fall back to caller's bodyAvailH
+  _contBodyHCache[key] = result;
+  return result;
+}
+
 function buildDreamContinuationPage(sectionLabel, content, styleClass, pageStyle) {
   const sheet = document.createElement('div');
   sheet.className = 'journal-sheet';
@@ -1754,8 +1793,11 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
   // Continuation pages have no meta row — so they have more vertical space.
   // We split content for the first page (small maxH), then re-split the remainder
   // with the larger continuation maxH so those pages fill up properly.
-  const contNarrMaxH     = Math.max(bodyAvailH - narrHeadH - 24, 60);
-  const contBsMaxH       = Math.max(bodyAvailH - brainstormHeadH - 24, 60);
+  // measureContBodyH() measures the actual journal-body height on a continuation page
+  // (which is taller than bodyAvailH because the cont-page header is smaller).
+  const contBodyH        = measureContBodyH(pageStyle) || bodyAvailH;
+  const contNarrMaxH     = Math.max(contBodyH - narrHeadH - 24, 60);
+  const contBsMaxH       = Math.max(contBodyH - brainstormHeadH - 24, 60);
 
   if (narrFullH <= bodyAvailH - metaH - narrHeadH - 24) {
     // Narrative fits — only Brainstorm overflows
@@ -1827,8 +1869,9 @@ function paginateSingleSection(container, sheet, content, cssClass, sectionLabel
   const metaH = (bodyEl.querySelector('.meta-row') || {offsetHeight: 0}).offsetHeight;
   const secHeadH = (bodyEl.querySelector('.j-sec-head') || {offsetHeight: 0}).offsetHeight;
   const availForContent = Math.max(bodyAvailH - metaH - secHeadH - 24, 80);
-  // Continuation pages have no meta row — use a larger maxH so they fill up properly
-  const contMaxH = Math.max(bodyAvailH - secHeadH - 24, 80);
+  // Continuation pages have no meta row and a smaller header — use measured height
+  const contBodyH = measureContBodyH(pageStyle) || bodyAvailH;
+  const contMaxH  = Math.max(contBodyH - secHeadH - 24, 80);
   const contentW = contentEl.offsetWidth || bodyW;
 
   const firstChunks = splitContentToFit(content, cssClass, availForContent, contentW);
@@ -1944,6 +1987,7 @@ const LAYOUT_SIZES = {
 };
 let _layoutStyleEl = null;
 function updateLayoutSize() {
+  clearContBodyHCache(); // page dimensions changed — invalidate continuation-height cache
   const key = (document.getElementById('printSize')?.value) || 'letter';
   const s = LAYOUT_SIZES[key] || LAYOUT_SIZES.letter;
   if (!_layoutStyleEl) {
