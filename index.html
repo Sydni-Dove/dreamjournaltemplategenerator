@@ -1949,9 +1949,16 @@ function paginateSingleSection(container, sheet, content, cssClass, sectionLabel
   const contentEl = bodyEl.querySelector('.' + firstCss);
   if (!contentEl) return 0;
 
-  const metaH = (bodyEl.querySelector('.meta-row') || {offsetHeight: 0}).offsetHeight;
   const secHeadH = (bodyEl.querySelector('.j-sec-head') || {offsetHeight: 0}).offsetHeight;
-  const availForContent = Math.max(bodyAvailH - metaH - secHeadH - 24, 80);
+  // Directly measure the pixel distance from the body's top edge to the content
+  // element's top edge. This captures meta-row height + meta margin-bottom +
+  // flex gap + sec-head height + sec-head margin-bottom in one shot, with no
+  // hardcoded fudge factors.  Previously the formula subtracted only
+  // offsetHeight values (which exclude margins) plus a flat 24 px buffer,
+  // causing ~18 px of unaccounted overhead and first-page underfill.
+  const bodyRect    = bodyEl.getBoundingClientRect();
+  const contentRect = contentEl.getBoundingClientRect();
+  const availForContent = Math.max(bodyAvailH - (contentRect.top - bodyRect.top), 80);
   // Continuation pages have no meta row and a smaller header — use measured height
   const contBodyH = measureContBodyH(pageStyle) || bodyAvailH;
   const contMaxH  = Math.max(contBodyH - secHeadH - 24, 80);
