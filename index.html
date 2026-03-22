@@ -1067,6 +1067,7 @@ function extractDreamData(raw) {
     const looksLikeNarrative = /^(?:i |we |she |he |they |the |it |there |then |in |at |after |before |and |so |but )/i.test(firstLine);
     if (!looksLikeHeading && !looksLikeNarrative) {
       result.dreamTitle  = firstLine;
+      result._weakTitle  = true;        // inferred from first line — can be overridden by filename
       _titleSourceLine   = firstLine;   // skip in main loop (declared above, before Strategy 1)
     }
   }
@@ -1165,11 +1166,15 @@ function extractDreamData(raw) {
   }
 
   // Helper: is this line a standalone section heading (with or without colon)?
+  // Strips leading/trailing separator decorations before testing so that
+  // formats like "Dream Narrative ————" or "——— Brainstorm ———" are recognized.
   function detectHeading(line) {
+    const stripped = line.replace(/\s*[-–—=*]+\s*$/, '').replace(/^\s*[-–—=*]+\s*/, '').trim();
+    const lineToTest = stripped || line;
     for (const rule of HEADING_RULES) {
-      if (rule.re.test(line)) {
+      if (rule.re.test(lineToTest)) {
         // Resolve the null-field entries
-        if (rule.field === null) return resolveInterpAppField(line);
+        if (rule.field === null) return resolveInterpAppField(lineToTest);
         return rule.field;
       }
     }
@@ -1357,14 +1362,16 @@ function enrichFromFilename(data, filename) {
   const name = filename.replace(/\.[^.]+$/, '').replace(/_/g, '.').replace(/^\s*[-–—.]+\s*/, '').trim();
   if (!name) return;
   if (!data.dreamDate) { const d = findDateInText(name); if (d) data.dreamDate = d; }
-  if (!data.dreamTitle) {
+  // Override if no title exists OR if title was weakly inferred from the first line (Strategy 6).
+  // Explicit "Title:" / "Dream Title:" labels in the content (Strategies 1–5) are never overridden.
+  if (!data.dreamTitle || data._weakTitle) {
     const dateRe = /\d{1,2}[\.\/\-]\d{1,2}[\.\/\-]\d{2,4}/;
     let withoutDate = name.replace(dateRe, '');
     if (data.dreamDate) withoutDate = withoutDate.replace(new RegExp(data.dreamDate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '');
     withoutDate = withoutDate.replace(/\s*[-–—]\s*/g, ' ').trim();
     const leadingLabel = withoutDate.replace(/^(?:dream|vision)\s+/i, '').trim();
     const candidate = /^(?:dream|vision)$/i.test(withoutDate) ? '' : (leadingLabel || withoutDate);
-    if (candidate && candidate.length > 1) data.dreamTitle = candidate;
+    if (candidate && candidate.length > 1) { data.dreamTitle = candidate; delete data._weakTitle; }
   }
 }
 
