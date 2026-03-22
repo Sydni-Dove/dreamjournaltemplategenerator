@@ -1898,8 +1898,11 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
     const availForNarr = Math.max(bodyAvailH - metaH - narrHeadH - 24, 60);
     const firstNarrChunks = splitContentToFit(narrContent, 'j-narrative', availForNarr, bodyW);
     if (narrEl) setParaText(narrEl, firstNarrChunks[0]);
-    // Hide Brainstorm from first page — will appear on continuation pages
-    const brainstormWrapper = brainstormEl ? brainstormEl.closest('div') : null;
+    // Hide Brainstorm from first page — will appear on continuation pages.
+    // Use .parentElement (the secWrap div) not .closest('div'): brainstormEl is
+    // itself a <div>, so closest('div') returns the element itself, hiding only
+    // the content and leaving the "BRAINSTORM" sec-head visible with a blank gap.
+    const brainstormWrapper = brainstormEl ? brainstormEl.parentElement : null;
     if (brainstormWrapper && brainstormWrapper !== bodyEl) brainstormWrapper.style.display = 'none';
 
     if (firstNarrChunks.length > 1) {
