@@ -1136,7 +1136,7 @@ function extractDreamData(raw) {
     { re: inlineRe('(?:scripture\\s+)?verse'),                                               field: 'dreamScriptures'     },
     { re: inlineRe('scripture\\s+references?'),                                              field: 'dreamScriptures'     },
     { re: inlineRe('(?:possible\\s+|long\\s+)?interpretation\\s+summary'),                  field: 'sumInterpretation'   },
-    { re: /^(?:(?:possible\s+meaning\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?)\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
+    { re: /^(?:(?:(?:possible\s+meaning\s*[\/\\]?\s*)|(?:long\s+))?interpretation(?:\s*\([^)]*\))?)\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
     { re: /^possible\s+meaning(?:\s*\([^)]*\))?(?:\s*[\/\\]\s*interpretation(?:\s*\([^)]*\))?)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
     { re: inlineRe('application\\s+summary'),                                                field: 'sumApplication'      },
     { re: /^application(?:\s*[\/\\]\s*\w[\w\s]*)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i,          field: 'dreamApplication'    },
@@ -1195,7 +1195,7 @@ function extractDreamData(raw) {
 
   // Detect "Plain:" clean version block BEFORE main loop
   let _plainNarrative = null;
-  const plainMatch = text.match(/(?:^|\n)plain:?\s*\n([\s\S]*?)(?:\n(?:brainstorm|interpretation|application|symbols?|actions?|emotions?|scriptures?)\b|$)/i);
+  const plainMatch = text.match(/(?:^|\n)plain:?\s*\n([\s\S]*?)(?:\n(?:brainstorm(?:ing)?|interpretation|application|symbols?|actions?|emotions?|scriptures?)\b|$)/i);
   if (plainMatch && plainMatch[1].trim()) _plainNarrative = plainMatch[1].trim();
 
   const allLines = text.split('\n').map(l => l.trim());
@@ -1793,7 +1793,8 @@ const _contBodyHCache = {};
 function clearContBodyHCache() { Object.keys(_contBodyHCache).forEach(k => delete _contBodyHCache[k]); }
 
 function measureContBodyH(pageStyle) {
-  const key = pageStyle || 'none';
+  const layoutKey = (document.getElementById('printSize')?.value) || 'letter';
+  const key = (pageStyle || 'none') + '|' + layoutKey;
   if (_contBodyHCache[key]) return _contBodyHCache[key];
   const probe = buildDreamContinuationPage('', '', 'j-narrative', pageStyle);
   probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;pointer-events:none;';
