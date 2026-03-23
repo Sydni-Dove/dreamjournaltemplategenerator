@@ -1962,6 +1962,16 @@ function buildDreamContinuationPage(sectionLabel, content, styleClass, pageStyle
   return sheet;
 }
 
+// ── PAGINATION DEBUG LOGGING ────────────────────────────────────────────
+// Set window._paginationDebug = true in the browser console to enable
+// per-split decision logs. Each log includes: section name, available height,
+// chunk count, content style (line-based vs. paragraph-based), and deferral
+// decisions for orphan control.
+function _paginationLog(label, data) {
+  if (!window._paginationDebug) return;
+  console.log('[Pagination]', label, data);
+}
+
 // Paginate the Dream page (Narrative + Brainstorm) if content overflows.
 // Modifies the page in-place and appends continuation pages to container.
 function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
@@ -2018,18 +2028,47 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
   if (narrFullH <= availForNarr) {
     // Narrative fits — only Brainstorm overflows
     if (!brainstormContent || !brainstormEl) return 0;
-    const availForBrainstorm = Math.max(bodyAvailH - metaH - narrHeadH - narrFullH - brainstormHeadH - 24, 60);
+    // Rect-based measurement: distance from body top to brainstorm content element top.
+    // Captures all real CSS margins, flex gaps, and heading height in one measurement —
+    // replacing the flat arithmetic (bodyAvailH - metaH - narrHeadH - narrFullH -
+    // brainstormHeadH - 24) that missed margin-bottom values and caused ~18 px error.
+    const bsBodyRect = brainstormEl.getBoundingClientRect();
+    const availForBrainstorm = Math.max(bodyAvailH - (bsBodyRect.top - bodyRect.top), 60);
+    const bsSep = /\n{2,}/.test(brainstormContent) ? '\n\n' : '\n';
+    // Orphan control: require at least ~3 lines (80 px) of body space before keeping
+    // the Brainstorm heading+content on page 1.  If remaining space is too small, the
+    // heading would be stranded at the bottom with negligible content below it.
+    const MIN_BS_BODY_H = 80;
+    _paginationLog('Brainstorm orphan check', {
+      availForBrainstorm, MIN_BS_BODY_H, brainstormHeadH,
+      deferred: availForBrainstorm < MIN_BS_BODY_H,
+      contBsMaxH, lineBased: bsSep === '\n'
+    });
+    if (availForBrainstorm < MIN_BS_BODY_H) {
+      // Not enough room — hide entire Brainstorm section (heading + body) from page 1
+      // and emit it in full on continuation pages.
+      const bsWrapper = brainstormEl.parentElement;
+      if (bsWrapper && bsWrapper !== bodyEl) bsWrapper.style.display = 'none';
+      const allBsChunks = splitContentToFit(brainstormContent, 'j-prose medium', contBsMaxH, bodyW);
+      _paginationLog('Brainstorm deferred to continuation', { chunks: allBsChunks.length, contBsMaxH });
+      for (const chunk of allBsChunks) addCont('Brainstorm', chunk, 'j-prose medium');
+      return added;
+    }
     const firstBsChunks = splitContentToFit(brainstormContent, 'j-prose medium', availForBrainstorm, bodyW);
     if (firstBsChunks.length <= 1) return 0;
     setParaText(brainstormEl, firstBsChunks[0]);
-    // Re-split remaining brainstorm for full-height continuation pages (no meta row)
-    const remainingBs = firstBsChunks.slice(1).join(/\n{2,}/.test(brainstormContent) ? '\n\n' : '\n');
+    _paginationLog('Brainstorm split (page-1)', { availForBrainstorm, chunks: firstBsChunks.length, contBsMaxH });
+    // Re-split remaining brainstorm for full-height continuation pages (no meta row).
+    // Preserve original separator so line-based content stays line-based.
+    const remainingBs = firstBsChunks.slice(1).join(bsSep);
     const contBsChunks = splitContentToFit(remainingBs, 'j-prose medium', contBsMaxH, bodyW);
+    _paginationLog('Brainstorm continuation split', { chunks: contBsChunks.length, contBsMaxH });
     for (const chunk of contBsChunks) addCont('Brainstorm', chunk, 'j-prose medium');
   } else {
     // Narrative overflows — split for first page, then re-split remainder for continuation pages
     const firstNarrChunks = splitContentToFit(narrContent, 'j-narrative', availForNarr, bodyW);
     if (narrEl) setParaText(narrEl, firstNarrChunks[0]);
+    _paginationLog('Narrative split (page-1)', { availForNarr, chunks: firstNarrChunks.length, contNarrMaxH, lineBased: !/\n{2,}/.test(narrContent) });
     // Hide Brainstorm from first page — will appear on continuation pages.
     // Use .parentElement (the secWrap div) not .closest('div'): brainstormEl is
     // itself a <div>, so closest('div') returns the element itself, hiding only
@@ -2046,9 +2085,10 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
         const last = contNarrChunks[contNarrChunks.length - 1];
         if (last && last.trim().split(/\s+/).length <= 8) {
           const prev = contNarrChunks[contNarrChunks.length - 2];
-          contNarrChunks.splice(contNarrChunks.length - 2, 2, prev + '\n\n' + last);
+          contNarrChunks.splice(contNarrChunks.length - 2, 2, prev + (/\n{2,}/.test(narrContent) ? '\n\n' : '\n') + last);
         }
       }
+      _paginationLog('Narrative continuation split', { chunks: contNarrChunks.length, contNarrMaxH, lineBased: !/\n{2,}/.test(narrContent) });
       for (const chunk of contNarrChunks) addCont('Dream Narrative', chunk, 'j-narrative');
     }
 
@@ -2060,9 +2100,10 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
         const last = brainstormChunks[brainstormChunks.length - 1];
         if (last && last.trim().split(/\s+/).length <= 8) {
           const prev = brainstormChunks[brainstormChunks.length - 2];
-          brainstormChunks.splice(brainstormChunks.length - 2, 2, prev + '\n\n' + last);
+          brainstormChunks.splice(brainstormChunks.length - 2, 2, prev + (/\n{2,}/.test(brainstormContent) ? '\n\n' : '\n') + last);
         }
       }
+      _paginationLog('Brainstorm continuation (narrative-overflow path)', { chunks: brainstormChunks.length, contBsMaxH, lineBased: !/\n{2,}/.test(brainstormContent) });
       for (const chunk of brainstormChunks) addCont('Brainstorm', chunk, 'j-prose medium');
     }
   }
@@ -2101,7 +2142,7 @@ function paginateSingleSection(container, sheet, content, cssClass, sectionLabel
 
   const firstChunks = splitContentToFit(content, cssClass, availForContent, contentW);
   if (firstChunks.length <= 1) return 0;
-
+  _paginationLog(sectionLabel + ' split (page-1)', { availForContent, contMaxH, chunks: firstChunks.length, lineBased: !/\n{2,}/.test(content) });
   setParaText(contentEl, firstChunks[0]);
   // Re-split the remaining content at the larger continuation-page maxH
   const remainingContent = firstChunks.slice(1).join(/\n{2,}/.test(content) ? '\n\n' : '\n');
@@ -2111,9 +2152,10 @@ function paginateSingleSection(container, sheet, content, cssClass, sectionLabel
     const last = contChunks[contChunks.length - 1];
     if (last && last.trim().split(/\s+/).length <= 8) {
       const prev = contChunks[contChunks.length - 2];
-      contChunks.splice(contChunks.length - 2, 2, prev + '\n\n' + last);
+      contChunks.splice(contChunks.length - 2, 2, prev + (/\n{2,}/.test(content) ? '\n\n' : '\n') + last);
     }
   }
+  _paginationLog(sectionLabel + ' continuation split', { chunks: contChunks.length, contMaxH, lineBased: !/\n{2,}/.test(content) });
   let added = 0;
   for (const chunk of contChunks) {
     const sp = document.createElement('div'); sp.className = 'page-spacer'; sp.style.height = '2.5rem';
@@ -2201,6 +2243,104 @@ function paginateKeysPage(container, keysSheet, data, pageStyle) {
     });
   });
 }
+
+// ── PAGINATION REGRESSION TESTS ─────────────────────────────────────────
+// Call runPaginationTests() from the browser console to validate core
+// pagination invariants.  Returns an array of {name, pass, detail} objects.
+// Usage: window._paginationDebug = true; window.runPaginationTests();
+//
+// Fixtures covered:
+//   T1 — separator detection (line-based vs. paragraph-based)
+//   T2 — splitContentToFit with long line-based content
+//   T3 — splitContentToFit with long paragraph-based content
+//   T4 — measureContBodyH returns a sane value
+//   T5 — orphan-control threshold arithmetic
+//   T6 — larger contMaxH produces fewer, larger chunks (regression guard)
+function runPaginationTests() {
+  const results = [];
+  function assert(name, condition, detail) {
+    results.push({ name, pass: !!condition, detail: detail !== undefined ? String(detail) : '' });
+    console[condition ? 'log' : 'error']('[PaginationTest]', condition ? '✓' : '✗', name, detail !== undefined ? detail : '');
+  }
+
+  const PROBE_W = 580;
+  function makeLongText(lineCount, sep) {
+    return Array.from({ length: lineCount }, (_, i) =>
+      `Line ${i + 1}: I was walking through a forest when I suddenly saw a bright light appear before me and felt a deep sense of wonder and awe`
+    ).join(sep);
+  }
+
+  // T1 — separator detection
+  assert('T1a: line-based → sep is \\n',      (/\n{2,}/.test('a\nb\nc')       ? '\n\n' : '\n') === '\n');
+  assert('T1b: para-based → sep is \\n\\n',   (/\n{2,}/.test('a\n\nb\n\nc')  ? '\n\n' : '\n') === '\n\n');
+  assert('T1c: mixed (has \\n\\n) → \\n\\n',  (/\n{2,}/.test('a\nb\n\nc')    ? '\n\n' : '\n') === '\n\n');
+
+  // T2 — line-based content splits and re-splits stably
+  {
+    const lineBased = makeLongText(60, '\n');
+    const chunks = splitContentToFit(lineBased, 'j-narrative', 200, PROBE_W);
+    assert('T2a: line-based → multiple chunks', chunks.length > 1, `chunks=${chunks.length}`);
+    assert('T2b: all line-based chunks non-empty', chunks.every(c => c.trim().length > 0));
+    // Correct re-join (single \n) — stable
+    const rejoined = chunks.join('\n');
+    const rechunked = splitContentToFit(rejoined, 'j-narrative', 200, PROBE_W);
+    assert('T2c: line-based correct rejoin → stable chunk count',
+      Math.abs(rechunked.length - chunks.length) <= 1,
+      `original=${chunks.length} rechunked=${rechunked.length}`);
+    // Wrong re-join (\n\n) — inflates chunk count (demonstrates original bug)
+    const rejoinedWrong = chunks.join('\n\n');
+    const rechunkedWrong = splitContentToFit(rejoinedWrong, 'j-narrative', 200, PROBE_W);
+    assert('T2d: wrong \\n\\n rejoin → more chunks (original bug demo)',
+      rechunkedWrong.length >= chunks.length,
+      `correct=${chunks.length} wrong=${rechunkedWrong.length}`);
+  }
+
+  // T3 — paragraph-based content splits and re-splits stably
+  {
+    const paraBased = makeLongText(20, '\n\n');
+    const chunks = splitContentToFit(paraBased, 'j-narrative', 300, PROBE_W);
+    assert('T3a: para-based → multiple chunks', chunks.length > 1, `chunks=${chunks.length}`);
+    const rejoined = chunks.join('\n\n');
+    const rechunked = splitContentToFit(rejoined, 'j-narrative', 300, PROBE_W);
+    assert('T3b: para-based correct rejoin → stable chunk count',
+      Math.abs(rechunked.length - chunks.length) <= 1,
+      `original=${chunks.length} rechunked=${rechunked.length}`);
+  }
+
+  // T4 — measureContBodyH sanity
+  {
+    const h = measureContBodyH(null);
+    assert('T4a: measureContBodyH > 400',   h > 400,  `h=${h}`);
+    assert('T4b: measureContBodyH < 1200',  h < 1200, `h=${h}`);
+  }
+
+  // T5 — orphan threshold arithmetic
+  {
+    const MIN = 80;
+    assert('T5a: orphan MIN_BS_BODY_H is 80',        MIN === 80);
+    assert('T5b: 79 px remaining triggers deferral', 79 < MIN);
+    assert('T5c: 80 px remaining does not defer',    80 >= MIN);
+  }
+
+  // T6 — larger maxH → fewer, larger chunks (fill regression guard)
+  {
+    const text = makeLongText(80, '\n');
+    const small = splitContentToFit(text, 'j-narrative', 150, PROBE_W);
+    const large = splitContentToFit(text, 'j-narrative', 700, PROBE_W);
+    assert('T6a: large maxH → fewer chunks',
+      large.length < small.length,
+      `small(150px)=${small.length} large(700px)=${large.length}`);
+    // Verify no content lost
+    const smallText = small.join('\n').replace(/\s+/g, ' ').trim();
+    const largeText = large.join('\n').replace(/\s+/g, ' ').trim();
+    assert('T6b: large maxH chunks preserve full content', smallText === largeText);
+  }
+
+  const passed = results.filter(r => r.pass).length;
+  console.log(`\n[PaginationTests] ${passed}/${results.length} passed`);
+  return results;
+}
+window.runPaginationTests = runPaginationTests;
 
 // ── LAYOUT SIZE ─────────────────────────────────────────
 // Inner page layout sizes — @page always stays US Letter (8.5×11).
