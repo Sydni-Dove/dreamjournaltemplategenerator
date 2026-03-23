@@ -2023,7 +2023,7 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
     if (firstBsChunks.length <= 1) return 0;
     setParaText(brainstormEl, firstBsChunks[0]);
     // Re-split remaining brainstorm for full-height continuation pages (no meta row)
-    const remainingBs = firstBsChunks.slice(1).join('\n\n');
+    const remainingBs = firstBsChunks.slice(1).join(/\n{2,}/.test(brainstormContent) ? '\n\n' : '\n');
     const contBsChunks = splitContentToFit(remainingBs, 'j-prose medium', contBsMaxH, bodyW);
     for (const chunk of contBsChunks) addCont('Brainstorm', chunk, 'j-prose medium');
   } else {
@@ -2039,7 +2039,7 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
 
     if (firstNarrChunks.length > 1) {
       // Re-split remaining narrative with larger continuation-page maxH
-      const remainingNarr = firstNarrChunks.slice(1).join('\n\n');
+      const remainingNarr = firstNarrChunks.slice(1).join(/\n{2,}/.test(narrContent) ? '\n\n' : '\n');
       const contNarrChunks = splitContentToFit(remainingNarr, 'j-narrative', contNarrMaxH, bodyW);
       // Merge a tiny trailing chunk (≤8 words) into the previous chunk to prevent near-blank pages
       if (contNarrChunks.length >= 2) {
@@ -2104,7 +2104,7 @@ function paginateSingleSection(container, sheet, content, cssClass, sectionLabel
 
   setParaText(contentEl, firstChunks[0]);
   // Re-split the remaining content at the larger continuation-page maxH
-  const remainingContent = firstChunks.slice(1).join('\n\n');
+  const remainingContent = firstChunks.slice(1).join(/\n{2,}/.test(content) ? '\n\n' : '\n');
   const contChunks = splitContentToFit(remainingContent, cssClass, contMaxH, contentW);
   // Merge a tiny trailing chunk (≤8 words) into the previous chunk to prevent near-blank pages
   if (contChunks.length >= 2) {
@@ -2160,7 +2160,7 @@ function paginateKeysPage(container, keysSheet, data, pageStyle) {
     setParaText(bodyDiv, chunks[0]);
 
     // Collect the overflow
-    const remaining = chunks.slice(1).join('\n\n');
+    const remaining = chunks.slice(1).join(/\n{2,}/.test(panelData[i].content) ? '\n\n' : '\n');
     if (remaining.trim()) overflowChunks.push({ label: panelData[i].label, remaining });
   });
 
@@ -2188,11 +2188,11 @@ function paginateKeysPage(container, keysSheet, data, pageStyle) {
     if (scrH <= avH + 8) return;
     // Overflow on the continuation page — split further
     const contW  = contBodyEl ? (contBodyEl.offsetWidth || 700) : 700;
-    const contMaxH = Math.max(avH - 40, 80);
+    const contMaxH = measureContBodyH(pageStyle) || Math.max(avH - 40, 80);
     const moreChunks = splitContentToFit(contContent, 'j-prose medium', contMaxH, contW);
     if (moreChunks.length <= 1) return;
     setParaText(contBodyEl, moreChunks[0]);
-    const extra = moreChunks.slice(1).join('\n\n');
+    const extra = moreChunks.slice(1).join(/\n{2,}/.test(contContent) ? '\n\n' : '\n');
     const extraChunks = splitContentToFit(extra, 'j-prose medium', contMaxH, contW);
     extraChunks.forEach(chunk => {
       const sp2 = document.createElement('div'); sp2.className = 'page-spacer'; sp2.style.height = '2.5rem';
