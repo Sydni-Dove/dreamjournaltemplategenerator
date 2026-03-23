@@ -1252,10 +1252,12 @@ function extractDreamData(raw) {
   }
 
   // ── MAIN PARSE LOOP ──────────────────────────────────────
-  // Processes ALL lines (including blanks) to preserve paragraph structure.
-  // Blank lines within a section become paragraph breaks (\n\n).
+  // Opening rule: curField starts as 'dreamNarrative'.
+  // Any content before the first recognized section heading is narrative by default.
+  // A recognized heading switches the active field; everything after belongs to it
+  // until the next recognized heading. Repeated headings append to the same field.
   const buf      = {};
-  let curField   = null;
+  let curField   = 'dreamNarrative';   // unlabeled content defaults to narrative
   let blanksSeen = 0;
 
   // Detect "Plain:" clean version block BEFORE main loop
@@ -1272,7 +1274,7 @@ function extractDreamData(raw) {
     const line = allLines[li];
 
     if (!line) {
-      // Blank line — mark a paragraph break in the current field
+      // Blank line — paragraph break in the active field
       blanksSeen++;
       if (curField && buf[curField] && !buf[curField].endsWith('\n\n')) {
         buf[curField] += '\n';
@@ -1281,52 +1283,40 @@ function extractDreamData(raw) {
     }
     blanksSeen = 0;
 
-    // Skip date headings — entry boundaries, not content
-    if (isDateHeading(line)) { curField = null; continue; }
+    // Date headings mark entry boundaries — reset to narrative default, skip
+    if (isDateHeading(line)) { curField = 'dreamNarrative'; continue; }
 
-    // Standalone heading
+    // Standalone heading — switch active field
+    // If re-entering a section that already has content, ensure a paragraph break
+    // so repeated Dream/Brainstorm blocks don't run together.
     const headingField = detectHeading(line);
     if (headingField) {
+      if (buf[headingField] && !buf[headingField].endsWith('\n')) buf[headingField] += '\n';
       curField = headingField;
       continue;
     }
 
-    // Inline label
+    // Inline label — switch field and capture same-line content
     const inlineMatch = detectInlineLabel(line);
     if (inlineMatch) {
-      curField = inlineMatch.field;
-      if (inlineMatch.content && curField) {
+      const targetField = inlineMatch.field;
+      if (buf[targetField] && !buf[targetField].endsWith('\n')) buf[targetField] += '\n';
+      curField = targetField;
+      if (inlineMatch.content) {
         const sep = buf[curField] ? '\n' : '';
         buf[curField] = (buf[curField] || '') + sep + inlineMatch.content;
       }
       continue;
     }
 
-    // Regular content — append with separator that respects paragraph breaks
-    if (curField) {
-      const sep = buf[curField] ? '\n' : '';
-      buf[curField] = (buf[curField] || '') + sep + line;
-    } else {
-      // No heading yet — collect as unlabelled (likely opening narrative).
-      // Skip the first occurrence of a line already claimed as dreamTitle by Strategy 6
-      // so the title text doesn't also appear at the start of dreamNarrative.
-      if (_titleSourceLine && line === _titleSourceLine) { _titleSourceLine = null; continue; }
-      const sep = buf['_unlabelled'] ? '\n' : '';
-      buf['_unlabelled'] = (buf['_unlabelled'] || '') + sep + line;
-    }
+    // Regular content — skip the line claimed as dreamTitle so it doesn't
+    // appear at the start of dreamNarrative, then append to the active field.
+    if (_titleSourceLine && line === _titleSourceLine) { _titleSourceLine = null; continue; }
+    const sep = buf[curField] ? '\n' : '';
+    buf[curField] = (buf[curField] || '') + sep + line;
   }
 
-  // Promote _unlabelled content: prepend to dreamNarrative if it exists, otherwise become it
-  if (buf['_unlabelled'] && buf['_unlabelled'].trim()) {
-    if (buf['dreamNarrative']) {
-      buf['dreamNarrative'] = buf['_unlabelled'] + '\n\n' + buf['dreamNarrative'];
-    } else {
-      buf['dreamNarrative'] = buf['_unlabelled'];
-    }
-  }
-  delete buf['_unlabelled'];
-
-  // Promote "Plain:" clean version to dreamNarrative
+  // Promote "Plain:" clean version to dreamNarrative (overrides accumulated content)
   if (_plainNarrative) buf['dreamNarrative'] = _plainNarrative;
 
   // ── APPLY BUFFERED CONTENT ───────────────────────────────
