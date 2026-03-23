@@ -1059,6 +1059,20 @@ function extractDreamData(raw) {
     }
   }
 
+  // Strategy 5.5: "Dream - Title Text" or "Vision - Title Text"
+  // Scan the first few non-date lines — the title line often follows a date heading.
+  // This is an explicit title format: bare Dream/Vision + dash + title text (no colon).
+  // "Dream: prose" and "Dream Narrative - prose" are handled separately as narrative labels.
+  if (!result.dreamTitle) {
+    let scanned = 0;
+    for (const line of nonEmptyLines) {
+      if (isDateHeading(line)) continue;
+      if (++scanned > 3) break;
+      const m = line.match(/^(?:dream|vision)\s+[-–—]\s+(.+)$/i);
+      if (m) { result.dreamTitle = m[1].trim(); _titleSourceLine = line; break; }
+    }
+  }
+
   // Strategy 6: first non-empty line is title if it's short, plain, no date, no section heading.
   // Excluded: lines that look like narrative sentences (first-person / common sentence openers)
   // and lines that look like section keyword headings.
@@ -1084,32 +1098,56 @@ function extractDreamData(raw) {
   function inlineRe(label, extra) { return new RegExp('^' + label + '\\s*' + SEP + '\\s*(.+)$' + (extra||''), 'i'); }
 
   const HEADING_RULES = [
+    // ── dreamNarrative ──────────────────────────────────────
+    // Dream:  Vision:  Dream Narrative  Vision Narrative:  Vision Scene:
     { re: /^(?:dream|vision)(?:\s+(?:narrative|scene))?:?$/i,                                  field: 'dreamNarrative'      },
+    { re: /^plain:?$/i,                                                                       field: 'dreamNarrative'      },
+    // ── dreamTitle ──────────────────────────────────────────
     { re: /^dream\s+title:?$/i,                                                               field: 'dreamTitle'          },
+    // ── dreamType / sumDream ────────────────────────────────
     { re: /^dream\s+type:?$/i,                                                                field: 'dreamType'           },
     { re: /^dream\s+summary:?$/i,                                                             field: 'sumDream'            },
+    // ── dreamBrainstorm ─────────────────────────────────────
+    // Brainstorm  Brainstorm:  Brainstorm/Notes:  Notes:
     { re: /^brainstorm(?:ing)?(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+\d.*)?:?$/i,                    field: 'dreamBrainstorm'     },
-    { re: /^plain:?$/i,                                                                       field: 'dreamNarrative'      },
+    { re: /^notes?:?$/i,                                                                      field: 'dreamBrainstorm'     },
+    // ── dreamSymbols ────────────────────────────────────────
+    // Key Symbols:  Dream Symbols:  Symbols:
     { re: /^key\s+(?:symbols?|objects?):?$/i,                                                 field: 'dreamSymbols'        },
-    { re: /^key\s+actions?:?$/i,                                                              field: 'dreamActions'        },
+    { re: /^dream\s+symbols?:?$/i,                                                            field: 'dreamSymbols'        },
     { re: /^(?:symbols?|objects?)(?:\/summary)?:?$/i,                                         field: 'dreamSymbols'        },
+    // ── dreamActions ────────────────────────────────────────
+    { re: /^key\s+actions?:?$/i,                                                              field: 'dreamActions'        },
     { re: /^actions?:?$/i,                                                                    field: 'dreamActions'        },
+    // ── dreamEmotions ───────────────────────────────────────
+    // Emotions:  Feelings:  How I Felt:
     { re: /^emotions?:?$/i,                                                                   field: 'dreamEmotions'       },
     { re: /^feelings?:?$/i,                                                                   field: 'dreamEmotions'       },
+    { re: /^how\s+i\s+felt:?$/i,                                                              field: 'dreamEmotions'       },
+    // ── dreamScriptures ─────────────────────────────────────
+    // Scripture:  Scriptures:  Bible Reference:
     { re: /^scriptures?:?$/i,                                                                 field: 'dreamScriptures'     },
     { re: /^(?:scripture\s+)?verse:?$/i,                                                      field: 'dreamScriptures'     },
     { re: /^scripture\s+references?:?$/i,                                                     field: 'dreamScriptures'     },
+    { re: /^bible\s+references?:?$/i,                                                         field: 'dreamScriptures'     },
+    // ── dreamInterpretation ─────────────────────────────────
+    // Dream Interpretation:  Interpretation:  Long Interpretation:  Meaning:
+    { re: /^dream\s+interpretation:?$/i,                                                      field: 'dreamInterpretation' },
+    { re: /^meaning:?$/i,                                                                     field: 'dreamInterpretation' },
     { re: /^(?:(?:possible\s+meaning\s*[\/\\]?\s*)|(?:long\s+))?interpretation(?:\s*\([^)]*\))?(?:\s+summary)?:?$/i, field: null },
     { re: /^possible\s+meaning(?:\s*\([^)]*\))?(?:\s*[\/\\]\s*interpretation(?:\s*\([^)]*\))?)?:?$/i, field: 'dreamInterpretation' },
+    // ── dreamApplication ────────────────────────────────────
+    // Application:  Application/How I Will Respond:  Reflect:  Reflection and Apply:  How I Will Respond:
     { re: /^application(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+summary)?:?$/i,                        field: null                  },
     { re: /^reflect(?:ion)?(?:\s+and\s+\w[\w\s]*)?:?$/i,                                     field: 'dreamApplication'    },
+    { re: /^how\s+i\s+will\s+respond:?$/i,                                                    field: 'dreamApplication'    },
+    // ── misc fields ─────────────────────────────────────────
     { re: /^summary:?$/i,                                                                     field: 'sumDream'            },
     { re: /^(?:dreamer'?s?\s+)?involvement:?$/i,                                              field: 'dreamerInvolvement'  },
     { re: /^context(?:\s*[\/\\]\s*source)?:?$/i,                                              field: 'dreamContextSource'  },
     { re: /^source:?$/i,                                                                      field: 'dreamContextSource'  },
     { re: /^theme:?$/i,                                                                       field: 'dreamTheme'          },
     { re: /^additional\s+notes?:?$/i,                                                         field: 'dreamAdditionalNotes'},
-    { re: /^notes?:?$/i,                                                                      field: 'dreamAdditionalNotes'},
     { re: /^time:?$/i,                                                                        field: 'dreamTime'           },
     { re: /^d{1,2}ate:?$/i,                                                                   field: 'dreamDate'           },
   ];
@@ -1117,42 +1155,64 @@ function extractDreamData(raw) {
   // Also match inline labeled format: "Brainstorm: some content" / "Actions — ran, hid"
   // These use a separator (: – — -) and have content on the same line.
   const INLINE_LABEL_RULES = [
+    // ── dreamNarrative ──────────────────────────────────────
     { re: /^plain\s*[-–—:\s]+\s*(.+)$/i,                                                    field: 'dreamNarrative'      },
-    // Require colon for bare "Dream:" / "Vision:" inline labels.
-    // Dash separator is reserved for "Dream Narrative — prose" (keyword required).
-    // This prevents "Dream - The Glass Door" title lines from being misrouted to dreamNarrative.
+    // "Dream Narrative — prose" / "Vision Scene — prose" — keyword required.
+    // Bare "Dream - Title" is intentionally NOT routed here (handled by title strategies).
     { re: /^(?:dream|vision)\s+(?:narrative|scene)\s*[-–—:]+\s*(.+)$/i,                    field: 'dreamNarrative'      },
+    // "Dream: prose" / "Vision: prose" — colon required to distinguish from "Dream - Title"
     { re: /^(?:dream|vision)\s*:\s*(.+)$/i,                                                 field: 'dreamNarrative'      },
+    // ── dreamTitle ──────────────────────────────────────────
     { re: inlineRe('dream\\s+title'),                                                        field: 'dreamTitle'          },
-    { re: inlineRe('dream\\s+summary'),                                                      field: 'sumDream'            },
+    { re: inlineRe('title'),                                                                 field: 'dreamTitle'          },
+    // ── dreamType / sumDream ────────────────────────────────
     { re: inlineRe('dream\\s+type'),                                                         field: 'dreamType'           },
+    { re: inlineRe('dream\\s+summary'),                                                      field: 'sumDream'            },
+    // ── dreamBrainstorm ─────────────────────────────────────
+    // Brainstorm: content  Brainstorm/Notes: content  Notes: content
     { re: /^brainstorm(?:ing)?(?:\s*[\/\\]\s*\w[\w\s]*)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i,    field: 'dreamBrainstorm'     },
+    { re: inlineRe('notes?'),                                                                field: 'dreamBrainstorm'     },
+    // ── dreamSymbols ────────────────────────────────────────
+    // Key Symbols: …  Dream Symbols: …  Symbols: …
     { re: inlineRe('key\\s+symbols?'),                                                       field: 'dreamSymbols'        },
-    { re: inlineRe('key\\s+actions?'),                                                       field: 'dreamActions'        },
+    { re: inlineRe('dream\\s+symbols?'),                                                     field: 'dreamSymbols'        },
     { re: inlineRe('symbols?'),                                                              field: 'dreamSymbols'        },
+    // ── dreamActions ────────────────────────────────────────
+    { re: inlineRe('key\\s+actions?'),                                                       field: 'dreamActions'        },
     { re: inlineRe('actions?'),                                                              field: 'dreamActions'        },
+    // ── dreamEmotions ───────────────────────────────────────
+    // Emotions: …  Feelings: …  How I Felt: …
     { re: inlineRe('emotions?'),                                                             field: 'dreamEmotions'       },
     { re: inlineRe('feelings?'),                                                             field: 'dreamEmotions'       },
+    { re: inlineRe('how\\s+i\\s+felt'),                                                      field: 'dreamEmotions'       },
+    // ── dreamScriptures ─────────────────────────────────────
+    // Scripture: …  Scriptures: …  Bible Reference: …
     { re: inlineRe('scriptures?'),                                                           field: 'dreamScriptures'     },
     { re: inlineRe('(?:scripture\\s+)?verse'),                                               field: 'dreamScriptures'     },
     { re: inlineRe('scripture\\s+references?'),                                              field: 'dreamScriptures'     },
+    { re: inlineRe('bible\\s+references?'),                                                  field: 'dreamScriptures'     },
+    // ── dreamInterpretation ─────────────────────────────────
+    // Dream Interpretation: …  Interpretation: …  Long Interpretation: …  Meaning: …
+    { re: inlineRe('dream\\s+interpretation'),                                               field: 'dreamInterpretation' },
+    { re: inlineRe('meaning'),                                                               field: 'dreamInterpretation' },
     { re: inlineRe('(?:possible\\s+|long\\s+)?interpretation\\s+summary'),                  field: 'sumInterpretation'   },
     { re: /^(?:(?:possible\s+meaning\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?)\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
     { re: /^possible\s+meaning(?:\s*\([^)]*\))?(?:\s*[\/\\]\s*interpretation(?:\s*\([^)]*\))?)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
+    // ── dreamApplication ────────────────────────────────────
+    // Application: …  Application/How I Will Respond: …  Reflect: …  Reflection and Apply: …  How I Will Respond: …
     { re: inlineRe('application\\s+summary'),                                                field: 'sumApplication'      },
     { re: /^application(?:\s*[\/\\]\s*\w[\w\s]*)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i,          field: 'dreamApplication'    },
     { re: /^reflect(?:ion)?(?:\s+and\s+\w[\w\s]*)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i,         field: 'dreamApplication'    },
+    { re: /^how\s+i\s+will\s+respond\s*[-–—:]*\s*(.+)$/i,                                   field: 'dreamApplication'    },
+    // ── misc fields ─────────────────────────────────────────
     { re: inlineRe('(?:dream\\s+)?summary'),                                                 field: 'sumDream'            },
     { re: inlineRe('(?:dreamer\'?s?\\s+)?involvement'),                                      field: 'dreamerInvolvement'  },
     { re: inlineRe('context(?:\\s*[\\/\\\\]\\s*source)?'),                                   field: 'dreamContextSource'  },
     { re: inlineRe('source'),                                                                field: 'dreamContextSource'  },
     { re: inlineRe('theme'),                                                                 field: 'dreamTheme'          },
     { re: inlineRe('additional\\s+notes?'),                                                  field: 'dreamAdditionalNotes'},
-    { re: inlineRe('notes?'),                                                                field: 'dreamAdditionalNotes'},
     { re: /^time\s*[-–—:\s]+(.+)$/i,                                                        field: 'dreamTime'           },
     { re: /^d{1,2}ate\s*[-–—:\s]+(.+)$/i,                                                   field: 'dreamDate'           },
-    { re: inlineRe('title'),                                                                 field: 'dreamTitle'          },
-    { re: /^how\s+i\s+will\s+respond\s*[-–—:]*\s*(.*)$/i,                                   field: 'dreamApplication'    },
   ];
 
   // Helper: resolve "interpretation summary" vs plain "interpretation"
