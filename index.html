@@ -1252,13 +1252,16 @@ function extractDreamData(raw) {
   }
 
   // ── MAIN PARSE LOOP ──────────────────────────────────────
-  // Opening rule: curField starts as 'dreamNarrative'.
-  // Any content before the first recognized section heading is narrative by default.
-  // A recognized heading switches the active field; everything after belongs to it
-  // until the next recognized heading. Repeated headings append to the same field.
-  const buf      = {};
-  let curField   = 'dreamNarrative';   // unlabeled content defaults to narrative
-  let blanksSeen = 0;
+  // Routing model:
+  //   • Before any section heading fires → content goes to dreamNarrative (opening default)
+  //   • After a heading fires → content goes to curField and STAYS there
+  //   • Unlabeled continuation lines after Brainstorm/Notes stay in dreamBrainstorm
+  //   • Only an explicit Dream / Dream Narrative heading switches back to dreamNarrative
+  //   • Date lines reset the active field only if no section heading has been seen yet
+  const buf          = {};
+  let curField       = 'dreamNarrative';   // default until a section heading fires
+  let _headingSeen   = false;              // true once any section heading has been detected
+  let blanksSeen     = 0;
 
   // Detect "Plain:" clean version block BEFORE main loop
   let _plainNarrative = null;
@@ -1283,25 +1286,34 @@ function extractDreamData(raw) {
     }
     blanksSeen = 0;
 
-    // Date headings mark entry boundaries — reset to narrative default, skip
-    if (isDateHeading(line)) { curField = 'dreamNarrative'; continue; }
+    // Date headings mark entry boundaries.
+    // Only reset curField before any section heading has been seen — once a section
+    // is active, a standalone date inside that section is treated as plain content,
+    // not a reset signal. This prevents a date reference in brainstorm text from
+    // accidentally switching the active field back to dreamNarrative.
+    if (isDateHeading(line)) {
+      if (!_headingSeen) curField = 'dreamNarrative';
+      continue;
+    }
 
-    // Standalone heading — switch active field
+    // Standalone heading — switch active field.
     // If re-entering a section that already has content, ensure a paragraph break
     // so repeated Dream/Brainstorm blocks don't run together.
     const headingField = detectHeading(line);
     if (headingField) {
       if (buf[headingField] && !buf[headingField].endsWith('\n')) buf[headingField] += '\n';
-      curField = headingField;
+      curField       = headingField;
+      _headingSeen   = true;
       continue;
     }
 
-    // Inline label — switch field and capture same-line content
+    // Inline label — switch field and capture same-line content.
     const inlineMatch = detectInlineLabel(line);
     if (inlineMatch) {
       const targetField = inlineMatch.field;
       if (buf[targetField] && !buf[targetField].endsWith('\n')) buf[targetField] += '\n';
-      curField = targetField;
+      curField       = targetField;
+      _headingSeen   = true;
       if (inlineMatch.content) {
         const sep = buf[curField] ? '\n' : '';
         buf[curField] = (buf[curField] || '') + sep + inlineMatch.content;
