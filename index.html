@@ -1959,7 +1959,17 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
   const contNarrMaxH     = Math.max(contBodyH - narrHeadH - 24, 60);
   const contBsMaxH       = Math.max(contBodyH - brainstormHeadH - 24, 60);
 
-  if (narrFullH <= bodyAvailH - metaH - narrHeadH - 24) {
+  // Measure the actual pixel distance from the body's top edge to the narrative
+  // content element's top edge.  This captures meta-row height + meta margin-bottom
+  // + flex gap + sec-head height + sec-head margin-bottom in one real measurement,
+  // replacing the flat -24px arithmetic that under-counted real overhead and caused
+  // page-1 narrative clipping.  Falls back to flat formula only if narrEl is absent.
+  const bodyRect      = bodyEl.getBoundingClientRect();
+  const narrRect      = narrEl ? narrEl.getBoundingClientRect() : null;
+  const narrTopOffset = narrRect ? narrRect.top - bodyRect.top : metaH + narrHeadH + 24;
+  const availForNarr  = Math.max(bodyAvailH - narrTopOffset, 60);
+
+  if (narrFullH <= availForNarr) {
     // Narrative fits — only Brainstorm overflows
     if (!brainstormContent || !brainstormEl) return 0;
     const availForBrainstorm = Math.max(bodyAvailH - metaH - narrHeadH - narrFullH - brainstormHeadH - 24, 60);
@@ -1972,7 +1982,6 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
     for (const chunk of contBsChunks) addCont('Brainstorm', chunk, 'j-prose medium');
   } else {
     // Narrative overflows — split for first page, then re-split remainder for continuation pages
-    const availForNarr = Math.max(bodyAvailH - metaH - narrHeadH - 24, 60);
     const firstNarrChunks = splitContentToFit(narrContent, 'j-narrative', availForNarr, bodyW);
     if (narrEl) setParaText(narrEl, firstNarrChunks[0]);
     // Hide Brainstorm from first page — will appear on continuation pages.
