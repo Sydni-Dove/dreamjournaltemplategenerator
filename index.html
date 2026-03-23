@@ -888,6 +888,12 @@ function parseEntries(rawText) {
     else if (/^Dream\s+\d+\s*$/i.test(line.trim()) && current !== null && current.text.trim().length > 20) {
       entries.push(current); current = { text: line + '\n' };
     }
+    // Triple-dash separator (--- or longer) — same boundary as splitTextEntries, but
+    // handled here so file-upload paths also split correctly (splitTextEntries is only
+    // called in the paste-only path). Only split if the current entry has real content.
+    else if (/^-{3,}$/.test(line.trim()) && current !== null && current.text.trim().length > 20) {
+      entries.push(current); current = { text: '' };
+    }
     else if (current !== null) { current.text += line + '\n'; }
     else { current = { text: line + '\n' }; }
   }
@@ -1100,7 +1106,9 @@ function extractDreamData(raw) {
   const HEADING_RULES = [
     // ── dreamNarrative ──────────────────────────────────────
     // Dream:  Vision:  Dream Narrative  Vision Narrative:  Vision Scene:
+    // Scene:  Scene Change:  Scene 1:  Scene 2:  Scene 3:  (numbered or change variants)
     { re: /^(?:dream|vision)(?:\s+(?:narrative|scene))?:?$/i,                                  field: 'dreamNarrative'      },
+    { re: /^scene(?:\s+(?:change|\d+))?:?$/i,                                                 field: 'dreamNarrative'      },
     { re: /^plain:?$/i,                                                                       field: 'dreamNarrative'      },
     // ── dreamTitle ──────────────────────────────────────────
     { re: /^dream\s+title:?$/i,                                                               field: 'dreamTitle'          },
