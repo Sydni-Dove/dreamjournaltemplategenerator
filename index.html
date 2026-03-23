@@ -1425,16 +1425,10 @@ function extractDreamData(raw) {
   }
 
   // ── SAFETY: rescue narrative prose misrouted to dreamBrainstorm ─────────
-  // Fires only when dreamNarrative is still empty but dreamBrainstorm has
-  // content.  This happens when an entry opens with a "Brainstorm" or "Notes"
-  // heading before any narrative, causing all story prose to route there.
-  // Scans dreamBrainstorm line-by-line: accumulates narrative-like lines into
-  // dreamNarrative and stops at the first line that looks like genuine
-  // brainstorm content (bullet, analytical phrase, or bare keyword fragment).
-  // Only rescues when the narrative portion is ≥15 words and contains at least
-  // one first-person / scene narrative marker.
+  // When an entry opens with "Brainstorm"/"Notes" before any narrative, the
+  // parse loop routes all prose there and leaves dreamNarrative empty.
   if (!result.dreamNarrative && result.dreamBrainstorm) {
-    const bLines   = result.dreamBrainstorm.split('\n');
+    const bLines    = result.dreamBrainstorm.split('\n');
     const narrLines = [];
     const bsLines   = [];
     let splitFound  = false;
@@ -1442,10 +1436,10 @@ function extractDreamData(raw) {
       if (splitFound) { bsLines.push(line); continue; }
       const t = line.trim();
       if (!t) { narrLines.push(line); continue; }
-      // Brainstorm signals: bullet point, analytical commentary, bare keyword (≤3 words, no verb pronoun, no sentence-end punct)
+      const words      = t.split(/\s+/);
       const isBullet     = /^\s*[-•*]\s/.test(t);
       const isAnalytical = /\b(this (?:means?|could|might|represent)|represents?|symbolizes?|could mean|I think this|I believe this)\b/i.test(t);
-      const isKeyword    = t.split(/\s+/).length <= 3 && !/[.!?,;]$/.test(t) && !/\b(I |we |she |he |they |the |it |there |then )/i.test(t);
+      const isKeyword    = words.length <= 3 && !/[.!?,;]$/.test(t) && !/\b(I |we |she |he |they |the |it |there |then )/i.test(t);
       if (isBullet || isAnalytical || isKeyword) { splitFound = true; bsLines.push(line); }
       else narrLines.push(line);
     }
@@ -1716,7 +1710,7 @@ function buildDreamPage(data) {
   body.appendChild(metaRow(data));
   const narr = document.createElement('div'); narr.className = 'j-narrative'; narr.style.flex = '2 0 auto'; setParaText(narr, autoParagraph(data.dreamNarrative||'', 5));
   body.appendChild(secWrap('Dream Narrative', narr));
-  body.appendChild(secWrap('Brainstorm', prosEl(data.dreamBrainstorm||'', 'medium')));
+  if (data.dreamBrainstorm && data.dreamBrainstorm.trim()) body.appendChild(secWrap('Brainstorm', prosEl(data.dreamBrainstorm, 'medium')));
   return page;
 }
 function buildKeysPage(data) {
@@ -1914,9 +1908,21 @@ function measureContBodyH(pageStyle) {
   probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;pointer-events:none;';
   document.body.appendChild(probe);
   const bodyEl = probe.querySelector('.journal-body');
-  const h = bodyEl ? bodyEl.offsetHeight : 0;
+  const contEl = probe.querySelector('[data-cont]');
+  let result = 0;
+  if (bodyEl && contEl) {
+    // Measure available height for content using rect, same as page-1 narrative fix.
+    // This captures sec-head height + its margin-bottom + flex gap in one shot,
+    // avoiding the flat -24 fudge that caused continuation underfill.
+    const bodyRect = bodyEl.getBoundingClientRect();
+    const contRect = contEl.getBoundingClientRect();
+    const avail    = bodyEl.offsetHeight - (contRect.top - bodyRect.top);
+    result = avail > 60 ? avail : 0;
+  } else if (bodyEl) {
+    const h = bodyEl.offsetHeight;
+    result = h > 60 ? h : 0;
+  }
   document.body.removeChild(probe);
-  const result = h > 60 ? h : 0; // 0 = fall back to caller's bodyAvailH
   _contBodyHCache[key] = result;
   return result;
 }
@@ -1993,9 +1999,11 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
   // with the larger continuation maxH so those pages fill up properly.
   // measureContBodyH() measures the actual journal-body height on a continuation page
   // (which is taller than bodyAvailH because the cont-page header is smaller).
-  const contBodyH        = measureContBodyH(pageStyle) || bodyAvailH;
-  const contNarrMaxH     = Math.max(contBodyH - narrHeadH - 24, 60);
-  const contBsMaxH       = Math.max(contBodyH - brainstormHeadH - 24, 60);
+  // measureContBodyH now returns available content height (body minus sec-head offset),
+  // so no further subtraction is needed here.
+  const contBodyH    = measureContBodyH(pageStyle) || bodyAvailH;
+  const contNarrMaxH = Math.max(contBodyH, 60);
+  const contBsMaxH   = Math.max(contBodyH, 60);
 
   // Measure the actual pixel distance from the body's top edge to the narrative
   // content element's top edge.  This captures meta-row height + meta margin-bottom
@@ -2086,9 +2094,9 @@ function paginateSingleSection(container, sheet, content, cssClass, sectionLabel
   const bodyRect    = bodyEl.getBoundingClientRect();
   const contentRect = contentEl.getBoundingClientRect();
   const availForContent = Math.max(bodyAvailH - (contentRect.top - bodyRect.top), 80);
-  // Continuation pages have no meta row and a smaller header — use measured height
+  // measureContBodyH returns available content height — no further subtraction needed.
   const contBodyH = measureContBodyH(pageStyle) || bodyAvailH;
-  const contMaxH  = Math.max(contBodyH - secHeadH - 24, 80);
+  const contMaxH  = Math.max(contBodyH, 80);
   const contentW = contentEl.offsetWidth || bodyW;
 
   const firstChunks = splitContentToFit(content, cssClass, availForContent, contentW);
