@@ -1424,6 +1424,44 @@ function extractDreamData(raw) {
     if (resultParas.length) result.dreamNarrative = resultParas.join('\n\n');
   }
 
+  // ── SAFETY: rescue narrative prose misrouted to dreamBrainstorm ─────────
+  // Fires only when dreamNarrative is still empty but dreamBrainstorm has
+  // content.  This happens when an entry opens with a "Brainstorm" or "Notes"
+  // heading before any narrative, causing all story prose to route there.
+  // Scans dreamBrainstorm line-by-line: accumulates narrative-like lines into
+  // dreamNarrative and stops at the first line that looks like genuine
+  // brainstorm content (bullet, analytical phrase, or bare keyword fragment).
+  // Only rescues when the narrative portion is ≥15 words and contains at least
+  // one first-person / scene narrative marker.
+  if (!result.dreamNarrative && result.dreamBrainstorm) {
+    const bLines   = result.dreamBrainstorm.split('\n');
+    const narrLines = [];
+    const bsLines   = [];
+    let splitFound  = false;
+    for (const line of bLines) {
+      if (splitFound) { bsLines.push(line); continue; }
+      const t = line.trim();
+      if (!t) { narrLines.push(line); continue; }
+      // Brainstorm signals: bullet point, analytical commentary, bare keyword (≤3 words, no verb pronoun, no sentence-end punct)
+      const isBullet     = /^\s*[-•*]\s/.test(t);
+      const isAnalytical = /\b(this (?:means?|could|might|represent)|represents?|symbolizes?|could mean|I think this|I believe this)\b/i.test(t);
+      const isKeyword    = t.split(/\s+/).length <= 3 && !/[.!?,;]$/.test(t) && !/\b(I |we |she |he |they |the |it |there |then )/i.test(t);
+      if (isBullet || isAnalytical || isKeyword) { splitFound = true; bsLines.push(line); }
+      else narrLines.push(line);
+    }
+    const narrPart = narrLines.join('\n').trim();
+    const bsPart   = bsLines.join('\n').trim();
+    if (narrPart) {
+      const wordCount      = narrPart.split(/\s+/).length;
+      const hasStoryMarker = /\b(I was|I saw|I walked|I found|I heard|I felt|I ran|I dreamed|dreamed|was in a|there was|there were|suddenly|then I|woke up)\b/i.test(narrPart);
+      if (wordCount >= 15 && hasStoryMarker) {
+        result.dreamNarrative = narrPart;
+        if (bsPart) result.dreamBrainstorm = bsPart;
+        else delete result.dreamBrainstorm;
+      }
+    }
+  }
+
   return result;
 }
 
