@@ -1795,14 +1795,24 @@ function clearContBodyHCache() { Object.keys(_contBodyHCache).forEach(k => delet
 function measureContBodyH(pageStyle) {
   const layoutKey = (document.getElementById('printSize')?.value) || 'letter';
   const key = (pageStyle || 'none') + '|' + layoutKey;
-  if (_contBodyHCache[key]) return _contBodyHCache[key];
+  // Use !== undefined so a cached null (failed probe) isn't re-measured every call.
+  if (_contBodyHCache[key] !== undefined) return _contBodyHCache[key];
   const probe = buildDreamContinuationPage('', '', 'j-narrative', pageStyle);
   probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;pointer-events:none;';
   document.body.appendChild(probe);
-  const bodyEl = probe.querySelector('.journal-body');
-  const h = bodyEl ? bodyEl.offsetHeight : 0;
+  const bodyEl  = probe.querySelector('.journal-body');
+  const headEl  = probe.querySelector('.j-sec-head');
+  const bodyH   = bodyEl ? bodyEl.offsetHeight : 0;
+  // Measure the section-heading contribution (element height + CSS margin-bottom)
+  // directly from this probe so contNarrMaxH uses geometry that exactly matches the
+  // real continuation page — not the main-page heading height plus a magic constant.
+  let secHeadH = 0;
+  if (headEl && bodyH > 60) {
+    const mb = parseFloat(getComputedStyle(headEl).marginBottom) || 0;
+    secHeadH = headEl.offsetHeight + mb;
+  }
   document.body.removeChild(probe);
-  const result = h > 60 ? h : 0; // 0 = fall back to caller's bodyAvailH
+  const result = bodyH > 60 ? { bodyH, secHeadH } : null; // null → callers fall back to bodyAvailH
   _contBodyHCache[key] = result;
   return result;
 }
@@ -1860,10 +1870,10 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
   const metaH = metaEl ? metaEl.offsetHeight : 0;
   const narrHeadH = secHeads[0] ? secHeads[0].offsetHeight : 0;
   const brainstormHeadH = secHeads[1] ? secHeads[1].offsetHeight : 0;
-
   const narrContent = autoParagraph(data.dreamNarrative || '', 5);
   const brainstormContent = data.dreamBrainstorm || '';
   const narrFullH = narrEl ? narrEl.offsetHeight : 0;
+  
   const brainstormFullH = brainstormEl && brainstormContent ? brainstormEl.offsetHeight : 0;
 
   let added = 0;
@@ -1877,16 +1887,34 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
   // Continuation pages have no meta row — so they have more vertical space.
   // We split content for the first page (small maxH), then re-split the remainder
   // with the larger continuation maxH so those pages fill up properly.
-  // measureContBodyH() measures the actual journal-body height on a continuation page
-  // (which is taller than bodyAvailH because the cont-page header is smaller).
-  const contBodyH        = measureContBodyH(pageStyle) || bodyAvailH;
-  const contNarrMaxH     = Math.max(contBodyH - narrHeadH - 24, 60);
-  const contBsMaxH       = Math.max(contBodyH - brainstormHeadH - 24, 60);
-
-  if (narrFullH <= bodyAvailH - metaH - narrHeadH - 24) {
+  // measureContBodyH() measures the actual journal-body height AND the section-heading
+  // contribution directly from a continuation-page probe, so contNarrMaxH is accurate.
+  const _contM           = measureContBodyH(pageStyle);
+  const contBodyH        = _contM ? _contM.bodyH : bodyAvailH;
+  // _contSecH: heading height + its margin-bottom, measured from the probe itself.
+  // Replaces the old "narrHeadH + 24" approach which used main-page values + a magic number.
+  const _contSecH        = _contM ? _contM.secHeadH : (narrHeadH + 8);
+  const contNarrMaxH     = Math.max(contBodyH - _contSecH, 60);
+  const contBsMaxH       = Math.max(contBodyH - _contSecH, 60);
+  const availForNarr = Math.max(bodyAvailH - metaH - narrHeadH - 24, 60);
+  const firstNarrChunks = splitContentToFit(narrContent, 'j-narrative', availForNarr, bodyW);
+  const narrativeFitsOnFirstPage = firstNarrChunks.length <= 1;
+  if (narrativeFitsOnFirstPage) {
     // Narrative fits — only Brainstorm overflows
     if (!brainstormContent || !brainstormEl) return 0;
-    const availForBrainstorm = Math.max(bodyAvailH - metaH - narrHeadH - narrFullH - brainstormHeadH - 24, 60);
+    const rawAvailForBrainstorm = bodyAvailH - metaH - narrHeadH - narrFullH - brainstormHeadH - 24;
+    // ── Orphan guard ──────────────────────────────────────────────────────────
+    // If there is not enough room below the narrative for the BRAINSTORM heading
+    // plus at least one line of content (~80px), remove it from page 1 entirely
+    // and start it fresh on a continuation page instead.
+    if (rawAvailForBrainstorm < 80) {
+     const bsSecWrap = brainstormEl.parentElement;
+      if (bsSecWrap && bsSecWrap !== bodyEl) bsSecWrap.style.display = 'none';
+      const allBsChunks = splitContentToFit(brainstormContent, 'j-prose medium', contBsMaxH, bodyW);
+      for (const chunk of allBsChunks) addCont('Brainstorm', chunk, 'j-prose medium');
+      return added;
+    }
+    const availForBrainstorm = Math.max(rawAvailForBrainstorm, 60);
     const firstBsChunks = splitContentToFit(brainstormContent, 'j-prose medium', availForBrainstorm, bodyW);
     if (firstBsChunks.length <= 1) return 0;
     setParaText(brainstormEl, firstBsChunks[0]);
@@ -1896,11 +1924,9 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
     for (const chunk of contBsChunks) addCont('Brainstorm', chunk, 'j-prose medium');
   } else {
     // Narrative overflows — split for first page, then re-split remainder for continuation pages
-    const availForNarr = Math.max(bodyAvailH - metaH - narrHeadH - 24, 60);
-    const firstNarrChunks = splitContentToFit(narrContent, 'j-narrative', availForNarr, bodyW);
     if (narrEl) setParaText(narrEl, firstNarrChunks[0]);
     // Hide Brainstorm from first page — will appear on continuation pages
-    const brainstormWrapper = brainstormEl ? brainstormEl.closest('div') : null;
+    const brainstormWrapper = brainstormEl ? brainstormEl.parentElement : null;
     if (brainstormWrapper && brainstormWrapper !== bodyEl) brainstormWrapper.style.display = 'none';
 
     if (firstNarrChunks.length > 1) {
@@ -1953,9 +1979,12 @@ function paginateSingleSection(container, sheet, content, cssClass, sectionLabel
   const metaH = (bodyEl.querySelector('.meta-row') || {offsetHeight: 0}).offsetHeight;
   const secHeadH = (bodyEl.querySelector('.j-sec-head') || {offsetHeight: 0}).offsetHeight;
   const availForContent = Math.max(bodyAvailH - metaH - secHeadH - 24, 80);
-  // Continuation pages have no meta row and a smaller header — use measured height
-  const contBodyH = measureContBodyH(pageStyle) || bodyAvailH;
-  const contMaxH  = Math.max(contBodyH - secHeadH - 24, 80);
+  // Continuation pages have no meta row and a smaller header — use measured height.
+  // secHeadH comes from the probe itself for the same reason as paginateDreamPage.
+  const _contM    = measureContBodyH(pageStyle);
+  const contBodyH = _contM ? _contM.bodyH : bodyAvailH;
+  const _contSecH = _contM ? _contM.secHeadH : (secHeadH + 8);
+  const contMaxH  = Math.max(contBodyH - _contSecH, 80);
   const contentW = contentEl.offsetWidth || bodyW;
 
   const firstChunks = splitContentToFit(content, cssClass, availForContent, contentW);
