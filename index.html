@@ -887,11 +887,56 @@ async function readPDF(file) {
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
   let out = '';
+  const approxSpaceWidth = item => {
+    const width = Number(item?.width) || 0;
+    const chars = String(item?.str || '').length || 1;
+    return width > 0 ? Math.max(width / chars, 3) : 4;
+  };
   for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i); const content = await page.getTextContent();
-    const lineMap = {};
-    content.items.forEach(item => { const y = Math.round(item.transform[5]); lineMap[y] = (lineMap[y] || '') + item.str + ' '; });
-    Object.keys(lineMap).sort((a,b) => b - a).forEach(y => { out += lineMap[y].trim() + '\n'; }); out += '\n';
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const items = content.items
+      .filter(item => String(item?.str || '').trim())
+      .map(item => ({
+        str: String(item.str || ''),
+        x: Number(item.transform?.[4]) || 0,
+        y: Number(item.transform?.[5]) || 0,
+        width: Number(item.width) || 0,
+        height: Number(item.height) || 0
+      }))
+      .sort((a, b) => {
+        const yDiff = Math.abs(b.y - a.y);
+        if (yDiff > 2) return b.y - a.y;
+        return a.x - b.x;
+      });
+
+    const lines = [];
+    items.forEach(item => {
+      const existing = lines.find(line => Math.abs(line.y - item.y) <= Math.max(2, item.height * 0.35));
+      if (existing) {
+        existing.items.push(item);
+      } else {
+        lines.push({ y: item.y, items: [item] });
+      }
+    });
+
+    lines
+      .sort((a, b) => b.y - a.y)
+      .forEach(line => {
+        const ordered = line.items.sort((a, b) => a.x - b.x);
+        let lineText = '';
+        let prev = null;
+        ordered.forEach(item => {
+          if (prev) {
+            const gap = item.x - (prev.x + prev.width);
+            if (gap > Math.max(approxSpaceWidth(prev) * 1.4, 8)) lineText += ' ';
+          }
+          lineText += item.str;
+          prev = item;
+        });
+        out += lineText.replace(/\s+/g, ' ').trim() + '\n';
+      });
+    out += '\n\f\n';
   }
   return out;
 }
@@ -914,6 +959,7 @@ function isDateHeading(line) {
 }
 
 function parseEntries(rawText) {
+  if (/\f/.test(String(rawText || ''))) return [{ text: rawText }];
   const lines = rawText.replace(/\r\n/g,'\n').replace(/\r/g,'\n')
     .replace(/[—–]\s*[-–—]+/g, '---') // normalize em-dash combos to --- separators
     .split('\n');
@@ -1102,13 +1148,49 @@ function extractDreamData(raw) {
   function collapseSpacedLetters(line) {
     return (line || '').replace(/\b(?:[A-Za-z]\s+){2,}[A-Za-z]\b/g, match => match.replace(/\s+/g, ''));
   }
+  function splitRawIntoPages(input) {
+    return String(input || '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split(/\n?\f\n?/)
+      .map(page => page.trim())
+      .filter(Boolean);
+  }
+  function normalizeWhitespace(line) {
+    return collapseSpacedLetters(line).replace(/\s+/g, ' ').trim();
+  }
+  function normalizeKey(line) {
+    return normalizeWhitespace(line).toLowerCase().replace(/[’']/g, "'").replace(/[:\-–—]+$/, '').trim();
+  }
+  function normalizeInterpretationHeading(line) {
+    return normalizeWhitespace(line)
+      .replace(/^chatgpt\s*[:\-–—]*\s*/i, '')
+      .trim();
+  }
   function countTemplateOptionHits(line) {
     const compact = collapseSpacedLetters(line).toLowerCase().replace(/[^a-z0-9]/g, '');
     if (!compact) return 0;
     return TEMPLATE_OPTION_COMPACT.filter(term => compact.includes(term)).length;
   }
+  function isNarrativeLike(line) {
+    const normalized = normalizeWhitespace(line);
+    if (!normalized) return false;
+    const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+    if (/(?:^|\b)(?:I|we|he|she|they)\s+(?:was|were|went|saw|heard|felt|walked|ran|looked|found|noticed|remember|remembered|kept|started|thought|knew|woke|woke up)\b/i.test(normalized)) return true;
+    if (/\b(?:then|after that|suddenly|at first|when I|as I|there was|we were|I was)\b/i.test(normalized) && wordCount >= 8) return true;
+    if (/[.!?]$/.test(normalized) && wordCount >= 8) return true;
+    return false;
+  }
+  function isRealDreamStart(line) {
+    const normalized = normalizeWhitespace(line);
+    if (!normalized) return false;
+    if (isDateHeading(normalized)) return false;
+    if (isNarrativeLike(normalized) && normalized.split(/\s+/).filter(Boolean).length >= 8) return true;
+    if (/^(?:I|we)\b/i.test(normalized) && /[.!?]/.test(normalized) && normalized.split(/\s+/).filter(Boolean).length >= 6) return true;
+    return false;
+  }
   function splitTemplatePreambleFromProse(line) {
-    const normalized = collapseSpacedLetters(line).replace(/\s+/g, ' ').trim();
+    const normalized = normalizeWhitespace(line);
     if (!normalized) return null;
     const proseMatch = normalized.match(/\b(?:I\s+(?:was|did|didn't|didnt|kept|knew|know|asked|heard|saw|went|had|took|wanted|told|looked|said)|Then\b|After\b|There\b|One of\b|My\b|We\b|She\b|He\b|It\s+was\b)\b/i);
     const clusterMatch = normalized.match(TEMPLATE_CLUSTER_RE);
@@ -1125,7 +1207,7 @@ function extractDreamData(raw) {
   }
   function normalizeExtractText(input) {
     const source = (input || '').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-    const rawLines = source.split('\n').map(line => collapseSpacedLetters(line).replace(/\s+/g, ' ').trim());
+    const rawLines = source.split('\n').map(line => normalizeWhitespace(line));
     const noiseLines = new Set([
       'legend',
       'bold',
@@ -1174,10 +1256,9 @@ function extractDreamData(raw) {
       return matches >= 4;
     };
     const isStandaloneNoise = line => {
-      const key = (line || '').toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
-      return noiseLines.has(key.replace(/[:\-–—]+$/, '').trim());
+      return noiseLines.has(normalizeKey(line));
     };
-    const looksLikeSectionHeading = line => /^(?:dream|vision)(?:\s+(?:narrative|scene))?:?$|^brainstorm(?:ing)?(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+\d.*)?:?$|^(?:(?:possible|short|long|polished)\s+|(?:possible\s+meaning\s*[\/\\]?\s*))?interpretation(?:\s*\([^)]*\))?(?:\s+summary)?:?$|^application(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+summary)?:?$/i.test(line || '');
+    const looksLikeSectionHeading = line => /^(?:dream|vision)(?:\s+(?:narrative|scene))?:?$|^brainstorm(?:ing)?(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+\d.*)?:?$|^application(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+summary)?:?$/i.test(line || '') || isInterpretationHeading(line);
     const shouldMergeFragment = (prev, next) => {
       if (!prev || !next) return false;
       if (looksLikeSectionHeading(prev) || looksLikeSectionHeading(next)) return false;
@@ -1210,13 +1291,83 @@ function extractDreamData(raw) {
     return normalized.join('\n').replace(/\n{3,}/g, '\n\n');
   }
 
-  const text   = normalizeExtractText(raw);
+  const hasExplicitPageBreaks = /\f/.test(String(raw || ''));
+  const pages = splitRawIntoPages(raw);
+  const headerPageRaw = hasExplicitPageBreaks ? (pages[0] || '') : '';
+  const bodyPagesRaw = hasExplicitPageBreaks ? pages.slice(1) : [raw || ''];
+  const bodyPages = bodyPagesRaw.map((pageRaw, index) => ({
+    pageNumber: hasExplicitPageBreaks ? index + 2 : index + 1,
+    raw: String(pageRaw || ''),
+    normalized: normalizeExtractText(pageRaw || '')
+  }));
+  const text = normalizeExtractText(bodyPages.map(page => page.normalized).join('\n\n'));
   const nonEmptyLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const firstLine = nonEmptyLines[0] || '';
+  const PDF_PARSE_DEBUG = hasExplicitPageBreaks;
 
-  // ── DATE — search full text via helper ──────────────────
-  const foundDate = findDateInText(text);
-  if (foundDate) result.dreamDate = foundDate;
+  function extractHeaderValueFromPage(pageText, labels) {
+    const lines = String(pageText || '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(line => normalizeWhitespace(line))
+      .filter(Boolean);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const normalized = normalizeKey(line);
+      if (!labels.some(label => normalized === label)) continue;
+      const nearby = [];
+      const nextLine = lines[i + 1] || '';
+      if (nextLine) nearby.push(nextLine);
+      const inlineMatch = line.match(/^[A-Za-z'’ ]+\s*[:\-–—]+\s*(.+)$/);
+      if (inlineMatch?.[1]) nearby.push(inlineMatch[1]);
+      for (const candidate of nearby) {
+        const value = normalizeWhitespace(candidate);
+        if (!value || labels.includes(normalizeKey(value))) continue;
+        if (isTemplateNoiseLabel(value) || isTemplateOptionCluster(value) || isStandaloneJunk(value)) continue;
+        return value;
+      }
+    }
+    return '';
+  }
+  function extractHeaderData(pageText) {
+    const header = {
+      dreamTitle: '',
+      dreamDate: '',
+      dreamTime: '',
+      dreamType: '',
+      dreamerInvolvement: ''
+    };
+    const normalizedPage = normalizeExtractText(pageText);
+    const pageLines = String(pageText || '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(line => normalizeWhitespace(line))
+      .filter(Boolean);
+    const titleValue = extractHeaderValueFromPage(pageText, ['title']);
+    if (titleValue && !isTemplatePlaceholderValue(titleValue, 'dreamTitle')) header.dreamTitle = titleValue;
+    const dateValue = extractHeaderValueFromPage(pageText, ['date']);
+    const foundHeaderDate = findDateInText(dateValue || normalizedPage);
+    if (foundHeaderDate) header.dreamDate = foundHeaderDate;
+    const timeValue = extractHeaderValueFromPage(pageText, ['time']);
+    if (timeValue && /\b\d{1,2}(?::\d{2})?\s*(?:a|p)\.?m\.?\b/i.test(timeValue)) header.dreamTime = timeValue;
+
+    const selectedOptionLine = pageLines.find(line =>
+      /(?:^|[\s(])(?:selected|checked|chosen|circled|highlighted|marked)(?:[\s):]|$)/i.test(line)
+    ) || '';
+    if (selectedOptionLine) {
+      const normalizedSelected = normalizeWhitespace(selectedOptionLine);
+      const typeMatch = TEMPLATE_OPTION_TERMS.find(term => new RegExp(`\\b${term.replace(/\s+/g, '\\s+')}\\b`, 'i').test(normalizedSelected));
+      if (typeMatch && !isTemplatePlaceholderValue(typeMatch, 'dreamType')) header.dreamType = typeMatch;
+      const involvementMatch = ['participant', 'partial participant', 'observer']
+        .find(term => new RegExp(`\\b${term.replace(/\s+/g, '\\s+')}\\b`, 'i').test(normalizedSelected));
+      if (involvementMatch) header.dreamerInvolvement = involvementMatch;
+    }
+    return header;
+  }
+
+  if (headerPageRaw) Object.assign(result, extractHeaderData(headerPageRaw));
 
   // Strip iCloud/document ID lines (long numeric IDs at top of entry)
   while (nonEmptyLines.length > 0 && /^\d{8,}$/.test(nonEmptyLines[0])) nonEmptyLines.shift();
@@ -1317,13 +1468,7 @@ function extractDreamData(raw) {
   const SEP = '(?:[-–—:]+|\\s{2,})';
   function inlineRe(label, extra) { return new RegExp('^' + label + '\\s*' + SEP + '\\s*(.+)$' + (extra||''), 'i'); }
   function isTemplateNoiseLabel(line) {
-    const key = (line || '')
-      .toLowerCase()
-      .replace(/[’']/g, "'")
-      .replace(/\s+/g, ' ')
-      .replace(/[:\-–—]+$/, '')
-      .trim();
-    return NOISE_LABELS.has(key);
+    return NOISE_LABELS.has(normalizeKey(line));
   }
   function isStandaloneJunk(line) {
     const trimmed = (line || '').trim();
@@ -1380,6 +1525,7 @@ function extractDreamData(raw) {
       if (!started && (isTemplateNoiseLabel(candidate) || isStandaloneJunk(candidate) || isTemplateOptionCluster(candidate))) return;
       if (!started && /^(?:dream|brainstorm|interpretation|application)$/i.test(candidate)) return;
       if (!started && index < 10 && isTemplatePlaceholderValue(candidate, 'dreamNarrative')) return;
+      if (!started && !isRealDreamStart(candidate)) return;
       started = true;
       cleaned.push(candidate);
     });
@@ -1464,31 +1610,258 @@ function extractDreamData(raw) {
     { re: /^how\s+i\s+will\s+respond\s*[-–—:]*\s*(.*)$/i,                                   field: 'dreamApplication'    },
   ];
 
+  function normalizeSectionHeading(line) {
+    return normalizeWhitespace(line)
+      .replace(/^chatgpt\s*[:\-–—]*\s*/i, '')
+      .trim();
+  }
+  function isApplicationHeading(line) {
+    const normalized = normalizeSectionHeading(line);
+    if (!normalized) return false;
+    return /^(?:\*\*\s*)?(?:#+\s*)?application(?:\s*\([^)]*\))?(?:\s*\*\*)?(?:\s*[:\-–—]+)?$/i.test(normalized);
+  }
+  function extractApplicationInlineContent(line) {
+    const normalized = normalizeSectionHeading(line);
+    if (!normalized) return '';
+    const compactMatch = normalized.match(/^(?:\*\*\s*)?(?:#+\s*)?application(?:\s*\([^)]*\))?(?:\s*\*\*)?\s*(.*)$/i);
+    if (!compactMatch) return '';
+    const rest = (compactMatch[1] || '').replace(/^[:\-–—]+/, '').trim();
+    if (!rest) return '';
+    const words = rest.split(/\s+/).filter(Boolean).length;
+    if (words >= 6 || /[.!?]/.test(rest)) return rest;
+    return '';
+  }
+
   // Helper: resolve "interpretation summary" vs plain "interpretation"
+  function isInterpretationHeading(line) {
+    const normalized = normalizeInterpretationHeading(line);
+    if (!normalized) return false;
+    return /^(?:\*\*\s*)?(?:#+\s*)?(?:possible\s+meaning\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?(?:\s*\*\*)?(?:\s*[:\-–—]+)?$/i.test(normalized);
+  }
+  function extractInterpretationInlineContent(line) {
+    const normalized = normalizeInterpretationHeading(line);
+    if (!normalized) return '';
+    const compactMatch = normalized.match(/^(?:\*\*\s*)?(?:#+\s*)?(?:possible\s+meaning\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?(?:\s*\*\*)?\s*(.*)$/i);
+    if (!compactMatch) return '';
+    const rest = (compactMatch[1] || '').replace(/^[:\-–—]+/, '').trim();
+    if (!rest) return '';
+    const words = rest.split(/\s+/).filter(Boolean).length;
+    if (words >= 6 || /[.!?]/.test(rest)) return rest;
+    return '';
+  }
   function resolveInterpAppField(line) {
-    if (/^(?:(?:possible|short|long|polished)\s+)?interpretation\s+summary/i.test(line)) return 'sumInterpretation';
-    if (/^application\s+summary/i.test(line))                             return 'sumApplication';
-    if (/^possible\s+meaning/i.test(line))                                return 'dreamInterpretation';
-    if (/^(?:(?:possible|short|long|polished)\s+)?interpretation/i.test(line)) return 'dreamInterpretation';
-    if (/^application/i.test(line))                                        return 'dreamApplication';
+    const normalized = normalizeInterpretationHeading(line);
+    if (/^(?:(?:possible|short|long|polished)\s+)?interpretation\s+summary\b/i.test(normalized)) return 'sumInterpretation';
+    if (/^application\s+summary/i.test(normalized))                             return 'sumApplication';
+    if (/^possible\s+meaning/i.test(normalized))                                return 'dreamInterpretation';
+    if (isInterpretationHeading(normalized) || /^(?:(?:possible|short|long|polished)\s+)?interpretation\b/i.test(normalized)) return 'dreamInterpretation';
+    if (isApplicationHeading(normalized) || /^application\b/i.test(normalized))  return 'dreamApplication';
     return null;
   }
 
+  function buildPageAwareLineRecords(pagesToParse) {
+    const records = [];
+    pagesToParse.forEach((page, pageIndex) => {
+      if (pageIndex > 0) records.push({ line: '', pageNumber: page.pageNumber - 1, isPageBoundary: true });
+      const lines = (page.normalized || '').split('\n').map(line => line.trim());
+      lines.forEach(line => records.push({ line, pageNumber: page.pageNumber, isPageBoundary: false }));
+    });
+    return records;
+  }
+
   // Helper: is this line a standalone section heading (with or without colon)?
-  function detectHeading(line) {
+  function hasRealContentAhead(records, startIndex) {
+    for (let i = startIndex + 1; i < records.length; i++) {
+      const candidate = normalizeWhitespace(records[i]?.line || '');
+      if (!candidate) continue;
+      if (isTemplateNoiseLabel(candidate) || isStandaloneJunk(candidate) || isTemplateOptionCluster(candidate)) continue;
+      if (detectInlineLabel(candidate)) return true;
+      if (detectHeading(candidate, records, i, true)) return false;
+      if (isRealDreamStart(candidate) || candidate.split(/\s+/).filter(Boolean).length >= 6 || /[.!?]/.test(candidate)) return true;
+      return false;
+    }
+    return false;
+  }
+
+  function detectHeading(line, records = [], index = -1, skipValidation = false) {
+    if (extractInterpretationInlineContent(line)) return null;
+    if (extractApplicationInlineContent(line)) return null;
+    if (isInterpretationHeading(line)) {
+      if (!skipValidation && !hasRealContentAhead(records, index)) return null;
+      return 'dreamInterpretation';
+    }
+    if (isApplicationHeading(line)) {
+      if (!skipValidation && !hasRealContentAhead(records, index)) return null;
+      return 'dreamApplication';
+    }
     for (const rule of HEADING_RULES) {
       if (rule.re.test(line)) {
-        // Resolve the null-field entries
-        if (rule.field === null) return resolveInterpAppField(line);
-        return rule.field;
+        const field = rule.field === null ? resolveInterpAppField(line) : rule.field;
+        if (!field) return null;
+        if (!skipValidation && (field === 'dreamInterpretation' || field === 'sumInterpretation' || field === 'dreamApplication' || field === 'sumApplication')) {
+          if (!hasRealContentAhead(records, index)) return null;
+        }
+        return field;
       }
     }
     return null;
   }
 
+  function detectInterpretationInlineLabel(line) {
+    const content = extractInterpretationInlineContent(line);
+    if (!content) return null;
+    return { field: 'dreamInterpretation', content };
+  }
+  function detectApplicationInlineLabel(line) {
+    const content = extractApplicationInlineContent(line);
+    if (!content) return null;
+    return { field: 'dreamApplication', content };
+  }
+  function detectSplitMajorHeading(records, index) {
+    const current = normalizeSectionHeading(records[index]?.line || '');
+    if (!current || current.split(/\s+/).length > 3) return null;
+    let nextIndex = index + 1;
+    while (nextIndex < records.length && !normalizeWhitespace(records[nextIndex]?.line || '')) nextIndex++;
+    const next = normalizeSectionHeading(records[nextIndex]?.line || '');
+    if (!next || next.split(/\s+/).length > 3) return null;
+    const combined = `${current} ${next}`.trim();
+    if (isInterpretationHeading(combined)) return { field: 'dreamInterpretation', skipTo: nextIndex };
+    if (isApplicationHeading(combined)) return { field: 'dreamApplication', skipTo: nextIndex };
+    return null;
+  }
+  function classifyLaterPages(pagesToParse, transitions) {
+    const interpretationSignals = [
+      { re: /\bit seems like (?:the )?dreams? (?:is|are) expressing\b/i, label: 'it-seems-like-dreams-are-expressing', weight: 4 },
+      { re: /\bhere is a prophetic word based on\b/i, label: 'prophetic-word-based-on', weight: 4 },
+      { re: /\bthis dream is\b/i, label: 'this-dream-is', weight: 3 },
+      { re: /\bthe lord says\b/i, label: 'the-lord-says', weight: 4 },
+      { re: /\bthis points to\b/i, label: 'this-points-to', weight: 3 },
+      { re: /\bthis likely represents\b/i, label: 'this-likely-represents', weight: 3 },
+      { re: /\b(?:represents?|symboli(?:zes|ses)|meaning|purpose|process|glory|calling|anointing|identity|refining|purification)\b/i, label: 'interpretive-language', weight: 1 },
+    ];
+    const applicationSignals = [
+      { re: /\bhelping people carry god'?s glory involves\b/i, label: 'helping-people-carry-gods-glory-involves', weight: 5 },
+      { re: /\bhere are ways you can\b/i, label: 'here-are-ways-you-can', weight: 4 },
+      { re: /\bteaching and encouragement\b/i, label: 'teaching-and-encouragement', weight: 4 },
+      { re: /\bmentorship and discipleship\b/i, label: 'mentorship-and-discipleship', weight: 4 },
+      { re: /\bencouraging holiness\b/i, label: 'encouraging-holiness', weight: 4 },
+      { re: /\b(?:be willing to|you can|you should|take time to|make sure you|walk in|pray for|encourage|disciple|mentor|teach|help people)\b/i, label: 'instructional-language', weight: 2 },
+    ];
+    const decisions = [];
+    const collected = { dreamInterpretation: '', dreamApplication: '' };
+    const brainstormStartPage = transitions.find(t => t.field === 'dreamBrainstorm')?.pageNumber || null;
+    let currentField = null;
+
+    pagesToParse.forEach(page => {
+      const pageText = String(page.normalized || '').trim();
+      const normalizedStart = pageText.slice(0, 180);
+      const decision = {
+        pageNumber: page.pageNumber,
+        normalizedStart,
+        sectionGuess: 'none',
+        confidence: 0,
+        matchedSignals: [],
+        assignedField: ''
+      };
+      if (!pageText) {
+        decisions.push(decision);
+        return;
+      }
+
+      const lines = pageText.split('\n').map(line => line.trim()).filter(Boolean);
+      const firstHeading = lines.find(line => {
+        const field = detectHeading(line, [], -1, true);
+        return field === 'dreamBrainstorm' || field === 'dreamInterpretation' || field === 'dreamApplication';
+      }) || '';
+      const explicitField = firstHeading ? detectHeading(firstHeading, [], -1, true) : null;
+
+      if (explicitField === 'dreamBrainstorm') {
+        currentField = 'dreamBrainstorm';
+        decision.sectionGuess = 'brainstorm';
+        decision.confidence = 5;
+        decision.matchedSignals.push('explicit-brainstorm');
+        decision.assignedField = 'dreamBrainstorm';
+        decisions.push(decision);
+        return;
+      }
+
+      if (!brainstormStartPage || page.pageNumber <= brainstormStartPage) {
+        if (explicitField) {
+          decision.sectionGuess = explicitField;
+          decision.confidence = 4;
+          decision.matchedSignals.push('explicit-heading-before-fallback');
+          decision.assignedField = explicitField;
+        }
+        decisions.push(decision);
+        return;
+      }
+
+      const interpretationScore = interpretationSignals.reduce((sum, signal) => {
+        if (signal.re.test(pageText)) {
+          decision.matchedSignals.push(`interp:${signal.label}`);
+          return sum + signal.weight;
+        }
+        return sum;
+      }, 0);
+      const applicationScore = applicationSignals.reduce((sum, signal) => {
+        if (signal.re.test(pageText)) {
+          decision.matchedSignals.push(`app:${signal.label}`);
+          return sum + signal.weight;
+        }
+        return sum;
+      }, 0);
+
+      let assignedField = null;
+      if (explicitField === 'dreamInterpretation' || explicitField === 'dreamApplication') {
+        assignedField = explicitField;
+        decision.matchedSignals.unshift(`explicit:${explicitField}`);
+      } else if (applicationScore >= 4 && applicationScore > interpretationScore) {
+        assignedField = 'dreamApplication';
+      } else if (interpretationScore >= 3) {
+        assignedField = 'dreamInterpretation';
+      } else if (currentField === 'dreamInterpretation' || currentField === 'dreamApplication') {
+        assignedField = currentField;
+        decision.matchedSignals.push(`continuation:${currentField}`);
+      }
+
+      if (currentField === 'dreamApplication' && assignedField === 'dreamInterpretation' && applicationScore >= interpretationScore) {
+        assignedField = 'dreamApplication';
+      }
+      if (currentField === 'dreamInterpretation' && !assignedField && interpretationScore > 0) {
+        assignedField = 'dreamInterpretation';
+      }
+
+      if (assignedField === 'dreamInterpretation' || assignedField === 'dreamApplication') {
+        currentField = assignedField;
+        collected[assignedField] += (collected[assignedField] ? '\n\n' : '') + pageText;
+        decision.sectionGuess = assignedField;
+        decision.confidence = Math.max(interpretationScore, applicationScore, explicitField ? 5 : 0);
+        decision.assignedField = assignedField;
+      }
+
+      decisions.push(decision);
+    });
+
+    Object.keys(collected).forEach(key => {
+      collected[key] = collected[key]
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .filter(line => !isTemplateNoiseLabel(line) && !isStandaloneJunk(line))
+        .join('\n')
+        .trim();
+    });
+
+    return { collected, decisions };
+  }
+
   // Helper: is this line an inline label ("Actions: ran, hid")?
   // Returns { field, content } or null.
   function detectInlineLabel(line) {
+    const interpretationInline = detectInterpretationInlineLabel(line);
+    if (interpretationInline) return interpretationInline;
+    const applicationInline = detectApplicationInlineLabel(line);
+    if (applicationInline) return applicationInline;
     for (const rule of INLINE_LABEL_RULES) {
       const m = line.match(rule.re);
       if (m) return { field: rule.field, content: m[1].trim() };
@@ -1514,13 +1887,22 @@ function extractDreamData(raw) {
   const plainMatch = text.match(/(?:^|\n)plain:?\s*\n([\s\S]*?)(?:\n(?:brainstorm(?:ing)?|interpretation|application|symbols?|actions?|emotions?|scriptures?)\b|$)/i);
   if (plainMatch && plainMatch[1].trim()) _plainNarrative = plainMatch[1].trim();
 
-  const allLines = text.split('\n').map(l => l.trim());
+  const lineRecords = buildPageAwareLineRecords(bodyPages);
+  const sectionTransitions = [];
+  const debugPageDump = bodyPages.map(page => ({
+    pageNumber: page.pageNumber,
+    raw: page.raw.slice(0, 4000),
+    normalized: page.normalized.slice(0, 4000)
+  }));
+
   // Strip doc-ID lines from top
   let startIdx = 0;
-  while (startIdx < 3 && allLines[startIdx] && /^\d{8,}$/.test(allLines[startIdx])) startIdx++;
+  while (startIdx < 3 && lineRecords[startIdx]?.line && /^\d{8,}$/.test(lineRecords[startIdx].line)) startIdx++;
 
-  for (let li = startIdx; li < allLines.length; li++) {
-    const line = allLines[li];
+  for (let li = startIdx; li < lineRecords.length; li++) {
+    const record = lineRecords[li];
+    const line = record?.line || '';
+    const splitHeading = detectSplitMajorHeading(lineRecords, li);
 
     if (!line) {
       // Blank line — mark a paragraph break in the current field
@@ -1538,13 +1920,21 @@ function extractDreamData(raw) {
     // Skip isolated template/sidebar labels so they don't leak into section prose.
     if (isTemplateNoiseLabel(line)) continue;
 
+    if (splitHeading) {
+      curField = splitHeading.field;
+      sectionTransitions.push({ type: 'split-heading', field: curField, pageNumber: record.pageNumber, line, nextLine: lineRecords[splitHeading.skipTo]?.line || '' });
+      li = splitHeading.skipTo;
+      continue;
+    }
+
     // Standalone heading
-    const headingField = detectHeading(line);
+    const headingField = detectHeading(line, lineRecords, li);
     if (headingField) {
       if (MAJOR_SECTION_FIELDS.has(headingField) && !seenMajorProse) {
         if (!openingMajorField) {
           openingMajorField = headingField;
           curField = headingField;
+          sectionTransitions.push({ type: 'heading', field: headingField, pageNumber: record.pageNumber, line });
           continue;
         }
         if (openingMajorField !== headingField) {
@@ -1552,6 +1942,7 @@ function extractDreamData(raw) {
         }
       }
       curField = headingField;
+      sectionTransitions.push({ type: 'heading', field: headingField, pageNumber: record.pageNumber, line });
       continue;
     }
 
@@ -1562,6 +1953,7 @@ function extractDreamData(raw) {
       if (inlineMatch.content && curField) {
         const sep = buf[curField] ? '\n' : '';
         buf[curField] = (buf[curField] || '') + sep + inlineMatch.content;
+        sectionTransitions.push({ type: 'inline', field: curField, pageNumber: record.pageNumber, line, captured: inlineMatch.content.slice(0, 200) });
         if (MAJOR_SECTION_FIELDS.has(curField) && (inlineMatch.content.split(/\s+/).filter(Boolean).length >= 3 || /[.!?]/.test(inlineMatch.content))) {
           seenMajorProse = true;
         }
@@ -1577,10 +1969,11 @@ function extractDreamData(raw) {
         seenMajorProse = true;
       }
     } else {
-      // No heading yet — collect as unlabelled (likely opening narrative).
+      // No heading yet — only start collecting once real dream prose begins.
       // Skip the first occurrence of a line already claimed as dreamTitle by Strategy 6
       // so the title text doesn't also appear at the start of dreamNarrative.
       if (_titleSourceLine && line === _titleSourceLine) { _titleSourceLine = null; continue; }
+      if (!buf['_unlabelled'] && !isRealDreamStart(line)) continue;
       const sep = buf['_unlabelled'] ? '\n' : '';
       buf['_unlabelled'] = (buf['_unlabelled'] || '') + sep + line;
     }
@@ -1611,6 +2004,10 @@ function extractDreamData(raw) {
     }
   };
   Object.entries(buf).forEach(([k,v]) => fill(k,v));
+
+  const laterSectionFallback = classifyLaterPages(bodyPages, sectionTransitions);
+  if (!result.dreamInterpretation && laterSectionFallback.collected.dreamInterpretation) result.dreamInterpretation = laterSectionFallback.collected.dreamInterpretation;
+  if (!result.dreamApplication && laterSectionFallback.collected.dreamApplication) result.dreamApplication = laterSectionFallback.collected.dreamApplication;
 
   if (!result.dreamTitle || isTemplatePlaceholderValue(result.dreamTitle, 'dreamTitle')) {
     const inferredTitle = splitTemplatePreambleFromProse(result.dreamNarrative || '')?.titleCandidate || '';
@@ -1704,10 +2101,26 @@ function extractDreamData(raw) {
   }
 
   if (PDF_TEMPLATE_DEBUG) {
-    console.debug('[PDFParser] raw extracted text', (raw || '').slice(0, 4000));
-    console.debug('[PDFParser] normalized text', text.slice(0, 4000));
-    console.debug('[PDFParser] pre-narrative cleaned text', (result.dreamNarrative || '').slice(0, 2000));
-    console.debug('[PDFParser] final parsed fields', {
+    const parserDebugPayload = {
+      pages: debugPageDump,
+      transitions: sectionTransitions,
+      raw: (raw || '').slice(0, 4000),
+      normalized: text.slice(0, 4000),
+      narrative: (result.dreamNarrative || '').slice(0, 2000),
+      brainstorm: (result.dreamBrainstorm || '').slice(0, 500),
+      interpretation: (result.dreamInterpretation || '').slice(0, 500),
+      application: (result.dreamApplication || '').slice(0, 500),
+      fallback: laterSectionFallback.collected,
+      pageDecisions: laterSectionFallback.decisions
+    };
+    if (typeof window !== 'undefined') window._lastPdfParserDebug = parserDebugPayload;
+    console.log('[PDFParser] page debug', debugPageDump);
+    console.log('[PDFParser] section transitions', sectionTransitions);
+    console.log('[PDFParser] page decisions', laterSectionFallback.decisions);
+    console.log('[PDFParser] raw extracted text', (raw || '').slice(0, 4000));
+    console.log('[PDFParser] normalized text', text.slice(0, 4000));
+    console.log('[PDFParser] pre-narrative cleaned text', (result.dreamNarrative || '').slice(0, 2000));
+    console.log('[PDFParser] final parsed fields', {
       dreamTitle: result.dreamTitle,
       dreamDate: result.dreamDate,
       dreamTime: result.dreamTime,
