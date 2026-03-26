@@ -1086,6 +1086,70 @@ function predictDreamType(data) {
   return sorted[0][1] >= 2 ? sorted[0][0] : null;
 }
 
+function extractSymbolEntriesFromText(text) {
+  const source = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  if (!source.trim()) return [];
+  const entries = [];
+  const seen = new Set();
+  const addEntry = value => {
+    const normalized = String(value || '').replace(/\s+/g, ' ').trim().replace(/^[\-*•]\s*/, '').replace(/[.;:,]+$/, '');
+    if (!normalized) return;
+    if (normalized.split(/\s+/).length > 8) return;
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    entries.push(normalized);
+  };
+  const lines = source.split('\n').map(line => line.trim()).filter(Boolean);
+  lines.forEach(line => {
+    const patterns = [
+      /^(?:doing\s+)?([^=:\-–—]{2,40}?)\s*=\s*(.+)$/i,
+      /^([^:]{2,40}?)\s+(?:represents|symboli(?:zes|ses)|speaks?\s+to|points?\s+to|is)\s+(.+)$/i,
+      /^([^:\-–—]{2,40}?)\s*[-–—:]\s*(.+)$/i,
+      /^the meaning of\s+([^:]{2,40}?)(?:\s+is)?\s*[:\-–—]?\s*(.+)$/i
+    ];
+    patterns.forEach(re => {
+      const m = line.match(re);
+      if (!m) return;
+      const symbol = m[1].replace(/^(?:the|a|an)\s+/i, '').trim();
+      const meaning = (m[2] || '').replace(/\s+/g, ' ').trim();
+      if (!symbol || !meaning) return;
+      if (symbol.split(/\s+/).length > 5) return;
+      addEntry(`${symbol} / ${meaning.split(/[.;]/)[0].trim().split(/\s+/).slice(0, 5).join(' ')}`);
+    });
+  });
+  return entries.slice(0, 12);
+}
+
+function extractActionPhrasesFromNarrative(text) {
+  const source = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!source) return [];
+  const phrases = [];
+  const seen = new Set();
+  const actionRe = /\b(?:I|we)\s+(asked(?:\s+\w+){0,5}|braided(?:\s+\w+){0,6}|received(?:\s+\w+){0,5}|took(?:\s+\w+){0,6}|identified(?:\s+\w+){0,6}|talked(?:\s+\w+){0,6}|followed(?:\s+\w+){0,6}|told(?:\s+\w+){0,6}|offered(?:\s+\w+){0,6}|worked(?:\s+\w+){0,6}|washed(?:\s+\w+){0,6}|went(?:\s+\w+){0,6}|walked(?:\s+\w+){0,6}|saw(?:\s+\w+){0,6}|heard(?:\s+\w+){0,6}|said(?:\s+\w+){0,6}|did(?:\s+\w+){0,6}|started(?:\s+\w+){0,6}|helped(?:\s+\w+){0,6}|served(?:\s+\w+){0,6})/gi;
+  const normalizeAction = phrase => {
+    const cleaned = String(phrase || '')
+      .replace(/\b(?:I|we)\s+/i, '')
+      .replace(/\b(?:and|then|because|when|while)\b.*$/i, '')
+      .replace(/[.,;:!?]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!cleaned) return '';
+    const words = cleaned.split(/\s+/).filter(Boolean);
+    if (words.length < 2) return '';
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  };
+  for (const match of source.matchAll(actionRe)) {
+    const phrase = normalizeAction(match[0]);
+    if (!phrase) continue;
+    const key = phrase.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    phrases.push(phrase);
+  }
+  return phrases.slice(0, 10);
+}
+
 // ── DREAM DATA EXTRACTION ───────────────────────────────
 function extractDreamData(raw) {
   const result = {};
@@ -1243,8 +1307,6 @@ function extractDreamData(raw) {
     const isStandaloneJunk = line => {
       const trimmed = (line || '').trim();
       if (!trimmed) return false;
-      // remove standalone "ChatGPT"
-      if (/^chatgpt:?$/i.test(trimmed)) return true;
       // remove long numeric IDs (common in PDF extraction noise)
       if (/^[+-]?\d{8,}$/.test(trimmed)) return true;
       return false;
@@ -1473,9 +1535,21 @@ function extractDreamData(raw) {
   function isStandaloneJunk(line) {
     const trimmed = (line || '').trim();
     if (!trimmed) return false;
-    if (/^chatgpt:?$/i.test(trimmed)) return true;
     if (/^[+-]?\d{8,}$/.test(trimmed)) return true;
     return false;
+  }
+  function isLikelySymbolList(textValue) {
+    const text = String(textValue || '').trim();
+    if (!text) return false;
+    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+    if (!lines.length) return false;
+    const totalWords = lines.join(' ').split(/\s+/).filter(Boolean).length;
+    const conciseLines = lines.filter(line => line.split(/\s+/).filter(Boolean).length <= 8);
+    const entryLikeLines = lines.filter(line => /^[-*•]\s+/.test(line) || /[:\-–—]/.test(line));
+    return totalWords <= 60 && (conciseLines.length >= Math.min(lines.length, 3) || entryLikeLines.length >= 2);
+  }
+  function hasExplicitSymbolEvidence(pagesToParse) {
+    return pagesToParse.some(page => /(?:^|\n)(?:key\s+symbols?|symbols?|objects?)(?:\s*[:\-–—]+|\n|$)/i.test(page.normalized || ''));
   }
   function isTemplateOptionCluster(line) {
     const compact = collapseSpacedLetters(line).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -2026,6 +2100,39 @@ function extractDreamData(raw) {
       .filter(line => line && !isStandaloneJunk(line) && !isTemplateNoiseLabel(line))
       .join('\n');
   });
+  if (result.dreamSymbols) {
+    result.dreamSymbols = result.dreamSymbols
+      .split('\n')
+      .map(line => collapseSpacedLetters(line).trim())
+      .filter(line => line && !isTemplateNoiseLabel(line))
+      .join('\n');
+  }
+  const explicitSymbolEvidence = hasExplicitSymbolEvidence(bodyPages);
+  if (result.dreamSymbols && !explicitSymbolEvidence && !isLikelySymbolList(result.dreamSymbols)) {
+    const symbolsAsProse = result.dreamSymbols.trim();
+    if (symbolsAsProse) {
+      result.dreamInterpretation = result.dreamInterpretation
+        ? `${result.dreamInterpretation}\n\n${symbolsAsProse}`
+        : symbolsAsProse;
+    }
+    result.dreamSymbols = '';
+  }
+  const inferredSymbols = extractSymbolEntriesFromText([result.dreamBrainstorm, result.dreamInterpretation].filter(Boolean).join('\n'));
+  if (inferredSymbols.length) {
+    const existing = (result.dreamSymbols || '').split('\n').map(line => line.trim()).filter(Boolean);
+    const merged = [...existing];
+    const seenSymbols = new Set(existing.map(line => line.toLowerCase()));
+    inferredSymbols.forEach(entry => {
+      const key = entry.toLowerCase();
+      if (!seenSymbols.has(key)) {
+        seenSymbols.add(key);
+        merged.push(entry);
+      }
+    });
+    result.dreamSymbols = merged.slice(0, 12).join('\n');
+  }
+  const inferredActions = extractActionPhrasesFromNarrative(result.dreamNarrative || '');
+  if (inferredActions.length) result.dreamActions = inferredActions.join('\n');
 
   // ── DREAM TYPE: match to known values ────────────────────
   if (result.dreamType) {
