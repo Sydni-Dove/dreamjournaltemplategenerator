@@ -69,6 +69,16 @@ body { font-family: 'Lato', sans-serif; background: var(--soft-bg); color: var(-
 .upload-msg.ok  { color: #5a8a5a; }
 .upload-msg.err { color: #a04040; }
 .upload-msg.spin { color: var(--gold); }
+.debug-panel { margin-top: 0.9rem; border: 1px solid rgba(99,0,0,0.18); border-radius: 0.75rem; background: #fffaf7; padding: 0.9rem 1rem; display: none; }
+.debug-panel.show { display: block; }
+.debug-panel-title { font-family: 'Playfair Display', serif; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--primary); margin-bottom: 0.7rem; }
+.debug-grid { display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
+.debug-item { border-top: 1px solid rgba(99,0,0,0.08); padding-top: 0.55rem; }
+.debug-item:first-child { border-top: none; padding-top: 0; }
+.debug-label { font-family: 'Lato', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-mid); margin-bottom: 0.2rem; }
+.debug-value { font-family: 'Lora', serif; font-size: 0.8rem; color: var(--text); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+.debug-meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
+@media (max-width: 680px) { .debug-meta { grid-template-columns: 1fr; } }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
 .field-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .field-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
@@ -476,6 +486,32 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <p class="upload-hint">Upload PDF, DOCX, TXT, or a photo of handwritten notes • Multiple dated entries split into separate journal page sets automatically • Sections labeled Dream:, Symbols:, Interpretation:, etc. map to the right fields</p>
     </div>
     <div class="upload-msg" id="uploadMsg"></div>
+    <div class="debug-panel" id="debugPanel">
+      <div class="debug-panel-title">Parser Debug</div>
+      <div class="debug-grid">
+        <div class="debug-meta">
+          <div class="debug-item"><div class="debug-label">Build</div><div class="debug-value" id="dbgBuild"></div></div>
+          <div class="debug-item"><div class="debug-label">Detected Entry Count</div><div class="debug-value" id="dbgEntryCount"></div></div>
+          <div class="debug-item"><div class="debug-label">Doc Mode</div><div class="debug-value" id="dbgDocMode"></div></div>
+          <div class="debug-item"><div class="debug-label">Detected Heading Count</div><div class="debug-value" id="dbgHeadingCount"></div></div>
+          <div class="debug-item"><div class="debug-label">Labeled Sections</div><div class="debug-value" id="dbgLabeledDetected"></div></div>
+          <div class="debug-item"><div class="debug-label">Repeated Blocks</div><div class="debug-value" id="dbgRepeatedDetected"></div></div>
+        </div>
+        <div class="debug-item"><div class="debug-label">Title</div><div class="debug-value" id="dbgTitle"></div></div>
+        <div class="debug-item"><div class="debug-label">Top Document Title Candidate</div><div class="debug-value" id="dbgTopTitleCandidate"></div></div>
+        <div class="debug-item"><div class="debug-label">Filename Title Candidate</div><div class="debug-value" id="dbgFilenameTitleCandidate"></div></div>
+        <div class="debug-item"><div class="debug-label">Narrative Title Candidate</div><div class="debug-value" id="dbgNarrativeTitleCandidate"></div></div>
+        <div class="debug-item"><div class="debug-label">Final Title Source</div><div class="debug-value" id="dbgFinalTitleSource"></div></div>
+        <div class="debug-item"><div class="debug-label">Date</div><div class="debug-value" id="dbgDate"></div></div>
+        <div class="debug-item"><div class="debug-label">Dream Narrative</div><div class="debug-value" id="dbgNarrative"></div></div>
+        <div class="debug-item"><div class="debug-label">Brainstorm</div><div class="debug-value" id="dbgBrainstorm"></div></div>
+        <div class="debug-item"><div class="debug-label">Interpretation</div><div class="debug-value" id="dbgInterpretation"></div></div>
+        <div class="debug-item"><div class="debug-label">Application</div><div class="debug-value" id="dbgApplication"></div></div>
+        <div class="debug-item"><div class="debug-label">Symbols</div><div class="debug-value" id="dbgSymbols"></div></div>
+        <div class="debug-item"><div class="debug-label">Additional Notes</div><div class="debug-value" id="dbgNotes"></div></div>
+        <div class="debug-item"><div class="debug-label">Raw Preview</div><div class="debug-value" id="dbgRawPreview"></div></div>
+      </div>
+    </div>
   </div>
 
   <div class="form-block">
@@ -680,6 +716,50 @@ if (typeof pdfjsLib !== 'undefined') {
 let pendingPages      = [];
 let lastGeneratedData = [];
 
+function setDebugField(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const text = String(value == null ? '' : value).trim();
+  el.textContent = text || '—';
+}
+
+function showParserDebug(data, meta = {}) {
+  const panel = document.getElementById('debugPanel');
+  if (!panel) return;
+  panel.classList.add('show');
+
+  setDebugField('dbgBuild', meta.build || window.__DJ_BUILD || 'unknown');
+  setDebugField('dbgEntryCount', meta.entryCount || '1');
+  setDebugField('dbgDocMode', meta.docMode || data?._docMode || '');
+  setDebugField('dbgHeadingCount', meta.headingCount || data?._detectedHeadingCount || '');
+  setDebugField('dbgLabeledDetected', meta.labeledSectionsDetected || String(!!data?._labeledSectionsDetected));
+  setDebugField('dbgRepeatedDetected', meta.repeatedBlockDetected || String(!!data?._repeatedBlockDetected));
+  setDebugField('dbgTitle', data?.dreamTitle || '');
+  setDebugField('dbgTopTitleCandidate', data?._topDocumentTitleCandidate || '');
+  setDebugField('dbgFilenameTitleCandidate', data?._filenameTitleCandidate || '');
+  setDebugField('dbgNarrativeTitleCandidate', data?._narrativeTitleCandidate || '');
+  setDebugField('dbgFinalTitleSource', data?._finalTitleSource || '');
+  setDebugField('dbgDate', data?.dreamDate || '');
+  setDebugField('dbgNarrative', data?.dreamNarrative || '');
+  setDebugField('dbgBrainstorm', data?.dreamBrainstorm || '');
+  setDebugField('dbgInterpretation', data?.dreamInterpretation || '');
+  setDebugField('dbgApplication', data?.dreamApplication || '');
+  setDebugField('dbgSymbols', data?.dreamSymbols || '');
+  setDebugField('dbgNotes', data?.dreamAdditionalNotes || '');
+  setDebugField('dbgRawPreview', (meta.rawText || '').slice(0, 700));
+}
+
+function clearParserDebug() {
+  const panel = document.getElementById('debugPanel');
+  if (panel) panel.classList.remove('show');
+  [
+    'dbgBuild','dbgEntryCount','dbgDocMode','dbgHeadingCount','dbgLabeledDetected','dbgRepeatedDetected','dbgTitle','dbgDate','dbgNarrative',
+    'dbgTopTitleCandidate','dbgFilenameTitleCandidate','dbgNarrativeTitleCandidate','dbgFinalTitleSource',
+    'dbgBrainstorm','dbgInterpretation','dbgApplication',
+    'dbgSymbols','dbgNotes','dbgRawPreview'
+  ].forEach(id => setDebugField(id, ''));
+}
+
 // ── SUPABASE ───────────────────────────────────────────
 const SUPABASE_URL      = 'https://jnlvvlkwskidloripvtp.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpubHZ2bGt3c2tpZGxvcmlwdnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU4MTYsImV4cCI6MjA4OTI2MTgxNn0.R5zXv54T4LGKiZfb7903wVmG-sjGNU8JiccmLRBKt18';
@@ -782,6 +862,7 @@ document.getElementById('fileInput').addEventListener('change', handleUpload);
 async function handleUpload(e) {
   const files = e.target.files;
   if (!files || files.length === 0) return;
+  clearParserDebug();
   const isImg = f => /\.(png|jpe?g|webp|bmp|tiff)$/i.test(f.name);
   try {
     if (files.length === 1) {
@@ -831,6 +912,7 @@ async function handleUpload(e) {
           setField('sumDream', first.sumDream || '');
           setField('sumInterpretation', first.sumInterpretation || '');
           setField('sumApplication', first.sumApplication || '');
+          showParserDebug(first, { build: window.__DJ_BUILD || 'unknown', entryCount: String(entries.length), rawText: combined });
         }
 
         setMsg(`✓ ${entries.length} entries found — first entry loaded into the form. Click Generate to create all journal page sets.`, 'ok');
@@ -840,6 +922,7 @@ async function handleUpload(e) {
         enrichFromFilename(_efd, file.name);
         setField('dreamTitle', _efd.dreamTitle || '');
         setField('dreamDate', _efd.dreamDate || '');
+        showParserDebug(_efd, { build: window.__DJ_BUILD || 'unknown', entryCount: '1', rawText: combined });
         setMsg(`✓ Content imported — generating journal pages…`, 'ok');
         setTimeout(() => generateFromForm(), 300);
       }
@@ -850,10 +933,11 @@ async function handleUpload(e) {
         let text = ''; try { text = await readFile(files[i]); } catch { continue; }
         if (!text.trim()) continue;
         setMsg(`🔍 Extracting entries from file ${i + 1} of ${files.length}…`, 'spin');
-        parseEntries(text).forEach(entry => { const d = extractDreamData(entry.text); d._label = files[i].name.replace(/\.[^.]+$/, ''); enrichFromFilename(d, files[i].name); dataArray.push(d); });
+        parseEntries(text).forEach(entry => { const d = extractDreamData(entry.text); d._label = files[i].name.replace(/\.[^.]+$/, ''); d._raw = entry.text; enrichFromFilename(d, files[i].name); dataArray.push(d); });
       }
       if (!dataArray.length) { setMsg('✗ No readable content found.', 'err'); return; }
       pendingPages = dataArray;
+      if (dataArray[0]) showParserDebug(dataArray[0], { build: window.__DJ_BUILD || 'unknown', entryCount: String(dataArray.length), rawText: dataArray[0]._raw || '' });
       setMsg(`✓ ${dataArray.length} entr${dataArray.length > 1 ? 'ies' : 'y'} ready — click Generate to create ${dataArray.length} journal page set${dataArray.length > 1 ? 's' : ''}.`, 'ok');
     }
   } catch (err) { setMsg('✗ ' + (err.message || 'Could not process files.'), 'err'); }
@@ -1036,6 +1120,184 @@ function isInterpretationLikeLine(line) {
     /\bthis\s+could\s+mean\b/.test(lower) ||
     /\bwhat\s+(this|does\s+this)\s+mean\b/.test(lower)
   );
+}
+
+function normalizeSimpleSectionHeading(line) {
+  const t = String(line || '').trim().toLowerCase().replace(/[\s:;,.!?-–—]+$/g, '');
+  if (!t) return null;
+  if (/^dream$/.test(t)) return 'dreamNarrative';
+  if (/^brainstorm(?:ing)?$/.test(t)) return 'dreamBrainstorm';
+  if (/^interpretation$/.test(t)) return 'dreamInterpretation';
+  if (/^application$/.test(t)) return 'dreamApplication';
+  if (/^symbols$/.test(t)) return 'dreamSymbols';
+  if (/^scriptures?$/.test(t)) return 'dreamScriptures';
+  return null;
+}
+
+function joinSectionChunks(chunks) {
+  return (chunks || [])
+    .map(chunk => String(chunk || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim())
+    .filter(Boolean)
+    .join('\n\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function detectRepeatedSimpleSectionBlocks(text) {
+  const lines = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const blocks = [];
+  let currentHeading = null;
+  let currentLines = [];
+  const prefaceLines = [];
+  let sawHeading = false;
+  let repeatedCount = 0;
+
+  const flush = () => {
+    if (!currentHeading && !currentLines.length) return;
+    blocks.push({ heading: currentHeading, text: currentLines.join('\n').replace(/\n{3,}/g, '\n\n').trim() });
+    currentHeading = null;
+    currentLines = [];
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const trimmed = String(raw || '').trim();
+    const normalizedHeading = normalizeSimpleSectionHeading(trimmed);
+
+    if (normalizedHeading) {
+      if (sawHeading) repeatedCount += 1;
+      sawHeading = true;
+      flush();
+      currentHeading = normalizedHeading;
+      continue;
+    }
+
+    if (!sawHeading) {
+      prefaceLines.push(raw);
+      continue;
+    }
+
+    currentLines.push(raw);
+  }
+
+  flush();
+
+  const meaningfulBlocks = blocks.filter(block => block.heading && String(block.text || '').trim());
+  const repeatedHeadings = meaningfulBlocks.length >= 3 && repeatedCount >= 1;
+  if (!repeatedHeadings) return null;
+  const hasRepeatedDreamOrBrainstorm =
+    meaningfulBlocks.filter(block =>
+      block.heading === 'dreamNarrative' || block.heading === 'dreamBrainstorm'
+    ).length >= 3;
+
+  if (!hasRepeatedDreamOrBrainstorm) return null;
+
+  const sectionBuckets = {
+    dreamNarrative: [],
+    dreamBrainstorm: [],
+    dreamInterpretation: [],
+    dreamApplication: [],
+    dreamSymbols: [],
+    dreamScriptures: []
+  };
+
+  meaningfulBlocks.forEach(block => {
+    if (sectionBuckets[block.heading]) sectionBuckets[block.heading].push(block.text);
+  });
+
+  const prefaceNonEmpty = prefaceLines.map(line => String(line || '').trim()).filter(Boolean);
+  let inferredTitle = '';
+  let additionalNotes = '';
+
+  if (prefaceNonEmpty.length) {
+    const first = prefaceNonEmpty[0];
+    const restLines = prefaceNonEmpty.slice(1);
+    const firstLooksLikeTitle =
+      first &&
+      first.split(/\s+/).length <= 12 &&
+      !isDateHeading(first) &&
+      !normalizeSimpleSectionHeading(first);
+
+    if (firstLooksLikeTitle) {
+      inferredTitle = first;
+    }
+
+    const prefaceBody = (firstLooksLikeTitle ? restLines : prefaceNonEmpty).join('\n').trim();
+
+    if (prefaceBody) {
+      if (!sectionBuckets.dreamNarrative.length) {
+        sectionBuckets.dreamNarrative.push(prefaceBody);
+      } else {
+        additionalNotes = prefaceBody;
+      }
+    }
+  }
+
+  return {
+    inferredTitle,
+    dreamNarrative: joinSectionChunks(sectionBuckets.dreamNarrative),
+    dreamBrainstorm: joinSectionChunks(sectionBuckets.dreamBrainstorm),
+    dreamInterpretation: joinSectionChunks(sectionBuckets.dreamInterpretation),
+    dreamApplication: joinSectionChunks(sectionBuckets.dreamApplication),
+    dreamSymbols: joinSectionChunks(sectionBuckets.dreamSymbols),
+    dreamScriptures: joinSectionChunks(sectionBuckets.dreamScriptures),
+    dreamAdditionalNotes: additionalNotes,
+    detected: true
+  };
+}
+
+function countDreamDocumentSectionHeadings(text) {
+  return String(text || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map(line => String(line || '').trim())
+    .filter(line => /^(dream|dream narrative|vision|brainstorm(?:ing)?|interpretation|application|symbols|scriptures?)[:]?$/i.test(line))
+    .length;
+}
+
+function detectParsingMode(text, repeatedBlocksDetected = false, labeledSectionsDetected = false) {
+  if (repeatedBlocksDetected) return 'repeated_simple_sections';
+  if (labeledSectionsDetected) return 'labeled_sections';
+  return 'unlabeled_or_template';
+}
+
+function splitNarrativeLikeContentFromInterpretation(text) {
+  const source = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!source) return { narrative: '', interpretation: '' };
+
+  const parts = source.split(/\n{2,}/).map(part => part.trim()).filter(Boolean);
+  const narrativeParts = [];
+  const interpretationParts = [];
+
+  const narrativeSignal = chunk => {
+    const lowered = chunk.toLowerCase();
+    let score = 0;
+    if (/\b(i|we|he|she|they)\s+(was|were|went|saw|came|decided|followed|looked|heard|told|left|got|get|walked|ended)\b/i.test(chunk)) score += 3;
+    if (/\bthen\b|\bafter\b|\bnext\b|\bscene\b|\broom\b|\bcar\b|\bforest\b|\bhouse\b|\bchurch\b/i.test(lowered)) score += 2;
+    if (/\bthere was\b|\bwe are\b|\bi'm\b|\bi am\b|\bi get\b|\bi went\b/i.test(lowered)) score += 2;
+    return score;
+  };
+  const interpretationSignal = chunk => {
+    const lowered = chunk.toLowerCase();
+    let score = 0;
+    if (/\bmeans?\b|\brepresents?\b|\bsymboli[sz]es?\b|\bcould mean\b|\bmay be about\b|\bgod is showing\b|\bi think (?:god )?is showing\b|\bthis may be\b/i.test(lowered)) score += 3;
+    if (isInterpretationLikeLine(chunk)) score += 3;
+    if (/^(maybe|perhaps|possibly|i think)\b/i.test(lowered)) score += 1;
+    return score;
+  };
+
+  parts.forEach(part => {
+    const nScore = narrativeSignal(part);
+    const iScore = interpretationSignal(part);
+    if (nScore > iScore) narrativeParts.push(part);
+    else interpretationParts.push(part);
+  });
+
+  return {
+    narrative: narrativeParts.join('\n\n').trim(),
+    interpretation: interpretationParts.join('\n\n').trim()
+  };
 }
 
 function splitNarrativeAndInterpretationLines(narrativeText, interpretationText) {
@@ -1591,6 +1853,7 @@ function extractActionPhrasesFromNarrative(text) {
 // ── DREAM DATA EXTRACTION ───────────────────────────────
 function extractDreamData(raw) {
   const result = {};
+  if (typeof window !== 'undefined') window.__DJ_BUILD = '20260326-22';
   const TEMPLATE_OPTION_TERMS = [
     'destiny',
     'encouragement',
@@ -1717,6 +1980,45 @@ function extractDreamData(raw) {
     }
     return '';
   }
+  function isBadNarrativeTitleCandidate(line) {
+    const normalized = normalizeWhitespace(line);
+    if (!normalized) return true;
+    const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+    if (isSceneMarker(normalized)) return true;
+    if (/^(?:i(?:'m|\s+am|\s+was|\s+went|\s+saw|\s+heard|\s+remember(?:ed)?|\s+get|\s+got)|we(?:'re|\s+are|\s+were)|then\b|after\b|next\s+scene\b|there\s+(?:was|were)|someone\s+was|in\s+the\s+car\b|at\s+(?:a|the)\b)/i.test(normalized)) return true;
+    if (/[.!?]/.test(normalized) && wordCount >= 6) return true;
+    if (wordCount > 14) return true;
+    return false;
+  }
+  function extractTopDocumentTitle(textValue) {
+    const lines = String(textValue || '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(line => normalizeWhitespace(line))
+      .filter(Boolean)
+      .slice(0, 8);
+
+    for (const line of lines) {
+      if (!line || isTemplateNoiseLabel(line) || isStandaloneJunk(line) || isDecorativeSidebarNoiseCluster(line)) continue;
+      const explicitTitle = line.match(/^title\s*[-–—:]+\s*(.+)$/i);
+      if (explicitTitle?.[1] && !isBadNarrativeTitleCandidate(explicitTitle[1])) {
+        return { title: explicitTitle[1].trim(), date: findDateInText(line) || '', sourceLine: line };
+      }
+      if (/^(?:dream|vision)\s+\d{1,2}[\.\/-]\d{1,2}[\.\/-]\d{2,4}(?:\s+.*)?$/i.test(line)) {
+        return { title: line, date: findDateInText(line) || '', sourceLine: line };
+      }
+      if (isRealDreamStart(line) || isSceneMarker(line)) break;
+      if (/^(?:dream|vision)\b/i.test(line) && !isBadNarrativeTitleCandidate(line)) {
+        return { title: line, date: findDateInText(line) || '', sourceLine: line };
+      }
+      if (!isBadNarrativeTitleCandidate(line) && line.length <= 120) {
+        return { title: line, date: findDateInText(line) || '', sourceLine: line };
+      }
+    }
+
+    return { title: '', date: '', sourceLine: '' };
+  }
   function deriveDreamTitleFromNarrative(text) {
     const narrative = String(text || '').replace(/\s+/g, ' ').trim();
     if (!narrative) return '';
@@ -1730,6 +2032,7 @@ function extractDreamData(raw) {
     firstSentence = firstSentence.replace(/[.!?]+$/, '').trim();
 
     if (!firstSentence) return '';
+    if (isBadNarrativeTitleCandidate(firstSentence)) return '';
 
     const words = firstSentence.split(/\s+/).filter(Boolean);
     if (words.length < 3) return '';
@@ -2046,7 +2349,252 @@ function extractDreamData(raw) {
   const text = normalizeExtractText(bodyPages.map(page => page.normalized).join('\n\n'));
   const nonEmptyLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const firstLine = nonEmptyLines[0] || '';
+  const topDocumentTitleInfo = extractTopDocumentTitle(text);
+  result._topDocumentTitleCandidate = topDocumentTitleInfo.title || '';
+  result._filenameTitleCandidate = '';
+  result._narrativeTitleCandidate = '';
+  result._finalTitleSource = '';
   const PDF_PARSE_DEBUG = hasExplicitPageBreaks;
+  const repeatedBlocks = detectRepeatedSimpleSectionBlocks(text);
+  const detectedHeadingCount = countDreamDocumentSectionHeadings(text);
+  const labeledSectionsDetected = detectedHeadingCount >= 2;
+  const repeatedBlocksDetected = !!(repeatedBlocks && repeatedBlocks.detected);
+  const docMode = detectParsingMode(text, repeatedBlocksDetected, labeledSectionsDetected);
+  const buildRepeatedBlocksResult = () => {
+    const repeatedTitle = String(repeatedBlocks?.inferredTitle || '').trim();
+    const repeatedNarrative = String(repeatedBlocks?.dreamNarrative || '').trim();
+    const repeatedBrainstorm = String(repeatedBlocks?.dreamBrainstorm || '').trim();
+    const repeatedInterpretation = String(repeatedBlocks?.dreamInterpretation || '').trim();
+    const repeatedApplication = String(repeatedBlocks?.dreamApplication || '').trim();
+    const repeatedSymbols = String(repeatedBlocks?.dreamSymbols || '').trim();
+    const repeatedScriptures = String(repeatedBlocks?.dreamScriptures || '').trim();
+    const repeatedNotes = String(repeatedBlocks?.dreamAdditionalNotes || '').trim();
+
+    let repeatedResult = {
+      dreamTitle: String(result.dreamTitle || repeatedTitle || '').trim(),
+      dreamDate: String(result.dreamDate || findDateInText(text) || '').trim(),
+      dreamTime: '',
+      dreamContextSource: '',
+      dreamTheme: '',
+      dreamType: '',
+      dreamerInvolvement: '',
+      dreamNarrative: repeatedNarrative,
+      dreamBrainstorm: repeatedBrainstorm,
+      dreamActions: '',
+      dreamSymbols: repeatedSymbols,
+      dreamEmotions: '',
+      dreamScriptures: repeatedScriptures,
+      dreamInterpretation: repeatedInterpretation,
+      dreamApplication: repeatedApplication,
+      dreamAdditionalNotes: repeatedNotes,
+      sumDream: '',
+      sumInterpretation: '',
+      sumApplication: '',
+      _docMode: 'repeated_simple_sections',
+      _detectedHeadingCount: detectedHeadingCount,
+      _labeledSectionsDetected: labeledSectionsDetected,
+      _repeatedBlockDetected: true,
+      _topDocumentTitleCandidate: result._topDocumentTitleCandidate || '',
+      _filenameTitleCandidate: result._filenameTitleCandidate || '',
+      _narrativeTitleCandidate: result._narrativeTitleCandidate || '',
+      _finalTitleSource: result._finalTitleSource || ''
+    };
+
+    const split = splitNarrativeAndInterpretationLines(
+      repeatedResult.dreamNarrative || '',
+      repeatedResult.dreamInterpretation || ''
+    );
+
+    repeatedResult.dreamNarrative = split.narrative || repeatedResult.dreamNarrative;
+    repeatedResult.dreamInterpretation = split.interpretation || repeatedResult.dreamInterpretation;
+
+    if (!repeatedResult.dreamTitle) {
+      const narrativeTitle = deriveDreamTitleFromNarrative(repeatedResult.dreamNarrative || '');
+      repeatedResult._narrativeTitleCandidate = narrativeTitle || repeatedResult._narrativeTitleCandidate || '';
+      if (narrativeTitle) {
+        repeatedResult.dreamTitle = narrativeTitle;
+        repeatedResult._finalTitleSource = repeatedResult._finalTitleSource || 'narrative_fallback';
+      }
+    }
+
+    return repeatedResult;
+  };
+  const buildLabeledSectionsResult = () => {
+    const sectionBuckets = {
+      dreamNarrative: [],
+      dreamBrainstorm: [],
+      dreamInterpretation: [],
+      dreamApplication: [],
+      dreamSymbols: [],
+      dreamScriptures: [],
+      dreamAdditionalNotes: []
+    };
+    const appendChunk = (field, textValue) => {
+      const cleaned = String(textValue || '')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+      if (!cleaned || cleaned === '-' || cleaned === '—') return;
+      if (!sectionBuckets[field]) sectionBuckets[field] = [];
+      sectionBuckets[field].push(cleaned);
+    };
+    const records = buildPageAwareLineRecords(bodyPages);
+    let startRecordIndex = 0;
+    while (startRecordIndex < 3 && records[startRecordIndex]?.line && /^\d{8,}$/.test(records[startRecordIndex].line)) startRecordIndex++;
+    const scopedRecords = records.slice(startRecordIndex);
+    let currentField = null;
+    let currentLines = [];
+    let sawHeading = false;
+    const prefaceLines = [];
+
+    const flushCurrent = () => {
+      const textValue = currentLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+      currentLines = [];
+      if (!textValue) return;
+      if (!currentField) {
+        prefaceLines.push(textValue);
+        return;
+      }
+      appendChunk(currentField, textValue);
+    };
+
+    for (let i = 0; i < scopedRecords.length; i++) {
+      const rawLine = scopedRecords[i]?.line || '';
+      const line = String(rawLine || '').trim();
+      const splitHeading = detectSplitMajorHeading(scopedRecords, i);
+
+      if (!line) {
+        if (currentLines.length && currentLines[currentLines.length - 1] !== '') currentLines.push('');
+        continue;
+      }
+      if (isDateHeading(line)) continue;
+      if (_titleSourceLine && normalizeWhitespace(line) === normalizeWhitespace(_titleSourceLine)) {
+        _titleSourceLine = null;
+        continue;
+      }
+      if (isTemplateNoiseLabel(line)) continue;
+
+      if (splitHeading) {
+        flushCurrent();
+        sawHeading = true;
+        currentField = splitHeading.field;
+        i = splitHeading.skipTo;
+        continue;
+      }
+
+      const headingField = detectHeading(line, scopedRecords, i, false, currentField);
+      if (headingField) {
+        flushCurrent();
+        sawHeading = true;
+        currentField = headingField;
+        continue;
+      }
+
+      if (!sawHeading) {
+        prefaceLines.push(rawLine);
+        continue;
+      }
+
+      currentLines.push(rawLine);
+    }
+
+    flushCurrent();
+
+    const cleanedPreface = prefaceLines
+      .join('\n')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(line => String(line || '').trim())
+      .filter(line => line && !isDateHeading(line) && !isTemplateNoiseLabel(line))
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    if (cleanedPreface) {
+      if (shouldStoreUnlabelledAsAdditionalNotes(cleanedPreface, 'dreamNarrative')) {
+        appendChunk('dreamAdditionalNotes', cleanedPreface);
+      } else {
+        sectionBuckets.dreamNarrative.unshift(cleanedPreface);
+      }
+    }
+
+    let labeledResult = {
+      dreamTitle: String(result.dreamTitle || '').trim(),
+      dreamDate: String(result.dreamDate || findDateInText(text) || '').trim(),
+      dreamTime: String(result.dreamTime || '').trim(),
+      dreamContextSource: String(result.dreamContextSource || '').trim(),
+      dreamTheme: String(result.dreamTheme || '').trim(),
+      dreamType: String(result.dreamType || '').trim(),
+      dreamerInvolvement: String(result.dreamerInvolvement || '').trim(),
+      dreamNarrative: joinSectionChunks(sectionBuckets.dreamNarrative),
+      dreamBrainstorm: joinSectionChunks(sectionBuckets.dreamBrainstorm),
+      dreamActions: '',
+      dreamSymbols: joinSectionChunks(sectionBuckets.dreamSymbols),
+      dreamEmotions: '',
+      dreamScriptures: joinSectionChunks(sectionBuckets.dreamScriptures),
+      dreamInterpretation: joinSectionChunks(sectionBuckets.dreamInterpretation),
+      dreamApplication: joinSectionChunks(sectionBuckets.dreamApplication),
+      dreamAdditionalNotes: joinSectionChunks(sectionBuckets.dreamAdditionalNotes),
+      sumDream: '',
+      sumInterpretation: '',
+      sumApplication: '',
+      _docMode: 'labeled_sections',
+      _detectedHeadingCount: detectedHeadingCount,
+      _labeledSectionsDetected: labeledSectionsDetected,
+      _repeatedBlockDetected: false,
+      _topDocumentTitleCandidate: result._topDocumentTitleCandidate || '',
+      _filenameTitleCandidate: result._filenameTitleCandidate || '',
+      _narrativeTitleCandidate: result._narrativeTitleCandidate || '',
+      _finalTitleSource: result._finalTitleSource || ''
+    };
+
+    if (labeledResult.dreamInterpretation) {
+      const repairedInterpretation = splitNarrativeLikeContentFromInterpretation(labeledResult.dreamInterpretation);
+      if (repairedInterpretation.narrative) {
+        labeledResult.dreamNarrative = [labeledResult.dreamNarrative, repairedInterpretation.narrative]
+          .filter(Boolean)
+          .join('\n\n')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+      }
+      labeledResult.dreamInterpretation = repairedInterpretation.interpretation;
+    }
+
+    const split = splitNarrativeAndInterpretationLines(
+      labeledResult.dreamNarrative || '',
+      labeledResult.dreamInterpretation || ''
+    );
+    labeledResult.dreamNarrative = split.narrative || labeledResult.dreamNarrative;
+    labeledResult.dreamInterpretation = split.interpretation || labeledResult.dreamInterpretation;
+
+    if (labeledResult.dreamNarrative) {
+      labeledResult.dreamNarrative = stripPreNarrativeTemplateNoise(labeledResult.dreamNarrative);
+      const splitNarrative = splitDreamNarrativeBlocks(labeledResult.dreamNarrative);
+      if (splitNarrative.blocks.length) {
+        labeledResult.dreamNarrative = splitNarrative.blocks[0] || '';
+        const additionalBlocks = splitNarrative.blocks.slice(1).join('\n\n');
+        const combinedNotes = [labeledResult.dreamAdditionalNotes, splitNarrative.notes, additionalBlocks]
+          .filter(Boolean)
+          .join('\n\n')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+        labeledResult.dreamAdditionalNotes = combinedNotes;
+      }
+    }
+
+    if (!labeledResult.dreamTitle) {
+      const narrativeTitle = deriveDreamTitleFromNarrative(labeledResult.dreamNarrative || '');
+      labeledResult._narrativeTitleCandidate = narrativeTitle || labeledResult._narrativeTitleCandidate || '';
+      if (narrativeTitle) {
+        labeledResult.dreamTitle = narrativeTitle;
+        labeledResult._finalTitleSource = labeledResult._finalTitleSource || 'narrative_fallback';
+      }
+    }
+
+    return labeledResult;
+  };
 
   function extractHeaderValueFromPage(pageText, labels) {
     const lines = String(pageText || '')
@@ -2110,7 +2658,10 @@ function extractDreamData(raw) {
     return header;
   }
 
-  if (headerPageRaw) Object.assign(result, extractHeaderData(headerPageRaw));
+  if (headerPageRaw) {
+    Object.assign(result, extractHeaderData(headerPageRaw));
+    if (result.dreamTitle && !result._finalTitleSource) result._finalTitleSource = 'explicit_title_field';
+  }
 
   // Strip iCloud/document ID lines (long numeric IDs at top of entry)
   while (nonEmptyLines.length > 0 && /^\d{8,}$/.test(nonEmptyLines[0])) nonEmptyLines.shift();
@@ -2122,10 +2673,17 @@ function extractDreamData(raw) {
   // dreamNarrative.  Must be declared here, before Strategy 3 sets it.
   let _titleSourceLine = null;
 
+  if (!result.dreamTitle && topDocumentTitleInfo.title && !isTemplatePlaceholderValue(topDocumentTitleInfo.title, 'dreamTitle')) {
+    result.dreamTitle = topDocumentTitleInfo.title;
+    if (!result.dreamDate && topDocumentTitleInfo.date) result.dreamDate = topDocumentTitleInfo.date;
+    _titleSourceLine = topDocumentTitleInfo.sourceLine || null;
+    result._finalTitleSource = 'top_document_title';
+  }
+
   // Strategy 1: "Dream M.DD.YY Title" or "Vision M.DD.YY Title" — Vision-date-title heading
   if (!result.dreamTitle) {
     const m = firstLine.match(/^(?:dream|vision)\s+\d{1,2}[\.\/]\d{1,2}[\.\/]\d{2,4}\s+(.+)$/i);
-    if (m) result.dreamTitle = m[1].trim();
+    if (m) { result.dreamTitle = m[1].trim(); result._finalTitleSource = 'top_document_title'; }
   }
 
   // Strategy 2: date heading with trailing text ("3.8.26 The Open Door")
@@ -2135,7 +2693,7 @@ function extractDreamData(raw) {
       firstLine.match(/^\d{1,2}\.\d{1,2}\.\d{2,4}\s+(.+)$/) ||
       firstLine.match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\s+(.+)$/) ||
       firstLine.match(/^(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2},?\s+\d{4}\s*[-–—:,]+\s*(.+)$/i);
-    if (trailMatch) result.dreamTitle = trailMatch[1].replace(/^(?:title|dream)[:\s]*/i,'').trim();
+    if (trailMatch) { result.dreamTitle = trailMatch[1].replace(/^(?:title|dream)[:\s]*/i,'').trim(); result._finalTitleSource = 'top_document_title'; }
   }
 
   // Strategy 3: "Some Title Dream M.DD.YY" — title text before trailing date
@@ -2150,6 +2708,7 @@ function extractDreamData(raw) {
       if (candidate && !/^(?:dream|vision)(?:\s+narrative)?$/i.test(candidate)) {
         result.dreamTitle = candidate;
         _titleSourceLine  = firstLine;   // skip this full line in main parse loop
+        result._finalTitleSource = 'top_document_title';
       }
       if (!result.dreamDate) result.dreamDate = m[2];
     }
@@ -2158,14 +2717,14 @@ function extractDreamData(raw) {
   // Strategy 4: "M.DD.YY Title Text" — date at start, title follows
   if (!result.dreamTitle && !isDateHeading(firstLine)) {
     const m = firstLine.match(/^(\d{1,2}\.\d{1,2}\.\d{2,4})\s+(.+)$/);
-    if (m && !result.dreamDate) { result.dreamDate = m[1]; result.dreamTitle = m[2].trim(); }
+    if (m && !result.dreamDate) { result.dreamDate = m[1]; result.dreamTitle = m[2].trim(); result._finalTitleSource = 'top_document_title'; }
   }
 
   // Strategy 5: Explicit "Title:" label anywhere in doc
   if (!result.dreamTitle) {
     for (const line of nonEmptyLines) {
       const m = line.match(/^(?:dream\s+)?title\s*[-–—:\s]+(.+)$/i);
-      if (m && m[1].trim().length > 1 && !isTemplatePlaceholderValue(m[1], 'dreamTitle')) { result.dreamTitle = m[1].trim(); break; }
+      if (m && m[1].trim().length > 1 && !isTemplatePlaceholderValue(m[1], 'dreamTitle')) { result.dreamTitle = m[1].trim(); result._finalTitleSource = 'explicit_title_field'; break; }
     }
   }
 
@@ -2175,9 +2734,10 @@ function extractDreamData(raw) {
   if (!result.dreamTitle && firstLine && firstLine.length < 100 && !isDateHeading(firstLine)) {
     const looksLikeHeading   = /^(?:dream|vision|brainstorm|long\s+interpretation|interpretation|application|reflect|key\s+symbols?|symbols?|actions?|emotions?|scriptures?|notes?|summary|theme|source|context|time|date)\s*:?$/i.test(firstLine);
     const looksLikeNarrative = /^(?:i |we |she |he |they |the |it |there |then |in |at |after |before |and |so |but )/i.test(firstLine);
-    if (!looksLikeHeading && !looksLikeNarrative) {
+    if (!looksLikeHeading && !looksLikeNarrative && !isBadNarrativeTitleCandidate(firstLine)) {
       result.dreamTitle  = firstLine;
       _titleSourceLine   = firstLine;   // skip in main loop (declared above, before Strategy 1)
+      result._finalTitleSource = 'top_document_title';
     }
   }
   if (!result.dreamTitle || isTemplatePlaceholderValue(result.dreamTitle, 'dreamTitle')) {
@@ -2189,9 +2749,10 @@ function extractDreamData(raw) {
       if (!line || isDateHeading(line) || isTemplateNoiseLabel(line) || isStandaloneJunk(line) || isDecorativeSidebarNoiseCluster(line)) continue;
       const looksLikeNarrative = /^(?:i |we |she |he |they |the |it |there |then |in |at |after |before |and |so |but )/i.test(line);
       const nearTitleContext = /^title:?$/i.test(prev) || /\b(?:date|time|dream type|dreamer'?s? involvement|dream)\b/i.test(nearbyContext);
-      if (!isTemplatePlaceholderValue(line, 'dreamTitle') && !looksLikeNarrative && !isDecorativeSidebarNoiseCluster(line) && line.length < 120 && nearTitleContext) {
+      if (!isTemplatePlaceholderValue(line, 'dreamTitle') && !looksLikeNarrative && !isBadNarrativeTitleCandidate(line) && !isDecorativeSidebarNoiseCluster(line) && line.length < 120 && nearTitleContext) {
         result.dreamTitle = line.trim();
         _titleSourceLine = line;
+        result._finalTitleSource = 'top_document_title';
         break;
       }
     }
@@ -2733,6 +3294,16 @@ function extractDreamData(raw) {
     return wordCount <= 60 && looksLikePreface && !/^dream(?:\s|$)/i.test(firstLine) && (!looksLikeNarrativeLead || /\banother\s+dream\b/i.test(text));
   }
 
+  switch (docMode) {
+    case 'repeated_simple_sections':
+      return buildRepeatedBlocksResult();
+    case 'labeled_sections':
+      return buildLabeledSectionsResult();
+    case 'unlabeled_or_template':
+    default:
+      break;
+  }
+
   // ── MAIN PARSE LOOP ──────────────────────────────────────
   // Alternate templates can switch sections with page-title headings instead of
   // field labels, while isolated decorative/sidebar labels should be ignored.
@@ -2762,8 +3333,8 @@ function extractDreamData(raw) {
   // Strip doc-ID lines from top
   let startIdx = 0;
   while (startIdx < 3 && lineRecords[startIdx]?.line && /^\d{8,}$/.test(lineRecords[startIdx].line)) startIdx++;
-  const repeatedBlocks = parseSectionBlocks(lineRecords.slice(startIdx));
-  const useRepeatedSectionBlocks = shouldUseSectionBlocks(repeatedBlocks);
+  const repeatedSectionBlocks = parseSectionBlocks(lineRecords.slice(startIdx));
+  const useRepeatedSectionBlocks = shouldUseSectionBlocks(repeatedSectionBlocks);
 
   if (useRepeatedSectionBlocks) {
     const appendBlock = (field, textValue) => {
@@ -2771,20 +3342,29 @@ function extractDreamData(raw) {
       if (!text) return;
       buf[field] = buf[field] ? `${buf[field]}\n\n${text}` : text;
     };
+    const stripClaimedTitleLine = textValue => {
+      const lines = String(textValue || '').split('\n');
+      if (_titleSourceLine && normalizeWhitespace(lines[0] || '') === normalizeWhitespace(_titleSourceLine)) {
+        _titleSourceLine = null;
+        return lines.slice(1).join('\n').trim();
+      }
+      return String(textValue || '').trim();
+    };
 
-    repeatedBlocks.forEach((block, index) => {
-      if (!block?.text) return;
+    repeatedSectionBlocks.forEach((block, index) => {
+      const blockText = block?.heading ? block.text : stripClaimedTitleLine(block?.text || '');
+      if (!blockText) return;
       if (block.heading) {
-        appendBlock(block.heading, block.text);
+        appendBlock(block.heading, blockText);
         sectionTransitions.push({ type: 'block-heading', field: block.heading, pageNumber: null, line: block.heading });
         return;
       }
-      if (index === 0 || isRealDreamStart(block.text.split('\n').find(Boolean) || '')) {
-        appendBlock('dreamNarrative', block.text);
-      } else if (shouldStoreUnlabelledAsAdditionalNotes(block.text, openingMajorField || curField)) {
-        appendBlock('dreamAdditionalNotes', block.text);
+      if (index === 0 || isRealDreamStart(blockText.split('\n').find(Boolean) || '')) {
+        appendBlock('dreamNarrative', blockText);
+      } else if (shouldStoreUnlabelledAsAdditionalNotes(blockText, openingMajorField || curField)) {
+        appendBlock('dreamAdditionalNotes', blockText);
       } else {
-        appendBlock('_unlabelled', block.text);
+        appendBlock('_unlabelled', blockText);
       }
     });
   } else {
@@ -2915,9 +3495,9 @@ function extractDreamData(raw) {
   Object.entries(buf).forEach(([k,v]) => fill(k,v));
 
   const laterSectionFallback = classifyLaterPages(bodyPages, sectionTransitions);
-  if (!result.dreamInterpretation && laterSectionFallback.collected.dreamInterpretation) result.dreamInterpretation = laterSectionFallback.collected.dreamInterpretation;
-  if (!result.dreamApplication && laterSectionFallback.collected.dreamApplication) result.dreamApplication = laterSectionFallback.collected.dreamApplication;
-  if (isSinglePagePdf && bodyPages[0]) {
+  if (docMode === 'unlabeled_or_template' && !result.dreamInterpretation && laterSectionFallback.collected.dreamInterpretation) result.dreamInterpretation = laterSectionFallback.collected.dreamInterpretation;
+  if (docMode === 'unlabeled_or_template' && !result.dreamApplication && laterSectionFallback.collected.dreamApplication) result.dreamApplication = laterSectionFallback.collected.dreamApplication;
+  if (docMode === 'unlabeled_or_template' && isSinglePagePdf && bodyPages[0]) {
     const singlePageNarrative = extractNarrativeFromSinglePage(bodyPages[0].normalized);
     if (singlePageNarrative && (!result.dreamNarrative || /^them[.,\s]/i.test(result.dreamNarrative) || singlePageNarrative.length > result.dreamNarrative.length)) {
       result.dreamNarrative = singlePageNarrative;
@@ -2930,32 +3510,41 @@ function extractDreamData(raw) {
       result.dreamTitle = inferredTitle;
     }
   }
-  result.dreamNarrative = stripPreNarrativeTemplateNoise(result.dreamNarrative || '');
-  if (result.dreamNarrative) {
-    const splitNarrative = splitDreamNarrativeBlocks(result.dreamNarrative);
-    if (splitNarrative.blocks.length) {
-      result.dreamNarrative = splitNarrative.blocks[0] || '';
-      const additionalBlocks = splitNarrative.blocks.slice(1).join('\n\n');
-      const combinedNotes = [result.dreamAdditionalNotes, splitNarrative.notes, additionalBlocks].filter(Boolean).join('\n\n').trim();
-      if (combinedNotes) result.dreamAdditionalNotes = combinedNotes;
+  if (docMode === 'labeled_sections') {
+    result.dreamNarrative = stripPreNarrativeTemplateNoise(result.dreamNarrative || '');
+    if (result.dreamNarrative) {
+      const splitNarrative = splitDreamNarrativeBlocks(result.dreamNarrative);
+      if (splitNarrative.blocks.length) {
+        result.dreamNarrative = splitNarrative.blocks[0] || '';
+        const additionalBlocks = splitNarrative.blocks.slice(1).join('\n\n');
+        const combinedNotes = [result.dreamAdditionalNotes, splitNarrative.notes, additionalBlocks].filter(Boolean).join('\n\n').trim();
+        if (combinedNotes) result.dreamAdditionalNotes = combinedNotes;
+      }
     }
-  }
-  if (result.dreamNarrative) {
-    const interpretiveSplit = splitInterpretiveParagraphsFromNarrative(result.dreamNarrative);
-    if (interpretiveSplit.interpretation) {
-      result.dreamNarrative = interpretiveSplit.narrative;
-      result.dreamInterpretation = [result.dreamInterpretation, interpretiveSplit.interpretation].filter(Boolean).join('\n\n').trim();
+    if (result.dreamNarrative) {
+      const interpretiveSplit = splitInterpretiveParagraphsFromNarrative(result.dreamNarrative);
+      if (interpretiveSplit.interpretation) {
+        result.dreamNarrative = interpretiveSplit.narrative;
+        result.dreamInterpretation = [result.dreamInterpretation, interpretiveSplit.interpretation].filter(Boolean).join('\n\n').trim();
+      }
+    }
+    if (result.dreamInterpretation) {
+      const repairedInterpretation = splitNarrativeLikeContentFromInterpretation(result.dreamInterpretation);
+      if (repairedInterpretation.narrative) {
+        result.dreamNarrative = [result.dreamNarrative, repairedInterpretation.narrative].filter(Boolean).join('\n\n').trim();
+      }
+      result.dreamInterpretation = repairedInterpretation.interpretation;
     }
   }
   let dreamNarrative = result.dreamNarrative || '';
   let dreamInterpretation = result.dreamInterpretation || '';
-  {
+  if (docMode === 'labeled_sections') {
     const split = splitNarrativeAndInterpretationLines(dreamNarrative || '', dreamInterpretation || '');
     if (split.narrative) dreamNarrative = split.narrative;
     if (split.interpretation) dreamInterpretation = split.interpretation;
   }
 
-  if ((!dreamNarrative || dreamNarrative.trim().split(/\s+/).length < 12) && dreamInterpretation && dreamInterpretation.trim().split(/\s+/).length >= 20) {
+  if (docMode === 'labeled_sections' && (!dreamNarrative || dreamNarrative.trim().split(/\s+/).length < 12) && dreamInterpretation && dreamInterpretation.trim().split(/\s+/).length >= 20) {
     const interpretationLooksNarrative = /\b(i|we|he|she|they)\s+(was|were|went|saw|followed|decided|looked|came)\b/i.test(dreamInterpretation);
     const interpretationLooksAnalytical = /(may\s+represent|this\s+dream\s+means|could\s+mean|symboli[sz]es|represents?)/i.test(dreamInterpretation);
     if (interpretationLooksNarrative && !interpretationLooksAnalytical) {
@@ -2963,7 +3552,7 @@ function extractDreamData(raw) {
       dreamInterpretation = '';
     }
   }
-  if ((!dreamNarrative || dreamNarrative.trim().split(/\s+/).length < 20) && dreamInterpretation) {
+  if (docMode === 'labeled_sections' && (!dreamNarrative || dreamNarrative.trim().split(/\s+/).length < 20) && dreamInterpretation) {
     const recovered = recoverNarrativeFromInterpretation(dreamNarrative || '', dreamInterpretation || '');
     if (recovered.narrative && recovered.narrative.trim().split(/\s+/).length > (dreamNarrative || '').trim().split(/\s+/).filter(Boolean).length) {
       dreamNarrative = recovered.narrative;
@@ -2996,15 +3585,18 @@ function extractDreamData(raw) {
     }
   }
 
+  const narrativeTitle = deriveDreamTitleFromNarrative(result.dreamNarrative || leadingNarrativeCandidate || '');
+  result._narrativeTitleCandidate = narrativeTitle || result._narrativeTitleCandidate || '';
   if (!result.dreamTitle) {
-    const narrativeTitle = deriveDreamTitleFromNarrative(result.dreamNarrative || leadingNarrativeCandidate || '');
-
     if (narrativeTitle && !isDecorativeSidebarNoiseCluster(narrativeTitle)) {
       result.dreamTitle = narrativeTitle;
+      result._finalTitleSource = result._finalTitleSource || 'narrative_fallback';
     } else if (result.dreamDate) {
       result.dreamTitle = `Dream ${result.dreamDate}`;
+      result._finalTitleSource = result._finalTitleSource || 'date_fallback';
     } else {
       result.dreamTitle = '';
+      result._finalTitleSource = result._finalTitleSource || 'blank';
     }
   }
   ['dreamBrainstorm', 'dreamInterpretation', 'dreamApplication'].forEach(field => {
@@ -3083,7 +3675,7 @@ function extractDreamData(raw) {
   }
   const inferredActions = extractActionPhrasesFromNarrative(result.dreamNarrative || '');
   if (inferredActions.length) result.dreamActions = inferredActions.join('\n');
-  if (isSinglePageNarrativePdf(bodyPages, result) && result.dreamBrainstorm && !/\b(?:idea|means|represents|symbol|because|possibly|maybe|suggests|processing|insight)\b/i.test(result.dreamBrainstorm)) {
+  if (docMode === 'unlabeled_or_template' && isSinglePageNarrativePdf(bodyPages, result) && result.dreamBrainstorm && !/\b(?:idea|means|represents|symbol|because|possibly|maybe|suggests|processing|insight)\b/i.test(result.dreamBrainstorm)) {
     const brainstormNoise = stripInlineSidebarNoise(result.dreamBrainstorm);
     if (brainstormNoise) {
       result.dreamNarrative = `${result.dreamNarrative}\n${brainstormNoise}`.trim();
@@ -3142,7 +3734,7 @@ function extractDreamData(raw) {
   // If the parse loop filled ANY section (brainstorm, interpretation, etc.), we do NOT run
   // the fallback — doing so would duplicate those sections' text into dreamNarrative.
   const _anySectionFilled = Object.values(buf).some(v => v && String(v).trim());
-  if (!result.dreamNarrative && !_anySectionFilled) {
+  if (docMode === 'unlabeled_or_template' && !result.dreamNarrative && !_anySectionFilled) {
     const isHeadingOrLabel = s =>
       detectHeading(s) !== null ||
       detectInlineLabel(s) !== null ||
@@ -3196,6 +3788,11 @@ function extractDreamData(raw) {
       dreamApplication: (result.dreamApplication || '').slice(0, 300),
     });
   }
+
+  result._docMode = docMode;
+  result._detectedHeadingCount = detectedHeadingCount;
+  result._labeledSectionsDetected = labeledSectionsDetected;
+  result._repeatedBlockDetected = repeatedBlocksDetected;
 
   return result;
 }
@@ -3266,6 +3863,7 @@ function enrichFromFilename(data, filename) {
   withoutDate = withoutDate.replace(/\s*[-–—]\s*/g, ' ').trim();
   const leadingLabel = withoutDate.replace(/^(?:dream|vision)\s+/i, '').trim();
   const candidate = /^(?:dream|vision)$/i.test(withoutDate) ? '' : (leadingLabel || withoutDate);
+  data._filenameTitleCandidate = candidate || '';
   if (!candidate || candidate.length <= 1 || /^copy\s+of\b/i.test(candidate)) return;
 
   const currentTitle = String(data.dreamTitle || '').trim();
@@ -3279,7 +3877,10 @@ function enrichFromFilename(data, filename) {
     currentTitle === dateFallbackTitle
   );
 
-  if (canUseFilenameTitle) data.dreamTitle = candidate;
+  if (canUseFilenameTitle) {
+    data.dreamTitle = candidate;
+    data._finalTitleSource = 'filename_title';
+  }
 }
 
 function populateDream(raw) {
@@ -3465,9 +4066,14 @@ function _showPagesCore(dataArray) {
 
     for (let i=0; i<xDream; i++) addPage(applyStyle(buildExtraPage('Dream Narrative', data), true));
     for (let i=0; i<xBrainstorm; i++) addPage(applyStyle(buildExtraPage('Brainstorm', data), true));
-    const keysSheet = applyStyle(buildKeysPage(data), true);
-    addPage(keysSheet);
-    paginateKeysPage(container, keysSheet, data, pageStyle);
+    const keyPageSlices = paginateKeysPanels(data, pageStyle);
+    keyPageSlices.forEach(pageSlice => {
+      const keysSheet = applyStyle(buildKeysPage({
+        ...data,
+        ...pageSlice
+      }), true);
+      addPage(keysSheet);
+    });
     for (let i=0; i<xKeys; i++) addPage(applyStyle(buildExtraPage('Dream Keys', data), true));
 
     (descriptors.interpretationDescriptors || []).forEach(descriptor => {
@@ -3716,6 +4322,131 @@ function buildKeysPage(data) {
     panel.appendChild(lbl); panel.appendChild(bd); grid.appendChild(panel);
   });
   body.appendChild(grid); return page;
+}
+
+function createKeysMeasurementContext(data, pageStyle) {
+  const sheet = buildKeysPage({
+    ...data,
+    dreamActions: '',
+    dreamSymbols: '',
+    dreamEmotions: '',
+    dreamScriptures: ''
+  });
+  sheet.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;left:-9999px;pointer-events:none;z-index:-1;';
+  if (pageStyle === 'lined') sheet.classList.add('ps-lined');
+  else if (pageStyle === 'dotted') sheet.classList.add('ps-dotted');
+  document.body.appendChild(sheet);
+
+  const panelMetrics = [...sheet.querySelectorAll('.j-panel')].map(panel => {
+    const body = panel.querySelector('.j-panel-body');
+    return {
+      width: Math.max(Math.floor(body?.clientWidth || panel.clientWidth || 280), 120),
+      height: Math.max(Math.floor(body?.clientHeight || 0), 60)
+    };
+  });
+
+  return {
+    panelMetrics,
+    cleanup() {
+      if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
+    }
+  };
+}
+
+function consumePaginatedContent(fullText, fittedText) {
+  const full = String(fullText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  const fitted = String(fittedText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!full || !fitted) return full;
+  if (full === fitted) return '';
+  if (full.startsWith(fitted)) return full.slice(fitted.length).replace(/^\s+/, '').trim();
+
+  const fullTokens = buildContentWordTokens(full);
+  const fittedTokens = buildContentWordTokens(fitted);
+  if (fittedTokens.length >= fullTokens.length) return '';
+  if (fittedTokens.length > 0) {
+    return renderContentWordSlice(full, fittedTokens.length, fullTokens.length - fittedTokens.length).trim();
+  }
+  return full;
+}
+
+function paginateKeysPanels(data, pageStyle) {
+  const panelConfig = [
+    { key: 'actions', field: 'dreamActions' },
+    { key: 'symbols', field: 'dreamSymbols' },
+    { key: 'emotions', field: 'dreamEmotions' },
+    { key: 'scriptures', field: 'dreamScriptures' }
+  ];
+  const remaining = {
+    actions: String(data.dreamActions || '').trim(),
+    symbols: String(data.dreamSymbols || '').trim(),
+    emotions: String(data.dreamEmotions || '').trim(),
+    scriptures: String(data.dreamScriptures || '').trim()
+  };
+  const hasAnyKeyContent = panelConfig.some(({ key }) => !!remaining[key]);
+  if (!hasAnyKeyContent) {
+    return [{
+      dreamActions: '',
+      dreamSymbols: '',
+      dreamEmotions: '',
+      dreamScriptures: ''
+    }];
+  }
+
+  const pageSlices = [];
+  const measurement = createKeysMeasurementContext(data, pageStyle);
+  try {
+    let safety = 0;
+    while (panelConfig.some(({ key }) => !!remaining[key]) && safety < 50) {
+      safety++;
+      const pageSlice = {
+        dreamActions: '',
+        dreamSymbols: '',
+        dreamEmotions: '',
+        dreamScriptures: ''
+      };
+      let consumedAny = false;
+
+      panelConfig.forEach(({ key, field }, index) => {
+        const source = remaining[key];
+        if (!source) return;
+        const metrics = measurement.panelMetrics[index] || { width: 280, height: 120 };
+        const chunks = splitContentToFit(source, 'j-panel-body', metrics.height, metrics.width);
+        let fitted = String(chunks[0] || '').trim();
+
+        if (!fitted && source.trim()) {
+          const tokens = buildContentWordTokens(source);
+          fitted = renderContentWordSlice(source, 0, Math.min(tokens.length, 12)).trim();
+        }
+        if (!fitted) return;
+
+        pageSlice[field] = fitted;
+        const nextRemaining = consumePaginatedContent(source, fitted);
+        if (nextRemaining !== source) consumedAny = true;
+        remaining[key] = nextRemaining;
+      });
+
+      if (!consumedAny) break;
+
+      console.log('[KEYS PAGINATION]', {
+        symbolsRemaining: remaining.symbols?.length || 0,
+        actionsRemaining: remaining.actions?.length || 0,
+        emotionsRemaining: remaining.emotions?.length || 0,
+        scripturesRemaining: remaining.scriptures?.length || 0,
+        pageSlice
+      });
+
+      pageSlices.push(pageSlice);
+    }
+  } finally {
+    measurement.cleanup();
+  }
+
+  return pageSlices.length ? pageSlices : [{
+    dreamActions: remaining.actions || '',
+    dreamSymbols: remaining.symbols || '',
+    dreamEmotions: remaining.emotions || '',
+    dreamScriptures: remaining.scriptures || ''
+  }];
 }
 // Legacy direct Interpretation builder kept for fallback/reference; descriptor rendering is active.
 function buildInterpretationPage(data) {
@@ -4966,6 +5697,7 @@ function clearAll() {
   const countEl = document.getElementById('notesPageCount'); countEl.value = '1'; countEl.disabled = true; countEl.style.opacity = '0.35';
   document.getElementById('uploadMsg').textContent = '';
   document.getElementById('fileInput').value = '';
+  clearParserDebug();
   document.getElementById('outputSection').classList.remove('show');
   document.getElementById('pagesContainer').innerHTML = '';
   const pw = document.getElementById('previewWrap'); if (pw) pw.style.zoom = '';
