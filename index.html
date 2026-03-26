@@ -1066,6 +1066,38 @@ function extractDreamData(raw) {
   ];
   const TEMPLATE_OPTION_COMPACT = TEMPLATE_OPTION_TERMS.map(term => term.replace(/[^a-z0-9]/gi, '').toLowerCase());
   const PDF_TEMPLATE_DEBUG = /(legend|key words|play on words|key emotions|participant|partial participant|observer|sydni(?:'|’)s dream journal|template dream)/i.test(raw || '');
+  const NOISE_LABELS = new Set([
+    'legend',
+    'bold',
+    'repeat',
+    'key words',
+    'play on words',
+    'key emotions',
+    'other',
+    'dream type',
+    "dreamer's involvement",
+    'dreamer’s involvement',
+    'participant',
+    'partial participant',
+    'observer',
+    'destiny',
+    'transformation',
+    'encouragement',
+    'direction',
+    'warning',
+    'self condition',
+    'intercession',
+    'demonic',
+    'revelatory',
+    'not interpreted',
+    'interpreted',
+    "sydni's dream journal",
+    'sydni’s dream journal',
+    'template dream',
+    'title',
+    'date',
+    'time'
+  ]);
   const TEMPLATE_CLUSTER_RE = /\b(?:destiny|encouragement|revelatory|direction|warning|self\s*condition|transformation|demonic|intercession|other|participant|partial\s*participant|observer|legend|bold|repeat|key\s*words|play\s*on\s*words|key\s*emotions|brainstorm)\b/i;
   function collapseSpacedLetters(line) {
     return (line || '').replace(/\b(?:[A-Za-z]\s+){2,}[A-Za-z]\b/g, match => match.replace(/\s+/g, ''));
@@ -1284,38 +1316,6 @@ function extractDreamData(raw) {
   // Map of heading regex → field name (longest/most-specific first)
   const SEP = '(?:[-–—:]+|\\s{2,})';
   function inlineRe(label, extra) { return new RegExp('^' + label + '\\s*' + SEP + '\\s*(.+)$' + (extra||''), 'i'); }
-  const NOISE_LABELS = new Set([
-    'legend',
-    'bold',
-    'repeat',
-    'key words',
-    'play on words',
-    'key emotions',
-    'other',
-    'dream type',
-    "dreamer's involvement",
-    'dreamer’s involvement',
-    'participant',
-    'partial participant',
-    'observer',
-    'destiny',
-    'transformation',
-    'encouragement',
-    'direction',
-    'warning',
-    'self condition',
-    'intercession',
-    'demonic',
-    'revelatory',
-    'not interpreted',
-    'interpreted',
-    "sydni's dream journal",
-    'sydni’s dream journal',
-    'template dream',
-    'title',
-    'date',
-    'time'
-  ]);
   function isTemplateNoiseLabel(line) {
     const key = (line || '')
       .toLowerCase()
@@ -1325,8 +1325,15 @@ function extractDreamData(raw) {
       .trim();
     return NOISE_LABELS.has(key);
   }
+  function isStandaloneJunk(line) {
+    const trimmed = (line || '').trim();
+    if (!trimmed) return false;
+    if (/^chatgpt:?$/i.test(trimmed)) return true;
+    if (/^[+-]?\d{8,}$/.test(trimmed)) return true;
+    return false;
+  }
   function isTemplateOptionCluster(line) {
-    const compact = (line || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const compact = collapseSpacedLetters(line).toLowerCase().replace(/[^a-z0-9]/g, '');
     if (!compact || compact.length < 24) return false;
     const matches = TEMPLATE_OPTION_COMPACT.filter(term => compact.includes(term)).length;
     return matches >= 4;
@@ -1344,7 +1351,7 @@ function extractDreamData(raw) {
     return false;
   }
   function stripLeadingTemplateCluster(line) {
-    let out = (line || '').trim();
+    let out = collapseSpacedLetters(line).trim();
     const clusterPrefix = /^(?:(?:destiny|encouragement|revelatory|direction|warning|self\s*condition|transformation|demonic|intercession|other:?|participant|partial\s*participant|observer|legend|bold|repeat|key\s*words|play\s*on\s*words|key\s*emotions|dream\s*type|dreamer'?s?\s*involvement|brainstorm)\s*)+/i;
     let prev = null;
     while (out && out !== prev) {
@@ -1355,7 +1362,7 @@ function extractDreamData(raw) {
   }
   function stripPreNarrativeTemplateNoise(textValue) {
     if (!textValue || !textValue.trim()) return textValue;
-    const lines = textValue.split('\n').map(line => line.trim());
+    const lines = textValue.split('\n').map(line => collapseSpacedLetters(line).trim());
     const cleaned = [];
     let started = false;
     lines.forEach((line, index) => {
@@ -1364,7 +1371,11 @@ function extractDreamData(raw) {
         return;
       }
       let candidate = line;
-      if (!started) candidate = stripLeadingTemplateCluster(candidate);
+      if (!started) {
+        const splitPreamble = splitTemplatePreambleFromProse(candidate);
+        if (splitPreamble?.prose) candidate = splitPreamble.prose;
+        candidate = stripLeadingTemplateCluster(candidate);
+      }
       if (!candidate) return;
       if (!started && (isTemplateNoiseLabel(candidate) || isStandaloneJunk(candidate) || isTemplateOptionCluster(candidate))) return;
       if (!started && /^(?:dream|brainstorm|interpretation|application)$/i.test(candidate)) return;
@@ -1496,7 +1507,7 @@ function extractDreamData(raw) {
   let curField   = null;
   let blanksSeen = 0;
   let openingMajorField = null;
-  let majorContentStarted = false;
+  let seenMajorProse = false;
 
   // Detect "Plain:" clean version block BEFORE main loop
   let _plainNarrative = null;
@@ -1530,7 +1541,7 @@ function extractDreamData(raw) {
     // Standalone heading
     const headingField = detectHeading(line);
     if (headingField) {
-      if (MAJOR_SECTION_FIELDS.has(headingField) && !majorContentStarted) {
+      if (MAJOR_SECTION_FIELDS.has(headingField) && !seenMajorProse) {
         if (!openingMajorField) {
           openingMajorField = headingField;
           curField = headingField;
@@ -1551,8 +1562,8 @@ function extractDreamData(raw) {
       if (inlineMatch.content && curField) {
         const sep = buf[curField] ? '\n' : '';
         buf[curField] = (buf[curField] || '') + sep + inlineMatch.content;
-        if (MAJOR_SECTION_FIELDS.has(curField) && inlineMatch.content.split(/\s+/).filter(Boolean).length >= 3) {
-          majorContentStarted = true;
+        if (MAJOR_SECTION_FIELDS.has(curField) && (inlineMatch.content.split(/\s+/).filter(Boolean).length >= 3 || /[.!?]/.test(inlineMatch.content))) {
+          seenMajorProse = true;
         }
       }
       continue;
@@ -1562,8 +1573,8 @@ function extractDreamData(raw) {
     if (curField) {
       const sep = buf[curField] ? '\n' : '';
       buf[curField] = (buf[curField] || '') + sep + line;
-      if (MAJOR_SECTION_FIELDS.has(curField) && line.split(/\s+/).filter(Boolean).length >= 3) {
-        majorContentStarted = true;
+      if (MAJOR_SECTION_FIELDS.has(curField) && (line.split(/\s+/).filter(Boolean).length >= 3 || /[.!?]/.test(line))) {
+        seenMajorProse = true;
       }
     } else {
       // No heading yet — collect as unlabelled (likely opening narrative).
@@ -1601,6 +1612,12 @@ function extractDreamData(raw) {
   };
   Object.entries(buf).forEach(([k,v]) => fill(k,v));
 
+  if (!result.dreamTitle || isTemplatePlaceholderValue(result.dreamTitle, 'dreamTitle')) {
+    const inferredTitle = splitTemplatePreambleFromProse(result.dreamNarrative || '')?.titleCandidate || '';
+    if (inferredTitle && !isTemplatePlaceholderValue(inferredTitle, 'dreamTitle') && inferredTitle.length < 120) {
+      result.dreamTitle = inferredTitle;
+    }
+  }
   result.dreamNarrative = stripPreNarrativeTemplateNoise(result.dreamNarrative || '');
   ['dreamTitle', 'dreamTime', 'dreamDate', 'dreamType'].forEach(field => {
     if (isTemplatePlaceholderValue(result[field], field)) result[field] = '';
@@ -1608,7 +1625,7 @@ function extractDreamData(raw) {
   ['dreamBrainstorm', 'dreamInterpretation', 'dreamApplication'].forEach(field => {
     if (result[field]) result[field] = result[field]
       .split('\n')
-      .map(line => line.trim())
+      .map(line => collapseSpacedLetters(line).trim())
       .filter(line => line && !isStandaloneJunk(line) && !isTemplateNoiseLabel(line))
       .join('\n');
   });
@@ -1647,7 +1664,7 @@ function extractDreamData(raw) {
   }
 
   // ── PREDICT DREAM TYPE from content ─────────────────────────
-  if (!result.dreamType) result.dreamType = predictDreamType(result) || '';
+  if (!result.dreamType && !PDF_TEMPLATE_DEBUG) result.dreamType = predictDreamType(result) || '';
   if (isTemplatePlaceholderValue(result.dreamType, 'dreamType')) result.dreamType = '';
 
   // ── SCRIPTURE AUTO-DETECT ────────────────────────────────
