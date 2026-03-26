@@ -804,9 +804,45 @@ async function handleUpload(e) {
       if (entries.length > 1) {
         setMsg(`🔍 Found ${entries.length} entries…`, 'spin');
         await new Promise(r => setTimeout(r, 150));
-        pendingPages = entries.map(entry => { const d = extractDreamData(entry.text); d._raw = entry.text; return d; });
-        setMsg(`✓ ${entries.length} entries found — click Generate to create ${entries.length} journal page sets.`, 'ok');
-      } else { populateDream(combined); const _efd = extractDreamData(combined); enrichFromFilename(_efd, file.name); setField('dreamTitle', _efd.dreamTitle||''); setField('dreamDate', _efd.dreamDate||''); setMsg('✓ Content imported — generating journal pages…', 'ok'); setTimeout(() => generateFromForm(), 300); }
+        pendingPages = entries.map(entry => {
+          const d = extractDreamData(entry.text);
+          d._raw = entry.text;
+          return d;
+        });
+
+        const first = pendingPages[0] || null;
+        if (first) {
+          setField('dreamTitle', first.dreamTitle || '');
+          setField('dreamDate', first.dreamDate || '');
+          setField('dreamTime', first.dreamTime || '');
+          setField('dreamContextSource', first.dreamContextSource || '');
+          setField('dreamTheme', first.dreamTheme || '');
+          setField('dreamType', first.dreamType || '');
+          setField('dreamerInvolvement', first.dreamerInvolvement || '');
+          setField('dreamNarrative', first.dreamNarrative || first._raw || '');
+          setField('dreamBrainstorm', first.dreamBrainstorm || '');
+          setField('dreamActions', first.dreamActions || '');
+          setField('dreamSymbols', first.dreamSymbols || '');
+          setField('dreamEmotions', first.dreamEmotions || '');
+          setField('dreamScriptures', first.dreamScriptures || '');
+          setField('dreamInterpretation', first.dreamInterpretation || '');
+          setField('dreamApplication', first.dreamApplication || '');
+          setField('dreamAdditionalNotes', first.dreamAdditionalNotes || '');
+          setField('sumDream', first.sumDream || '');
+          setField('sumInterpretation', first.sumInterpretation || '');
+          setField('sumApplication', first.sumApplication || '');
+        }
+
+        setMsg(`✓ ${entries.length} entries found — first entry loaded into the form. Click Generate to create all journal page sets.`, 'ok');
+      } else {
+        populateDream(combined);
+        const _efd = extractDreamData(combined);
+        enrichFromFilename(_efd, file.name);
+        setField('dreamTitle', _efd.dreamTitle || '');
+        setField('dreamDate', _efd.dreamDate || '');
+        setMsg('✓ Content imported — generating journal pages…', 'ok');
+        setTimeout(() => generateFromForm(), 300);
+      }
     } else {
       const dataArray = [];
       for (let i = 0; i < files.length; i++) {
@@ -881,9 +917,22 @@ function parseEntries(rawText) {
   const lines = rawText.replace(/\r\n/g,'\n').replace(/\r/g,'\n')
     .replace(/[—–]\s*[-–—]+/g, '---') // normalize em-dash combos to --- separators
     .split('\n');
+  const looksLikeTemplatePreamble = text => {
+    const nonEmpty = (text || '').split('\n').map(l => l.trim()).filter(Boolean);
+    if (!nonEmpty.length || nonEmpty.length > 12) return false;
+    const proseLike = nonEmpty.filter(line => line.split(/\s+/).filter(Boolean).length >= 10 || /[.!?]/.test(line));
+    return proseLike.length <= 1;
+  };
   const entries = []; let current = null;
   for (const line of lines) {
-    if (isDateHeading(line)) { if (current !== null) entries.push(current); current = { text: line + '\n' }; }
+    if (isDateHeading(line)) {
+      if (current !== null && looksLikeTemplatePreamble(current.text)) {
+        current.text += line + '\n';
+      } else {
+        if (current !== null) entries.push(current);
+        current = { text: line + '\n' };
+      }
+    }
     // Numbered dream headings (Dream 1, Dream 2…) start a new entry
     else if (/^Dream\s+\d+\s*$/i.test(line.trim()) && current !== null && current.text.trim().length > 20) {
       entries.push(current); current = { text: line + '\n' };
@@ -994,7 +1043,142 @@ function predictDreamType(data) {
 // ── DREAM DATA EXTRACTION ───────────────────────────────
 function extractDreamData(raw) {
   const result = {};
-  const text   = raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const TEMPLATE_OPTION_TERMS = [
+    'destiny',
+    'encouragement',
+    'revelatory',
+    'direction',
+    'warning',
+    'self condition',
+    'transformation',
+    'demonic',
+    'intercession',
+    'other',
+    'participant',
+    'partial participant',
+    'observer',
+    'legend',
+    'bold',
+    'repeat',
+    'key words',
+    'play on words',
+    'key emotions'
+  ];
+  const TEMPLATE_OPTION_COMPACT = TEMPLATE_OPTION_TERMS.map(term => term.replace(/[^a-z0-9]/gi, '').toLowerCase());
+  const PDF_TEMPLATE_DEBUG = /(legend|key words|play on words|key emotions|participant|partial participant|observer|sydni(?:'|’)s dream journal|template dream)/i.test(raw || '');
+  const TEMPLATE_CLUSTER_RE = /\b(?:destiny|encouragement|revelatory|direction|warning|self\s*condition|transformation|demonic|intercession|other|participant|partial\s*participant|observer|legend|bold|repeat|key\s*words|play\s*on\s*words|key\s*emotions|brainstorm)\b/i;
+  function collapseSpacedLetters(line) {
+    return (line || '').replace(/\b(?:[A-Za-z]\s+){2,}[A-Za-z]\b/g, match => match.replace(/\s+/g, ''));
+  }
+  function countTemplateOptionHits(line) {
+    const compact = collapseSpacedLetters(line).toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!compact) return 0;
+    return TEMPLATE_OPTION_COMPACT.filter(term => compact.includes(term)).length;
+  }
+  function splitTemplatePreambleFromProse(line) {
+    const normalized = collapseSpacedLetters(line).replace(/\s+/g, ' ').trim();
+    if (!normalized) return null;
+    const proseMatch = normalized.match(/\b(?:I\s+(?:was|did|didn't|didnt|kept|knew|know|asked|heard|saw|went|had|took|wanted|told|looked|said)|Then\b|After\b|There\b|One of\b|My\b|We\b|She\b|He\b|It\s+was\b)\b/i);
+    const clusterMatch = normalized.match(TEMPLATE_CLUSTER_RE);
+    if (!proseMatch || !clusterMatch) return null;
+    const proseIdx = proseMatch.index ?? -1;
+    const clusterIdx = clusterMatch.index ?? -1;
+    if (clusterIdx < 0 || proseIdx < 0 || clusterIdx >= proseIdx) return null;
+    const preamble = normalized.slice(clusterIdx, proseIdx).trim();
+    if (countTemplateOptionHits(preamble) < 3) return null;
+    return {
+      titleCandidate: normalized.slice(0, clusterIdx).trim(),
+      prose: normalized.slice(proseIdx).trim()
+    };
+  }
+  function normalizeExtractText(input) {
+    const source = (input || '').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+    const rawLines = source.split('\n').map(line => collapseSpacedLetters(line).replace(/\s+/g, ' ').trim());
+    const noiseLines = new Set([
+      'legend',
+      'bold',
+      'repeat',
+      'key words',
+      'play on words',
+      'key emotions',
+      'other',
+      'dream type',
+      "dreamer's involvement",
+      'dreamer’s involvement',
+      'participant',
+      'partial participant',
+      'observer',
+      'destiny',
+      'transformation',
+      'encouragement',
+      'direction',
+      'warning',
+      'self condition',
+      'intercession',
+      'demonic',
+      'revelatory',
+      'not interpreted',
+      'interpreted',
+      "sydni's dream journal",
+      'sydni’s dream journal',
+      'template dream',
+      'title',
+      'date',
+      'time'
+    ]);
+    const isStandaloneJunk = line => {
+      const trimmed = (line || '').trim();
+      if (!trimmed) return false;
+      // remove standalone "ChatGPT"
+      if (/^chatgpt:?$/i.test(trimmed)) return true;
+      // remove long numeric IDs (common in PDF extraction noise)
+      if (/^[+-]?\d{8,}$/.test(trimmed)) return true;
+      return false;
+    };
+    const isTemplateOptionCluster = line => {
+      const compact = collapseSpacedLetters(line).toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!compact || compact.length < 24) return false;
+      const matches = TEMPLATE_OPTION_COMPACT.filter(term => compact.includes(term)).length;
+      return matches >= 4;
+    };
+    const isStandaloneNoise = line => {
+      const key = (line || '').toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
+      return noiseLines.has(key.replace(/[:\-–—]+$/, '').trim());
+    };
+    const looksLikeSectionHeading = line => /^(?:dream|vision)(?:\s+(?:narrative|scene))?:?$|^brainstorm(?:ing)?(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+\d.*)?:?$|^(?:(?:possible|short|long|polished)\s+|(?:possible\s+meaning\s*[\/\\]?\s*))?interpretation(?:\s*\([^)]*\))?(?:\s+summary)?:?$|^application(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+summary)?:?$/i.test(line || '');
+    const shouldMergeFragment = (prev, next) => {
+      if (!prev || !next) return false;
+      if (looksLikeSectionHeading(prev) || looksLikeSectionHeading(next)) return false;
+      if (isStandaloneNoise(prev) || isStandaloneNoise(next)) return false;
+      if (isDateHeading(prev) || isDateHeading(next)) return false;
+      if (/[.!?:"”)]$/.test(prev)) return false;
+      if (/^(?:dream|vision|brainstorm|interpretation|application|title|date|time)\b/i.test(next)) return false;
+      const prevWords = prev.split(/\s+/).filter(Boolean);
+      const nextWords = next.split(/\s+/).filter(Boolean);
+      const nextStartsSentence = /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,}/.test(next);
+      const nextLooksFragment = /^[a-z0-9("'`]/.test(next) || nextWords.length <= 3;
+      return !nextStartsSentence && (prevWords.length <= 8 || nextWords.length <= 4) && nextLooksFragment;
+    };
+
+    const normalized = [];
+    rawLines.forEach(line => {
+      if (!line) {
+        if (normalized.length && normalized[normalized.length - 1] !== '') normalized.push('');
+        return;
+      }
+      if (isStandaloneNoise(line) || isStandaloneJunk(line) || isTemplateOptionCluster(line)) return;
+      if (normalized.length && normalized[normalized.length - 1] && shouldMergeFragment(normalized[normalized.length - 1], line)) {
+        normalized[normalized.length - 1] += ' ' + line;
+      } else {
+        normalized.push(line);
+      }
+    });
+
+    while (normalized.length && !normalized[normalized.length - 1]) normalized.pop();
+    return normalized.join('\n').replace(/\n{3,}/g, '\n\n');
+  }
+
+  const text   = normalizeExtractText(raw);
   const nonEmptyLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const firstLine = nonEmptyLines[0] || '';
 
@@ -1055,7 +1239,7 @@ function extractDreamData(raw) {
   if (!result.dreamTitle) {
     for (const line of nonEmptyLines) {
       const m = line.match(/^(?:dream\s+)?title\s*[-–—:\s]+(.+)$/i);
-      if (m && m[1].trim().length > 1) { result.dreamTitle = m[1].trim(); break; }
+      if (m && m[1].trim().length > 1 && !isTemplatePlaceholderValue(m[1], 'dreamTitle')) { result.dreamTitle = m[1].trim(); break; }
     }
   }
 
@@ -1070,8 +1254,27 @@ function extractDreamData(raw) {
       _titleSourceLine   = firstLine;   // skip in main loop (declared above, before Strategy 1)
     }
   }
+  if (!result.dreamTitle || isTemplatePlaceholderValue(result.dreamTitle, 'dreamTitle')) {
+    result.dreamTitle = '';
+    for (let i = 0; i < Math.min(nonEmptyLines.length, 12); i++) {
+      const line = nonEmptyLines[i];
+      const prev = nonEmptyLines[i - 1] || '';
+      const nearbyContext = nonEmptyLines.slice(i + 1, i + 5).join(' ');
+      if (!line || isDateHeading(line) || isTemplateNoiseLabel(line) || isStandaloneJunk(line)) continue;
+      const looksLikeNarrative = /^(?:i |we |she |he |they |the |it |there |then |in |at |after |before |and |so |but )/i.test(line);
+      const nearTitleContext = /^title:?$/i.test(prev) || /\b(?:date|time|dream type|dreamer'?s? involvement|dream)\b/i.test(nearbyContext);
+      if (!isTemplatePlaceholderValue(line, 'dreamTitle') && !looksLikeNarrative && line.length < 120 && nearTitleContext) {
+        result.dreamTitle = line.trim();
+        _titleSourceLine = line;
+        break;
+      }
+    }
+  }
 
   // ── SECTION HEADING DETECTION ────────────────────────────
+  // Alternate journal templates may use page-title headings instead of field labels,
+  // and may include decorative sidebar labels that should be ignored.
+  // Canonical section titles still need to switch the active parser section on their own.
   // Matches standalone headings (with or without a trailing colon/dash),
   // e.g. "Dream", "Dream Narrative", "Brainstorm", "Actions:", "Key Symbols —"
   // Also matches inline label format "Brainstorm: content here".
@@ -1081,6 +1284,102 @@ function extractDreamData(raw) {
   // Map of heading regex → field name (longest/most-specific first)
   const SEP = '(?:[-–—:]+|\\s{2,})';
   function inlineRe(label, extra) { return new RegExp('^' + label + '\\s*' + SEP + '\\s*(.+)$' + (extra||''), 'i'); }
+  const NOISE_LABELS = new Set([
+    'legend',
+    'bold',
+    'repeat',
+    'key words',
+    'play on words',
+    'key emotions',
+    'other',
+    'dream type',
+    "dreamer's involvement",
+    'dreamer’s involvement',
+    'participant',
+    'partial participant',
+    'observer',
+    'destiny',
+    'transformation',
+    'encouragement',
+    'direction',
+    'warning',
+    'self condition',
+    'intercession',
+    'demonic',
+    'revelatory',
+    'not interpreted',
+    'interpreted',
+    "sydni's dream journal",
+    'sydni’s dream journal',
+    'template dream',
+    'title',
+    'date',
+    'time'
+  ]);
+  function isTemplateNoiseLabel(line) {
+    const key = (line || '')
+      .toLowerCase()
+      .replace(/[’']/g, "'")
+      .replace(/\s+/g, ' ')
+      .replace(/[:\-–—]+$/, '')
+      .trim();
+    return NOISE_LABELS.has(key);
+  }
+  function isTemplateOptionCluster(line) {
+    const compact = (line || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!compact || compact.length < 24) return false;
+    const matches = TEMPLATE_OPTION_COMPACT.filter(term => compact.includes(term)).length;
+    return matches >= 4;
+  }
+  function isTemplatePlaceholderValue(value, field = '') {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return false;
+    const normalized = trimmed.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
+    const placeholders = new Set(['title', 'time', 'date', 'dream', 'brainstorm', 'interpretation', 'application']);
+    if (placeholders.has(normalized)) return true;
+    if (field === 'dreamType') {
+      if (TEMPLATE_OPTION_TERMS.includes(normalized)) return true;
+      if (isTemplateOptionCluster(trimmed)) return true;
+    }
+    return false;
+  }
+  function stripLeadingTemplateCluster(line) {
+    let out = (line || '').trim();
+    const clusterPrefix = /^(?:(?:destiny|encouragement|revelatory|direction|warning|self\s*condition|transformation|demonic|intercession|other:?|participant|partial\s*participant|observer|legend|bold|repeat|key\s*words|play\s*on\s*words|key\s*emotions|dream\s*type|dreamer'?s?\s*involvement|brainstorm)\s*)+/i;
+    let prev = null;
+    while (out && out !== prev) {
+      prev = out;
+      out = out.replace(clusterPrefix, '').trim();
+    }
+    return out;
+  }
+  function stripPreNarrativeTemplateNoise(textValue) {
+    if (!textValue || !textValue.trim()) return textValue;
+    const lines = textValue.split('\n').map(line => line.trim());
+    const cleaned = [];
+    let started = false;
+    lines.forEach((line, index) => {
+      if (!line) {
+        if (started && cleaned.length && cleaned[cleaned.length - 1] !== '') cleaned.push('');
+        return;
+      }
+      let candidate = line;
+      if (!started) candidate = stripLeadingTemplateCluster(candidate);
+      if (!candidate) return;
+      if (!started && (isTemplateNoiseLabel(candidate) || isStandaloneJunk(candidate) || isTemplateOptionCluster(candidate))) return;
+      if (!started && /^(?:dream|brainstorm|interpretation|application)$/i.test(candidate)) return;
+      if (!started && index < 10 && isTemplatePlaceholderValue(candidate, 'dreamNarrative')) return;
+      started = true;
+      cleaned.push(candidate);
+    });
+    return cleaned.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  const MAJOR_SECTION_FIELDS = new Set([
+    'dreamNarrative',
+    'dreamBrainstorm',
+    'dreamInterpretation',
+    'dreamApplication'
+  ]);
 
   const HEADING_RULES = [
     { re: /^(?:dream|vision)(?:\s+(?:narrative|scene))?:?$/i,                                  field: 'dreamNarrative'      },
@@ -1098,7 +1397,7 @@ function extractDreamData(raw) {
     { re: /^scriptures?:?$/i,                                                                 field: 'dreamScriptures'     },
     { re: /^(?:scripture\s+)?verse:?$/i,                                                      field: 'dreamScriptures'     },
     { re: /^scripture\s+references?:?$/i,                                                     field: 'dreamScriptures'     },
-    { re: /^(?:(?:possible\s+meaning\s*[\/\\]?\s*)|(?:long\s+))?interpretation(?:\s*\([^)]*\))?(?:\s+summary)?:?$/i, field: null },
+    { re: /^(?:(?:possible|short|long|polished)\s+|(?:possible\s+meaning\s*[\/\\]?\s*))?interpretation(?:\s*\([^)]*\))?(?:\s+summary)?:?$/i, field: null },
     { re: /^possible\s+meaning(?:\s*\([^)]*\))?(?:\s*[\/\\]\s*interpretation(?:\s*\([^)]*\))?)?:?$/i, field: 'dreamInterpretation' },
     { re: /^application(?:\s*[\/\\]\s*\w[\w\s]*)?(?:\s+summary)?:?$/i,                        field: null                  },
     { re: /^reflect(?:ion)?(?:\s+and\s+\w[\w\s]*)?:?$/i,                                     field: 'dreamApplication'    },
@@ -1135,8 +1434,8 @@ function extractDreamData(raw) {
     { re: inlineRe('scriptures?'),                                                           field: 'dreamScriptures'     },
     { re: inlineRe('(?:scripture\\s+)?verse'),                                               field: 'dreamScriptures'     },
     { re: inlineRe('scripture\\s+references?'),                                              field: 'dreamScriptures'     },
-    { re: inlineRe('(?:possible\\s+|long\\s+)?interpretation\\s+summary'),                  field: 'sumInterpretation'   },
-    { re: /^(?:(?:(?:possible\s+meaning\s*[\/\\]?\s*)|(?:long\s+))?interpretation(?:\s*\([^)]*\))?)\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
+    { re: inlineRe('(?:(?:possible|short|long|polished)\\s+)?interpretation\\s+summary'),   field: 'sumInterpretation'   },
+    { re: /^(?:(?:(?:possible|short|long|polished)\s+|(?:possible\s+meaning\s*[\/\\]?\s*))?interpretation(?:\s*\([^)]*\))?)\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
     { re: /^possible\s+meaning(?:\s*\([^)]*\))?(?:\s*[\/\\]\s*interpretation(?:\s*\([^)]*\))?)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i, field: 'dreamInterpretation' },
     { re: inlineRe('application\\s+summary'),                                                field: 'sumApplication'      },
     { re: /^application(?:\s*[\/\\]\s*\w[\w\s]*)?\s*(?:[-–—:]+|\s{2,})\s*(.+)$/i,          field: 'dreamApplication'    },
@@ -1156,10 +1455,10 @@ function extractDreamData(raw) {
 
   // Helper: resolve "interpretation summary" vs plain "interpretation"
   function resolveInterpAppField(line) {
-    if (/^(?:possible\s+|long\s+)?interpretation\s+summary/i.test(line)) return 'sumInterpretation';
+    if (/^(?:(?:possible|short|long|polished)\s+)?interpretation\s+summary/i.test(line)) return 'sumInterpretation';
     if (/^application\s+summary/i.test(line))                             return 'sumApplication';
     if (/^possible\s+meaning/i.test(line))                                return 'dreamInterpretation';
-    if (/^(?:possible\s+|long\s+)?interpretation/i.test(line))           return 'dreamInterpretation';
+    if (/^(?:(?:possible|short|long|polished)\s+)?interpretation/i.test(line)) return 'dreamInterpretation';
     if (/^application/i.test(line))                                        return 'dreamApplication';
     return null;
   }
@@ -1187,11 +1486,17 @@ function extractDreamData(raw) {
   }
 
   // ── MAIN PARSE LOOP ──────────────────────────────────────
+  // Alternate templates can switch sections with page-title headings instead of
+  // field labels, while isolated decorative/sidebar labels should be ignored.
+  // Section capture stays local to the current active section until a new valid
+  // heading appears.
   // Processes ALL lines (including blanks) to preserve paragraph structure.
   // Blank lines within a section become paragraph breaks (\n\n).
   const buf      = {};
   let curField   = null;
   let blanksSeen = 0;
+  let openingMajorField = null;
+  let majorContentStarted = false;
 
   // Detect "Plain:" clean version block BEFORE main loop
   let _plainNarrative = null;
@@ -1219,9 +1524,22 @@ function extractDreamData(raw) {
     // Skip date headings — entry boundaries, not content
     if (isDateHeading(line)) { curField = null; continue; }
 
+    // Skip isolated template/sidebar labels so they don't leak into section prose.
+    if (isTemplateNoiseLabel(line)) continue;
+
     // Standalone heading
     const headingField = detectHeading(line);
     if (headingField) {
+      if (MAJOR_SECTION_FIELDS.has(headingField) && !majorContentStarted) {
+        if (!openingMajorField) {
+          openingMajorField = headingField;
+          curField = headingField;
+          continue;
+        }
+        if (openingMajorField !== headingField) {
+          continue;
+        }
+      }
       curField = headingField;
       continue;
     }
@@ -1233,6 +1551,9 @@ function extractDreamData(raw) {
       if (inlineMatch.content && curField) {
         const sep = buf[curField] ? '\n' : '';
         buf[curField] = (buf[curField] || '') + sep + inlineMatch.content;
+        if (MAJOR_SECTION_FIELDS.has(curField) && inlineMatch.content.split(/\s+/).filter(Boolean).length >= 3) {
+          majorContentStarted = true;
+        }
       }
       continue;
     }
@@ -1241,6 +1562,9 @@ function extractDreamData(raw) {
     if (curField) {
       const sep = buf[curField] ? '\n' : '';
       buf[curField] = (buf[curField] || '') + sep + line;
+      if (MAJOR_SECTION_FIELDS.has(curField) && line.split(/\s+/).filter(Boolean).length >= 3) {
+        majorContentStarted = true;
+      }
     } else {
       // No heading yet — collect as unlabelled (likely opening narrative).
       // Skip the first occurrence of a line already claimed as dreamTitle by Strategy 6
@@ -1270,12 +1594,24 @@ function extractDreamData(raw) {
   const fill = (field, src) => {
     if (!src || !src.trim()) return;
     if (PRELOOP_FIELDS.has(field)) {
-      if (!result[field]) result[field] = src.trim();
+      if (!result[field] && !isTemplatePlaceholderValue(src.trim(), field)) result[field] = src.trim();
     } else {
       result[field] = result[field] ? result[field] + '\n\n' + src.trim() : src.trim();
     }
   };
   Object.entries(buf).forEach(([k,v]) => fill(k,v));
+
+  result.dreamNarrative = stripPreNarrativeTemplateNoise(result.dreamNarrative || '');
+  ['dreamTitle', 'dreamTime', 'dreamDate', 'dreamType'].forEach(field => {
+    if (isTemplatePlaceholderValue(result[field], field)) result[field] = '';
+  });
+  ['dreamBrainstorm', 'dreamInterpretation', 'dreamApplication'].forEach(field => {
+    if (result[field]) result[field] = result[field]
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line && !isStandaloneJunk(line) && !isTemplateNoiseLabel(line))
+      .join('\n');
+  });
 
   // ── DREAM TYPE: match to known values ────────────────────
   if (result.dreamType) {
@@ -1312,6 +1648,7 @@ function extractDreamData(raw) {
 
   // ── PREDICT DREAM TYPE from content ─────────────────────────
   if (!result.dreamType) result.dreamType = predictDreamType(result) || '';
+  if (isTemplatePlaceholderValue(result.dreamType, 'dreamType')) result.dreamType = '';
 
   // ── SCRIPTURE AUTO-DETECT ────────────────────────────────
   if (!result.dreamScriptures) {
@@ -1347,6 +1684,22 @@ function extractDreamData(raw) {
       if (unique.length) resultParas.push(unique.join('\n'));
     });
     if (resultParas.length) result.dreamNarrative = resultParas.join('\n\n');
+  }
+
+  if (PDF_TEMPLATE_DEBUG) {
+    console.debug('[PDFParser] raw extracted text', (raw || '').slice(0, 4000));
+    console.debug('[PDFParser] normalized text', text.slice(0, 4000));
+    console.debug('[PDFParser] pre-narrative cleaned text', (result.dreamNarrative || '').slice(0, 2000));
+    console.debug('[PDFParser] final parsed fields', {
+      dreamTitle: result.dreamTitle,
+      dreamDate: result.dreamDate,
+      dreamTime: result.dreamTime,
+      dreamType: result.dreamType,
+      dreamNarrative: (result.dreamNarrative || '').slice(0, 500),
+      dreamBrainstorm: (result.dreamBrainstorm || '').slice(0, 300),
+      dreamInterpretation: (result.dreamInterpretation || '').slice(0, 300),
+      dreamApplication: (result.dreamApplication || '').slice(0, 300),
+    });
   }
 
   return result;
@@ -1516,16 +1869,32 @@ function _showPagesCore(dataArray) {
     addPage(buildHeaderPage(data)); // metadata page — no lines
     for (let i=0; i<xHeader; i++) addPage(buildExtraPage('Dream Header', data));
 
-    // Dream page (Narrative + Brainstorm) with content-aware pagination
-    // Phase 3: Use descriptor-based rendering from planPages()
+    // Active generated-page pagination path:
+    // Narrative, Brainstorm, Interpretation, and Application flow through
+    // descriptor planning plus token-stream max-fit pagination.
     const layout = getLayoutConfig();
     const measure = createContentMeasurer(layout);
     const descriptors = planPages(data, layout, measure);
     
     // Render each page from descriptors
     descriptors.forEach(descriptor => {
-      const pageSheet = applyStyle(buildDreamPageFromDescriptor(descriptor, data), true);
+      let pageSheet;
+      if (descriptor.pageType === 'brainstorm') {
+        pageSheet = buildBrainstormPageFromDescriptor(descriptor, data);
+      } else if (descriptor.pageType === 'interpretation') {
+        pageSheet = buildInterpretationPageFromDescriptor(descriptor, data);
+      } else if (descriptor.pageType === 'application') {
+        pageSheet = buildApplicationPageFromDescriptor(descriptor, data);
+      } else if (descriptor.pageType === 'dream' || descriptor.pageType === 'narrative' || !descriptor.pageType) {
+        pageSheet = buildDreamPageFromDescriptor(descriptor, data);
+      } else {
+        pageSheet = buildDreamPageFromDescriptor(descriptor, data);
+      }
+      pageSheet = applyStyle(pageSheet, true);
       addPage(pageSheet);
+      if (descriptor.sections?.some(section => section.type === 'narrative')) {
+        logRenderedNarrativeMeasurement(pageSheet, descriptor);
+      }
     });
 
     // Legacy: Keep old rendering for now (commented out)
@@ -1540,16 +1909,16 @@ function _showPagesCore(dataArray) {
     paginateKeysPage(container, keysSheet, data, pageStyle);
     for (let i=0; i<xKeys; i++) addPage(applyStyle(buildExtraPage('Dream Keys', data), true));
 
-    // Interpretation page with overflow → continuation
-    const interpSheet = applyStyle(buildInterpretationPage(data), true);
-    addPage(interpSheet);
-    paginateSingleSection(container, interpSheet, autoParagraph(data.dreamInterpretation||'', 5), 'j-prose large', 'Interpretation', pageStyle);
+    (descriptors.interpretationDescriptors || []).forEach(descriptor => {
+      const pageSheet = applyStyle(buildInterpretationPageFromDescriptor(descriptor, data), true);
+      addPage(pageSheet);
+    });
     for (let i=0; i<xInterpretation; i++) addPage(applyStyle(buildExtraPage('Interpretation', data), true));
 
-    // Application page with overflow → continuation
-    const appSheet = applyStyle(buildApplicationPage(data), true);
-    addPage(appSheet);
-    paginateSingleSection(container, appSheet, data.dreamApplication||'', 'j-prose large', 'Application', pageStyle);
+    (descriptors.applicationDescriptors || []).forEach(descriptor => {
+      const pageSheet = applyStyle(buildApplicationPageFromDescriptor(descriptor, data), true);
+      addPage(pageSheet);
+    });
     for (let i=0; i<xApplication; i++) addPage(applyStyle(buildExtraPage('Application', data), true));
 
     // Additional Notes page with overflow → continuation
@@ -1608,6 +1977,7 @@ function buildHeaderPage(data) {
   sheet.appendChild(page);
   return sheet;
 }
+// Legacy direct Dream builder kept for fallback/reference; descriptor rendering is active.
 function buildDreamPage(data) {
   const page = pageShell('Dream', data.dreamTitle||''); const body = page.querySelector('#pg-body');
   body.appendChild(metaRow(data));
@@ -1620,7 +1990,6 @@ function buildDreamPage(data) {
 // ── DESCRIPTOR-BASED RENDERING ───────────────────────────
 // Phase 3: Render purely from planPages() descriptors
 function buildDreamPageFromDescriptor(descriptor, data) {
-  // Use different page shell for continuation pages
   const pageTitle = descriptor.isContinuationPage ? 'Dream (continued)' : 'Dream';
   const page = pageShell(pageTitle, data.dreamTitle || ''); 
   const body = page.querySelector('#pg-body');
@@ -1650,6 +2019,128 @@ function buildDreamPageFromDescriptor(descriptor, data) {
   return page;
 }
 
+function buildBrainstormPageFromDescriptor(descriptor, data) {
+  // IMPORTANT:
+  // Brainstorm continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
+  const isContinuation = descriptor.sections?.some(section => section.type === 'brainstorm' && section.isContinuation);
+  const pageTitle = isContinuation ? 'Brainstorm (continued)' : 'Brainstorm';
+  const page = pageShell(pageTitle, data.dreamTitle || '');
+  const body = page.querySelector('#pg-body');
+
+  if (!isContinuation) {
+    body.appendChild(metaRow(data));
+  }
+
+  descriptor.sections.forEach(section => {
+    if (section.type === 'brainstorm') {
+      const label = section.isContinuation ? 'Brainstorm (continued)' : 'Brainstorm';
+      body.appendChild(secWrap(label, prosEl(section.content, 'medium')));
+    }
+  });
+
+  return page;
+}
+
+function buildInterpretationPageFromDescriptor(descriptor, data) {
+  // IMPORTANT:
+  // Interpretation continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
+  const isContinuation = descriptor.sections?.some(section => section.type === 'interpretation' && section.isContinuation);
+  const pageTitle = isContinuation ? 'Interpretation (continued)' : 'Interpretation';
+  const page = pageShell(pageTitle, data.dreamTitle || '');
+  const body = page.querySelector('#pg-body');
+
+  if (!isContinuation) {
+    body.appendChild(metaRow(data));
+  }
+
+  descriptor.sections.forEach(section => {
+    if (section.type === 'interpretation') {
+      const label = section.isContinuation ? 'Interpretation (continued)' : 'Interpretation';
+      body.appendChild(secWrap(label, prosEl(section.content, 'large')));
+    }
+  });
+
+  return page;
+}
+
+function buildApplicationPageFromDescriptor(descriptor, data) {
+  // IMPORTANT:
+  // Application continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
+  const isContinuation = descriptor.sections?.some(section => section.type === 'application' && section.isContinuation);
+  const pageTitle = isContinuation ? 'Application (continued)' : 'Application';
+  const page = pageShell(pageTitle, data.dreamTitle || '');
+  const body = page.querySelector('#pg-body');
+
+  if (!isContinuation) {
+    body.appendChild(metaRow(data));
+  }
+
+  descriptor.sections.forEach(section => {
+    if (section.type === 'application') {
+      const label = section.isContinuation ? 'Application (continued)' : 'Application';
+      body.appendChild(secWrap(label, prosEl(section.content, 'large')));
+    }
+  });
+
+  return page;
+}
+
+function logRenderedNarrativeMeasurement(pageSheet, descriptor) {
+  if (!DREAM_PAGINATION_DEBUG || !descriptor?.measurement || !pageSheet) return;
+  const page = pageSheet.querySelector('.journal-page');
+  const body = pageSheet.querySelector('#pg-body');
+  const narr = pageSheet.querySelector('.j-narrative');
+  if (!page || !body || !narr) return;
+
+  const bodyRect = body.getBoundingClientRect();
+  const narrRect = narr.getBoundingClientRect();
+  const actualAvailableHeight = Math.max(Math.floor(bodyRect.bottom - narrRect.top), 0);
+  const actualRenderedHeight = Math.ceil(narr.offsetHeight);
+  const mismatch = Math.abs(actualRenderedHeight - descriptor.measurement.measuredHeight);
+
+  const actualStyle = (() => {
+    const cs = getComputedStyle(narr);
+    return {
+      width: narr.clientWidth,
+      fontFamily: cs.fontFamily,
+      fontSize: cs.fontSize,
+      lineHeight: cs.lineHeight,
+      paddingLeft: cs.paddingLeft,
+      borderLeftWidth: cs.borderLeftWidth,
+    };
+  })();
+
+  console.debug('[DreamPagination] rendered narrative page', {
+    pageIndex: descriptor.pageNumber,
+    isContinuationPage: !!descriptor.isContinuationPage,
+    maxHeightUsed: descriptor.measurement.availableHeight,
+    measuredHeight: descriptor.measurement.measuredHeight,
+    actualRenderedHeight,
+    actualAvailableHeight,
+    mismatch,
+    measuredStyles: descriptor.measurement.measureStyles,
+    actualStyles: actualStyle,
+  });
+
+  if (mismatch > 10) {
+    console.debug('[DreamPagination] rendered narrative mismatch > 10px', {
+      pageIndex: descriptor.pageNumber,
+      differingProperties: Object.fromEntries(
+        Object.keys(actualStyle).map(key => [key, {
+          measured: descriptor.measurement.measureStyles?.[key],
+          actual: actualStyle[key]
+        }]).filter(([, val]) => String(val.measured) !== String(val.actual))
+      )
+    });
+  }
+}
+
 function buildKeysPage(data) {
   const page = pageShell('Dream Keys', data.dreamTitle||''); const body = page.querySelector('#pg-body');
   body.appendChild(metaRow(data));
@@ -1665,12 +2156,14 @@ function buildKeysPage(data) {
   });
   body.appendChild(grid); return page;
 }
+// Legacy direct Interpretation builder kept for fallback/reference; descriptor rendering is active.
 function buildInterpretationPage(data) {
   const page = pageShell('Interpretation', data.dreamTitle||''); const body = page.querySelector('#pg-body');
   body.appendChild(metaRow(data));
   const el = prosEl(autoParagraph(data.dreamInterpretation||'', 5), 'large'); el.style.flex = '1';
   body.appendChild(secWrap('Dream Interpretation', el)); return page;
 }
+// Legacy direct Application builder kept for fallback/reference; descriptor rendering is active.
 function buildApplicationPage(data) {
   const page = pageShell('Application', data.dreamTitle||''); const body = page.querySelector('#pg-body');
   body.appendChild(metaRow(data));
@@ -1723,58 +2216,494 @@ function setParaText(el, text) {
 function esc(s)     { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
+function buildContentWordTokens(content) {
+  const paragraphs = (content || '').split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+  const tokens = [];
+  paragraphs.forEach((para, paraIndex) => {
+    para.split(/\s+/).filter(Boolean).forEach(word => tokens.push({ word, paraIndex }));
+  });
+  return tokens;
+}
+
+function renderContentWordSlice(content, start, count) {
+  const tokens = buildContentWordTokens(content);
+  if (count <= 0 || start >= tokens.length) return '';
+  const end = Math.min(start + count, tokens.length);
+  const parts = [];
+  let currentPara = null;
+  let currentWords = [];
+  for (let i = start; i < end; i++) {
+    const token = tokens[i];
+    if (currentPara === null) currentPara = token.paraIndex;
+    if (token.paraIndex !== currentPara) {
+      parts.push(currentWords.join(' '));
+      currentWords = [token.word];
+      currentPara = token.paraIndex;
+    } else {
+      currentWords.push(token.word);
+    }
+  }
+  if (currentWords.length) parts.push(currentWords.join(' '));
+  return parts.join('\n\n');
+}
+
+function createNarrativeMeasurementContext({ isContinuation, subtitle, pageStyle }) {
+  const title = isContinuation ? 'Dream (continued)' : 'Dream';
+  const label = isContinuation ? 'Dream Narrative (continued)' : 'Dream Narrative';
+  const sheet = pageShell(title, subtitle || '');
+  sheet.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;left:-9999px;pointer-events:none;z-index:-1;';
+  if (pageStyle === 'lined') sheet.classList.add('ps-lined');
+  else if (pageStyle === 'dotted') sheet.classList.add('ps-dotted');
+
+  const body = sheet.querySelector('#pg-body');
+  if (!isContinuation) body.appendChild(metaRow({}));
+
+  const narr = document.createElement('div');
+  narr.className = 'j-narrative';
+  narr.style.flex = '0 0 auto';
+  narr.style.height = 'auto';
+  narr.style.minHeight = '0';
+  const wrap = secWrap(label, narr);
+  body.appendChild(wrap);
+
+  document.body.appendChild(sheet);
+
+  const bodyRect = body.getBoundingClientRect();
+  const narrRect = narr.getBoundingClientRect();
+  const availableHeight = Math.max(Math.floor(bodyRect.bottom - narrRect.top), 1);
+
+  return {
+    sheet,
+    body,
+    narr,
+    availableHeight,
+    measure(text) {
+      setParaText(narr, text);
+      return Math.ceil(narr.offsetHeight);
+    },
+    styleSnapshot() {
+      const cs = getComputedStyle(narr);
+      return {
+        width: narr.clientWidth,
+        fontFamily: cs.fontFamily,
+        fontSize: cs.fontSize,
+        lineHeight: cs.lineHeight,
+        paddingLeft: cs.paddingLeft,
+        borderLeftWidth: cs.borderLeftWidth,
+      };
+    },
+    cleanup() {
+      if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
+    }
+  };
+}
+
+function createBrainstormMeasurementContext({ isContinuation, subtitle, pageStyle }) {
+  // Active Brainstorm token-stream measurement path; keep aligned with the
+  // Brainstorm descriptor renderer and section-local continuation rule.
+  // IMPORTANT:
+  // Brainstorm continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
+  // The isContinuation flag passed here must mirror the Brainstorm section-local continuation state.
+  // Small safety buffer to avoid real-render clipping from subpixel / line-box differences.
+  const BRAINSTORM_MEASURE_SAFETY_PX = isContinuation ? 8 : 3;
+  const sheet = buildBrainstormPageFromDescriptor({
+    pageType: 'brainstorm',
+    isContinuationPage: !!isContinuation,
+    sections: [{
+      type: 'brainstorm',
+      label: 'Brainstorm',
+      content: '',
+      isContinuation: !!isContinuation
+    }]
+  }, { dreamTitle: subtitle || '' });
+  sheet.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;left:-9999px;pointer-events:none;z-index:-1;';
+  if (pageStyle === 'lined') sheet.classList.add('ps-lined');
+  else if (pageStyle === 'dotted') sheet.classList.add('ps-dotted');
+
+  document.body.appendChild(sheet);
+
+  const body = sheet.querySelector('#pg-body');
+  const secHead = sheet.querySelector('.j-sec-head');
+  const brainstorm = sheet.querySelector('.j-prose.medium');
+  const bodyRect = body.getBoundingClientRect();
+  const brainstormRect = brainstorm.getBoundingClientRect();
+  const secHeadRect = secHead.getBoundingClientRect();
+  const secHeadStyles = getComputedStyle(secHead);
+  const secHeadMarginBottom = parseFloat(secHeadStyles.marginBottom) || 0;
+  const availableHeight = Math.max(
+    Math.floor(bodyRect.bottom - (secHeadRect.bottom + secHeadMarginBottom)),
+    0
+  );
+  const finalMaxHeight = Math.max(
+    availableHeight - BRAINSTORM_MEASURE_SAFETY_PX,
+    0
+  );
+
+  return {
+    sheet,
+    body,
+    contentEl: brainstorm,
+    availableHeight: finalMaxHeight,
+    measure(text) {
+      setParaText(brainstorm, text);
+      return Math.ceil(brainstorm.offsetHeight);
+    },
+    styleSnapshot() {
+      const cs = getComputedStyle(brainstorm);
+      return {
+        width: brainstorm.clientWidth,
+        fontFamily: cs.fontFamily,
+        fontSize: cs.fontSize,
+        lineHeight: cs.lineHeight,
+        paddingLeft: cs.paddingLeft,
+        borderLeftWidth: cs.borderLeftWidth,
+      };
+    },
+    cleanup() {
+      if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
+    }
+  };
+}
+
+function createInterpretationMeasurementContext({ isContinuation, subtitle, pageStyle }) {
+  // Active Interpretation token-stream measurement path; keep aligned with the
+  // Interpretation descriptor renderer and section-local continuation rule.
+  // IMPORTANT:
+  // Interpretation continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
+  const INTERPRETATION_MEASURE_SAFETY_PX = isContinuation ? 8 : 3;
+  const sheet = buildInterpretationPageFromDescriptor({
+    pageType: 'interpretation',
+    isContinuationPage: !!isContinuation,
+    sections: [{
+      type: 'interpretation',
+      label: 'Interpretation',
+      content: '',
+      isContinuation: !!isContinuation
+    }]
+  }, { dreamTitle: subtitle || '' });
+  sheet.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;left:-9999px;pointer-events:none;z-index:-1;';
+  if (pageStyle === 'lined') sheet.classList.add('ps-lined');
+  else if (pageStyle === 'dotted') sheet.classList.add('ps-dotted');
+
+  document.body.appendChild(sheet);
+
+  const body = sheet.querySelector('#pg-body');
+  const secHead = sheet.querySelector('.j-sec-head');
+  const interp = sheet.querySelector('.j-prose.large');
+  const bodyRect = body.getBoundingClientRect();
+  const secHeadRect = secHead.getBoundingClientRect();
+  const secHeadStyles = getComputedStyle(secHead);
+  const secHeadMarginBottom = parseFloat(secHeadStyles.marginBottom) || 0;
+  const availableHeight = Math.max(
+    Math.floor(bodyRect.bottom - (secHeadRect.bottom + secHeadMarginBottom)),
+    0
+  );
+  const finalMaxHeight = Math.max(availableHeight - INTERPRETATION_MEASURE_SAFETY_PX, 0);
+
+  return {
+    sheet,
+    body,
+    contentEl: interp,
+    availableHeight: finalMaxHeight,
+    measure(text) {
+      setParaText(interp, text);
+      return Math.ceil(interp.offsetHeight);
+    },
+    styleSnapshot() {
+      const cs = getComputedStyle(interp);
+      return {
+        width: interp.clientWidth,
+        fontFamily: cs.fontFamily,
+        fontSize: cs.fontSize,
+        lineHeight: cs.lineHeight,
+        paddingLeft: cs.paddingLeft,
+        borderLeftWidth: cs.borderLeftWidth,
+      };
+    },
+    cleanup() {
+      if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
+    }
+  };
+}
+
+function createApplicationMeasurementContext({ isContinuation, subtitle, pageStyle }) {
+  // Active Application token-stream measurement path; keep aligned with the
+  // Application descriptor renderer and section-local continuation rule.
+  // IMPORTANT:
+  // Application continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
+  const APPLICATION_MEASURE_SAFETY_PX = isContinuation ? 8 : 3;
+  const sheet = buildApplicationPageFromDescriptor({
+    pageType: 'application',
+    isContinuationPage: !!isContinuation,
+    sections: [{
+      type: 'application',
+      label: 'Application',
+      content: '',
+      isContinuation: !!isContinuation
+    }]
+  }, { dreamTitle: subtitle || '' });
+  sheet.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;left:-9999px;pointer-events:none;z-index:-1;';
+  if (pageStyle === 'lined') sheet.classList.add('ps-lined');
+  else if (pageStyle === 'dotted') sheet.classList.add('ps-dotted');
+
+  document.body.appendChild(sheet);
+
+  const body = sheet.querySelector('#pg-body');
+  const secHead = sheet.querySelector('.j-sec-head');
+  const app = sheet.querySelector('.j-prose.large');
+  const bodyRect = body.getBoundingClientRect();
+  const secHeadRect = secHead.getBoundingClientRect();
+  const secHeadStyles = getComputedStyle(secHead);
+  const secHeadMarginBottom = parseFloat(secHeadStyles.marginBottom) || 0;
+  const availableHeight = Math.max(
+    Math.floor(bodyRect.bottom - (secHeadRect.bottom + secHeadMarginBottom)),
+    0
+  );
+  const finalMaxHeight = Math.max(availableHeight - APPLICATION_MEASURE_SAFETY_PX, 0);
+
+  return {
+    sheet,
+    body,
+    contentEl: app,
+    availableHeight: finalMaxHeight,
+    measure(text) {
+      setParaText(app, text);
+      return Math.ceil(app.offsetHeight);
+    },
+    styleSnapshot() {
+      const cs = getComputedStyle(app);
+      return {
+        width: app.clientWidth,
+        fontFamily: cs.fontFamily,
+        fontSize: cs.fontSize,
+        lineHeight: cs.lineHeight,
+        paddingLeft: cs.paddingLeft,
+        borderLeftWidth: cs.borderLeftWidth,
+      };
+    },
+    cleanup() {
+      if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
+    }
+  };
+}
+
+function paginateTokenStream(content, cssClass, subtitle, pageStyle, measurementContextFactory = createNarrativeMeasurementContext) {
+  if (!content || !content.trim()) return [];
+  const tokens = buildContentWordTokens(content);
+  const pages = [];
+  const firstContext = measurementContextFactory({ isContinuation: false, subtitle, pageStyle });
+  const continuationContext = measurementContextFactory({ isContinuation: true, subtitle, pageStyle });
+
+  let start = 0;
+  try {
+    while (start < tokens.length) {
+      const remaining = tokens.length - start;
+      const context = pages.length === 0 ? firstContext : continuationContext;
+      const maxH = context.availableHeight;
+      let lo = 1;
+      let hi = remaining;
+      let bestCount = 1;
+      let bestText = renderContentWordSlice(content, start, 1);
+      let bestHeight = context.measure(bestText);
+
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        const test = renderContentWordSlice(content, start, mid);
+        const testH = context.measure(test);
+        if (DREAM_PAGINATION_DEBUG && cssClass === 'j-narrative') {
+          console.debug('[DreamPagination] token-stream binary step', {
+            pageIndex: pages.length + 1,
+            candidateWordCount: mid,
+            testHeight: testH,
+            availableHeight: maxH
+          });
+        }
+        if (testH <= maxH) {
+          bestCount = mid;
+          bestText = test;
+          bestHeight = testH;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+
+      const finalHeight = context.measure(bestText);
+      const nextText = bestCount < remaining ? renderContentWordSlice(content, start, bestCount + 1) : '';
+      const nextHeight = nextText ? context.measure(nextText) : Infinity;
+      if (finalHeight > maxH) {
+        throw new Error('Overflow - invalid pagination');
+      }
+      if (DREAM_PAGINATION_DEBUG && nextText && nextHeight <= maxH) {
+        console.warn('Underfilled page - binary search failed');
+      }
+
+      pages.push({
+        content: bestText,
+        wordCount: bestCount,
+        height: finalHeight,
+        availableHeight: maxH,
+        isFinal: start + bestCount >= tokens.length,
+        isContinuation: pages.length > 0,
+        measureStyles: context.styleSnapshot()
+      });
+
+      if (DREAM_PAGINATION_DEBUG && cssClass === 'j-narrative') {
+        console.debug('[DreamPagination] token-stream page', {
+          pageIndex: pages.length,
+          isFinalChunk: start + bestCount >= tokens.length,
+          measuredChunkHeight: finalHeight,
+          availableHeight: maxH,
+          chunkWordCount: bestCount,
+          remainingWordCountAfterChunk: Math.max(tokens.length - (start + bestCount), 0),
+          measureStyles: context.styleSnapshot()
+        });
+        const remainingPx = maxH - finalHeight;
+        if (start + bestCount < tokens.length && remainingPx > 5) {
+          console.warn('PAGE NOT FULL', remainingPx);
+        }
+      }
+
+      start += bestCount;
+    }
+  } finally {
+    firstContext.cleanup();
+    continuationContext.cleanup();
+  }
+  return pages;
+}
+
+function paginateBrainstormTokenStream(content, cssClass, widthPx, getMaxHeightForPage, subtitle = '', pageStyle = 'clean') {
+  void widthPx;
+  void getMaxHeightForPage;
+  return paginateTokenStream(content, cssClass, subtitle, pageStyle, createBrainstormMeasurementContext);
+}
+
+function paginateInterpretationTokenStream(content, cssClass, widthPx, getMaxHeightForPage, subtitle = '', pageStyle = 'clean') {
+  void widthPx;
+  void getMaxHeightForPage;
+  return paginateTokenStream(content, cssClass, subtitle, pageStyle, createInterpretationMeasurementContext);
+}
+
+function paginateApplicationTokenStream(content, cssClass, widthPx, getMaxHeightForPage, subtitle = '', pageStyle = 'clean') {
+  void widthPx;
+  void getMaxHeightForPage;
+  return paginateTokenStream(content, cssClass, subtitle, pageStyle, createApplicationMeasurementContext);
+}
+
 // ── LAYOUT CONFIG ─────────────────────────────
+const DREAM_PAGINATION_DEBUG = false;
+const DREAM_PAGE_MEASURE_SAFETY_PX = 0;
+const _layoutConfigCache = {};
+const _contentMeasurerCache = {};
+function clearLayoutMeasurementCaches() {
+  Object.keys(_layoutConfigCache).forEach(k => delete _layoutConfigCache[k]);
+  Object.keys(_contentMeasurerCache).forEach(k => {
+    const cached = _contentMeasurerCache[k];
+    if (cached?.sheet?.parentNode) cached.sheet.parentNode.removeChild(cached.sheet);
+    delete _contentMeasurerCache[k];
+  });
+}
+function outerHeightWithMargins(el) {
+  if (!el) return 0;
+  const cs = getComputedStyle(el);
+  const mt = parseFloat(cs.marginTop) || 0;
+  const mb = parseFloat(cs.marginBottom) || 0;
+  return el.offsetHeight + mt + mb;
+}
 function getLayoutConfig() {
   const layoutKey = document.getElementById('printSize')?.value || 'letter';
-  const sizes = LAYOUT_SIZES[layoutKey] || LAYOUT_SIZES.letter;
-  
-  // Convert layout units to approximate px (temporary: calibrate with actual rendering)
-  const unitToPx = (unit) => {
-    if (unit.endsWith('in')) return parseFloat(unit) * 96; // Assume 96 DPI
-    if (unit.endsWith('mm')) return parseFloat(unit) * 3.7795; // mm to px
-    return 816; // fallback
-  };
-  
-  return {
-    bodyW: Math.round(unitToPx(sizes.w)), // Derived from LAYOUT_SIZES
-    bodyAvailH: 900, // TEMP: calibrate based on actual page height minus headers/footers
-    narrHeadH: 40, // TEMP: measure actual section header height
-    brainstormHeadH: 40, // TEMP: measure actual section header height
+  if (_layoutConfigCache[layoutKey]) return _layoutConfigCache[layoutKey];
+
+  const sheet = pageShell('Dream', 'Measurement Probe');
+  sheet.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;left:-9999px;top:-9999px;z-index:-1;';
+  const body = sheet.querySelector('#pg-body');
+
+  const meta = metaRow({});
+  body.appendChild(meta);
+
+  const narr = document.createElement('div');
+  narr.className = 'j-narrative';
+  narr.style.minHeight = '0';
+  narr.style.height = 'auto';
+  narr.style.flex = '0 0 auto';
+  const narrWrap = secWrap('Dream Narrative', narr);
+  body.appendChild(narrWrap);
+
+  const brainstorm = document.createElement('div');
+  brainstorm.className = 'j-prose medium';
+  brainstorm.style.minHeight = '0';
+  brainstorm.style.height = 'auto';
+  brainstorm.style.flex = '0 0 auto';
+  const brainstormWrap = secWrap('Brainstorm', brainstorm);
+  body.appendChild(brainstormWrap);
+
+  document.body.appendChild(sheet);
+
+  const bodyRect = body.getBoundingClientRect();
+  const narrRect = narr.getBoundingClientRect();
+  const brainstormRect = brainstorm.getBoundingClientRect();
+  const narrHead = narrWrap.querySelector('.j-sec-head');
+  const brainstormHead = brainstormWrap.querySelector('.j-sec-head');
+
+  const layout = {
+    bodyW: Math.floor(narr.clientWidth || body.clientWidth || bodyRect.width),
+    bodyAvailH: Math.floor(bodyRect.height),
+    narrHeadH: Math.ceil(outerHeightWithMargins(narrHead)),
+    brainstormHeadH: Math.ceil(outerHeightWithMargins(brainstormHead)),
     keysHeadH: 40,
     interpretationHeadH: 40,
     applicationHeadH: 40,
     additionalNotesHeadH: 40,
     summaryHeadH: 40,
-    metaH: 30 // TEMP: measure actual meta row height
+    metaH: Math.ceil(outerHeightWithMargins(meta)),
+    narrAvailH: Math.max(Math.floor(bodyRect.bottom - narrRect.top) - DREAM_PAGE_MEASURE_SAFETY_PX, 60),
+    brainstormAvailH: Math.max(Math.floor(bodyRect.bottom - brainstormRect.top) - DREAM_PAGE_MEASURE_SAFETY_PX, 60),
   };
+
+  document.body.removeChild(sheet);
+  _layoutConfigCache[layoutKey] = layout;
+  return layout;
 }
 
 // ── MEASUREMENT HELPER ─────────────────────────────
 function createContentMeasurer(layout) {
-  const probe = document.createElement('div');
-  // Match content container context: width, typography, and rendering environment
-  probe.style.cssText = `
-    position: fixed;
-    visibility: hidden;
-    top: -9999px;
-    left: -9999px;
-    width: ${layout.bodyW}px;
-    height: auto;
-    overflow: visible;
-    min-height: 0;
-    font-family: 'Lora', serif; /* Match .j-narrative and .j-prose typography */
-    font-size: 12pt; /* Approximate print font size */
-    line-height: 1.4;
-    padding: 0;
-    margin: 0;
-  `;
-  document.body.appendChild(probe);
-  
-  return function measure(content, cssClass, maxH) {
+  const layoutKey = document.getElementById('printSize')?.value || 'letter';
+  const cacheKey = `${layoutKey}|${layout.bodyW}`;
+  let cached = _contentMeasurerCache[cacheKey];
+
+  if (!cached) {
+    const sheet = pageShell('Dream', 'Measurement Probe');
+    sheet.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;left:-9999px;top:-9999px;z-index:-1;';
+    const body = sheet.querySelector('#pg-body');
+    const wrap = document.createElement('div');
+    const probe = document.createElement('div');
+    probe.style.minHeight = '0';
+    probe.style.height = 'auto';
+    probe.style.overflow = 'visible';
+    probe.style.flex = '0 0 auto';
+    wrap.appendChild(probe);
+    body.appendChild(wrap);
+    document.body.appendChild(sheet);
+    cached = { sheet, probe };
+    _contentMeasurerCache[cacheKey] = cached;
+  }
+
+  return function measure(content, cssClass, maxH = Infinity) {
+    const probe = cached.probe;
+    probe.className = cssClass;
+    probe.style.minHeight = '0';
+    probe.style.height = 'auto';
+    probe.style.overflow = 'visible';
     if (!content || !content.trim()) return { height: 0, fits: true };
-    probe.className = cssClass; // Apply section-specific styles (e.g., .j-narrative)
     setParaText(probe, content);
-    const h = probe.offsetHeight;
+    const h = Math.ceil(probe.offsetHeight);
     return { height: h, fits: h <= maxH };
   };
 }
@@ -1782,11 +2711,13 @@ function createContentMeasurer(layout) {
 // ── PAGE PLANNING ─────────────────────────────
 function planPages(data, layout, measure) {
   const pages = [];
+  pages.interpretationDescriptors = [];
+  pages.applicationDescriptors = [];
   let pageNum = 1;
   let currentSections = [];
   let isContinuationPage = false;
   
-  // Helper to add a page
+  // Helper to add the current working page, if it has any sections.
   const commitPage = () => {
     if (currentSections.length > 0) {
       pages.push({
@@ -1798,110 +2729,199 @@ function planPages(data, layout, measure) {
       isContinuationPage = true;
     }
   };
+  const pushStandalonePage = (sections, continuationPage) => {
+    if (!sections || sections.length === 0) return;
+    pages.push({
+      pageNumber: pageNum++,
+      isContinuationPage: continuationPage,
+      sections: [...sections]
+    });
+    isContinuationPage = true;
+  };
   
   // Plan Narrative
   const narrContent = autoParagraph(data.dreamNarrative || '', 5);
-  const availForNarr = Math.max(layout.bodyAvailH - layout.metaH - layout.narrHeadH - 24, 60);
-  const narrChunks = [];
-  let remainingNarr = narrContent;
+  const availForNarr = Math.max(layout.narrAvailH || (layout.bodyAvailH - layout.metaH - layout.narrHeadH - 24), 60);
+  const fullNarrMeasure = measure(narrContent, 'j-narrative');
+  // Active Narrative token-stream pagination path:
+  // page 1 uses the first-page narrative max height, continuation pages use the
+  // continuation-page max height, token-stream pagination fills each non-final
+  // page to the maximum fitting word count, and the final page ends at the true remainder.
+  const narrativePages = paginateTokenStream(
+    narrContent,
+    'j-narrative',
+    data.dreamTitle || '',
+    document.getElementById('pageStyle')?.value || 'clean'
+  );
+  const narrChunks = narrativePages.map(page => page.content);
   
-  while (remainingNarr.trim()) {
-    const meas = measure(remainingNarr, 'j-narrative', availForNarr);
-    if (meas.fits) {
-      narrChunks.push(remainingNarr);
-      break;
-    } else {
-      // Split: find largest prefix that fits
-      const words = remainingNarr.trim().split(/\s+/);
-      let low = 0, high = words.length;
-      let bestSplit = '';
-      while (low <= high) {
-        const mid = Math.floor((low + high) / 2);
-        const testContent = words.slice(0, mid).join(' ');
-        const testMeas = measure(testContent, 'j-narrative', availForNarr);
-        if (testMeas.fits) {
-          bestSplit = testContent;
-          low = mid + 1;
-        } else {
-          high = mid - 1;
-        }
-      }
-      if (bestSplit) {
-        narrChunks.push(bestSplit);
-        remainingNarr = words.slice(bestSplit.split(/\s+/).length).join(' ');
-      } else {
-        // Fallback: take first word
-        narrChunks.push(words[0]);
-        remainingNarr = words.slice(1).join(' ');
-      }
-    }
-  }
-  
-  // Add narrative sections to pages
+  // Commit every narrative chunk immediately so continuation pages are never
+  // left pending behind later section planning.
   narrChunks.forEach((chunk, i) => {
-    currentSections.push({
+    const pageDescriptor = {
+      pageNumber: pageNum++,
+      isContinuationPage: i > 0,
+      sections: [{
       type: 'narrative',
       label: 'Dream Narrative',
       content: chunk,
       isContinuation: i > 0
-    });
-    if (i < narrChunks.length - 1) commitPage(); // New page for continuation
+      }],
+      measurement: {
+        availableHeight: narrativePages[i]?.availableHeight || availForNarr,
+        measuredHeight: narrativePages[i]?.height || 0,
+        measureStyles: narrativePages[i]?.measureStyles || null,
+      }
+    };
+    pages.push(pageDescriptor);
+    isContinuationPage = true;
   });
   
-  // Plan Brainstorm
+  // Active Brainstorm token-stream pagination path.
+  // Must use paginateTokenStream(); do not revert to paragraph-based splitting
+  // or to splitContentToFit() for Brainstorm overflow.
+  // Active Interpretation token-stream pagination path.
+  // IMPORTANT:
+  // Brainstorm continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
   const brainstormContent = data.dreamBrainstorm || '';
   if (brainstormContent.trim()) {
-    const availForBrainstorm = Math.max(layout.bodyAvailH - layout.metaH - layout.narrHeadH - layout.brainstormHeadH - 24, 60);
-    const brainstormChunks = [];
-    let remainingBrainstorm = brainstormContent;
-    
-    while (remainingBrainstorm.trim()) {
-      const meas = measure(remainingBrainstorm, 'j-prose medium', availForBrainstorm);
-      if (meas.fits) {
-        brainstormChunks.push(remainingBrainstorm);
-        break;
-      } else {
-        // Split: find largest prefix that fits (same binary search as narrative)
-        const words = remainingBrainstorm.trim().split(/\s+/);
-        let low = 0, high = words.length;
-        let bestSplit = '';
-        while (low <= high) {
-          const mid = Math.floor((low + high) / 2);
-          const testContent = words.slice(0, mid).join(' ');
-          const testMeas = measure(testContent, 'j-prose medium', availForBrainstorm);
-          if (testMeas.fits) {
-            bestSplit = testContent;
-            low = mid + 1;
-          } else {
-            high = mid - 1;
-          }
+    const brainstormPages = paginateBrainstormTokenStream(
+      brainstormContent,
+      'j-prose medium',
+      layout.bodyW,
+      null,
+      data.dreamTitle || '',
+      document.getElementById('pageStyle')?.value || 'clean'
+    );
+    brainstormPages.forEach((page, i) => {
+      const continuationPage = i > 0;
+      pages.push({
+        pageNumber: pageNum++,
+        pageType: 'brainstorm',
+        isContinuationPage: continuationPage,
+        sections: [{
+          type: 'brainstorm',
+          label: 'Brainstorm',
+          content: page.content,
+          isContinuation: i > 0
+        }],
+        measurement: {
+          availableHeight: page.availableHeight,
+          measuredHeight: page.height,
+          measureStyles: page.measureStyles || null,
         }
-        if (bestSplit) {
-          brainstormChunks.push(bestSplit);
-          remainingBrainstorm = words.slice(bestSplit.split(/\s+/).length).join(' ');
-        } else {
-          // Fallback: take first word
-          brainstormChunks.push(words[0]);
-          remainingBrainstorm = words.slice(1).join(' ');
-        }
-      }
-    }
-    
-    // Add brainstorm sections to pages
-    brainstormChunks.forEach((chunk, i) => {
-      currentSections.push({
-        type: 'brainstorm',
-        label: 'Brainstorm',
-        content: chunk,
-        isContinuation: i > 0
       });
-      if (i < brainstormChunks.length - 1) commitPage(); // New page for continuation
+      isContinuationPage = true;
+    });
+  }
+
+  // Active Application token-stream pagination path.
+  // IMPORTANT:
+  // Interpretation continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
+  const interpretationContent = autoParagraph(data.dreamInterpretation || '', 5);
+  if (interpretationContent.trim()) {
+    const interpretationPages = paginateInterpretationTokenStream(
+      interpretationContent,
+      'j-prose large',
+      layout.bodyW,
+      null,
+      data.dreamTitle || '',
+      document.getElementById('pageStyle')?.value || 'clean'
+    );
+    interpretationPages.forEach((page, i) => {
+      const continuationPage = i > 0;
+      pages.interpretationDescriptors.push({
+        pageNumber: i + 1,
+        pageType: 'interpretation',
+        isContinuationPage: continuationPage,
+        sections: [{
+          type: 'interpretation',
+          label: 'Interpretation',
+          content: page.content,
+          isContinuation: continuationPage
+        }],
+        measurement: {
+          availableHeight: page.availableHeight,
+          measuredHeight: page.height,
+          measureStyles: page.measureStyles || null,
+        }
+      });
+    });
+  }
+
+  // IMPORTANT:
+  // Application continuation is derived ONLY from section.isContinuation (i > 0).
+  // Do NOT use descriptor-level or pageNum-based continuation logic.
+  // Measurement and rendering must stay aligned with this rule.
+  const applicationContent = data.dreamApplication || '';
+  if (applicationContent.trim()) {
+    const applicationPages = paginateApplicationTokenStream(
+      applicationContent,
+      'j-prose large',
+      layout.bodyW,
+      null,
+      data.dreamTitle || '',
+      document.getElementById('pageStyle')?.value || 'clean'
+    );
+    applicationPages.forEach((page, i) => {
+      const continuationPage = i > 0;
+      pages.applicationDescriptors.push({
+        pageNumber: i + 1,
+        pageType: 'application',
+        isContinuationPage: continuationPage,
+        sections: [{
+          type: 'application',
+          label: 'Application',
+          content: page.content,
+          isContinuation: continuationPage
+        }],
+        measurement: {
+          availableHeight: page.availableHeight,
+          measuredHeight: page.height,
+          measureStyles: page.measureStyles || null,
+        }
+      });
     });
   }
   
-  // Commit final page
-  commitPage();
-  
+  if (DREAM_PAGINATION_DEBUG) {
+    const fullNarrWords = narrContent.trim() ? narrContent.trim().split(/\s+/).filter(Boolean).length : 0;
+    const narrativeChunksDebug = narrativePages.map((page, index) => {
+      const words = page.content.trim().split(/\s+/).filter(Boolean);
+      return {
+        chunkIndex: index + 1,
+        wordCount: page.wordCount,
+        measuredChunkHeight: page.height,
+        availableHeight: page.availableHeight,
+        isFinalChunk: page.isFinal,
+        first8Words: words.slice(0, 8).join(' '),
+        last8Words: words.slice(-8).join(' ')
+      };
+    });
+    const descriptorSequence = pages.map(page => ({
+      pageNumber: page.pageNumber,
+      pageTitle: page.isContinuationPage ? 'Dream (continued)' : 'Dream',
+      sections: page.sections.map(section => ({
+        type: section.type,
+        continued: !!section.isContinuation,
+        words: section.content ? section.content.trim().split(/\s+/).filter(Boolean).length : 0
+      }))
+    }));
+    console.debug('[DreamPagination] planPages', {
+      availableNarrativeHeight: availForNarr,
+      continuationNarrativeHeight: narrativePages[1]?.availableHeight || availForNarr,
+      measuredFullNarrativeHeight: fullNarrMeasure.height,
+      fullNarrativeWordCount: fullNarrWords,
+      narrativeChunkCount: narrChunks.length,
+      narrativeChunks: narrativeChunksDebug,
+      descriptorSequence
+    });
+  }
+
   return pages;
 }
 
@@ -1919,82 +2939,73 @@ function splitContentToFit(content, cssClass, maxH, widthPx) {
   document.body.appendChild(probe);
   setParaText(probe, content);
   if (probe.offsetHeight <= maxH) { document.body.removeChild(probe); return [content]; }
+  const tokens = buildContentWordTokens(content);
+  const totalWords = tokens.length;
 
-  // Word-level binary-search split — shared helper used by all three paths below.
-  function wordSplit(text) {
-    const words = text.trim().split(/\s+/);
-    if (words.length <= 1) return [text];
-    const result = [];
-    let start = 0;
-    while (start < words.length) {
-      let lo = 1, hi = words.length - start, bestFit = 1;
-      while (lo <= hi) {
-        const mid = (lo + hi) >> 1;
-        setParaText(probe, words.slice(start, start + mid).join(' '));
-        if (probe.offsetHeight <= maxH) { bestFit = mid; lo = mid + 1; }
-        else { hi = mid - 1; }
-      }
-      result.push(words.slice(start, start + bestFit).join(' '));
-      start += bestFit;
-    }
-    return result.length > 1 ? result : [text];
+  function measureHeight(text) {
+    setParaText(probe, text);
+    return Math.ceil(probe.offsetHeight);
   }
 
-  const paragraphs = content.split(/\n{2,}/).filter(p => p.trim());
-  if (paragraphs.length <= 1) {
-    const lines = content.split('\n');
-    if (lines.length <= 1) {
-      const wc = wordSplit(content);
-      document.body.removeChild(probe);
-      return wc;
-    }
-    const chunks = []; let batch = [];
-    for (const line of lines) {
-      batch.push(line);
-      setParaText(probe, batch.join('\n'));
-      if (probe.offsetHeight > maxH && batch.length > 1) {
-        batch.pop(); chunks.push(batch.join('\n')); batch = [line];
-      }
-    }
-    if (batch.length) chunks.push(batch.join('\n'));
-    document.body.removeChild(probe);
-    return chunks.length > 1 ? chunks : wordSplit(content);
-  }
+  const chunks = [];
+  let start = 0;
+  while (start < tokens.length) {
+    const remaining = tokens.length - start;
+    let lo = 1, hi = remaining, bestCount = 1;
+    let bestText = renderContentWordSlice(content, start, 1);
+    let bestHeight = measureHeight(bestText);
 
-  // Multi-paragraph path — with word-level fallback when a single paragraph overflows.
-  // Previously, an overflowing lone paragraph was pushed unsplit onto page 1 and clipped;
-  // the continuation page then started at the NEXT paragraph boundary, skipping text.
-  const chunks = []; let batch = [];
-  for (const para of paragraphs) {
-    const test = [...batch, para];
-    setParaText(probe, test.join('\n\n'));
-    if (probe.offsetHeight > maxH) {
-      if (batch.length > 0) {
-        // Commit what fits, then evaluate the new paragraph alone.
-        chunks.push(batch.join('\n\n'));
-        batch = [];
-        setParaText(probe, para);
-        if (probe.offsetHeight <= maxH) {
-          batch = [para];
-        } else {
-          // Single paragraph exceeds page — split it by words.
-          const wc = wordSplit(para);
-          if (wc.length > 1) {
-            for (let i = 0; i < wc.length - 1; i++) chunks.push(wc[i]);
-            batch = [wc[wc.length - 1]];
-          } else { chunks.push(para); batch = []; }
-        }
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const test = renderContentWordSlice(content, start, mid);
+      const testH = measureHeight(test);
+      if (DREAM_PAGINATION_DEBUG && cssClass === 'j-narrative') {
+        console.debug('[DreamPagination] narrative binary step', {
+          chunkIndex: chunks.length + 1,
+          prefixWordCount: mid,
+          combinedWordCount: mid,
+          testHeight: testH,
+          availableHeight: maxH
+        });
+      }
+      if (testH <= maxH) {
+        bestCount = mid;
+        bestText = test;
+        bestHeight = testH;
+        lo = mid + 1;
       } else {
-        // First paragraph already overflows — split it by words.
-        const wc = wordSplit(para);
-        if (wc.length > 1) {
-          for (let i = 0; i < wc.length - 1; i++) chunks.push(wc[i]);
-          batch = [wc[wc.length - 1]];
-        } else { chunks.push(para); batch = []; }
+        hi = mid - 1;
       }
-    } else { batch = test; }
+    }
+
+    if (DREAM_PAGINATION_DEBUG && cssClass === 'j-narrative') {
+      console.debug('[DreamPagination] narrative chosen prefix', {
+        chunkIndex: chunks.length + 1,
+        finalPrefixWordCount: bestCount,
+        combinedWordCount: bestCount,
+        measuredChunkHeight: bestHeight,
+        availableHeight: maxH
+      });
+    }
+
+    const chunkText = bestText;
+    const chunkHeight = bestHeight;
+    chunks.push(chunkText);
+    if (DREAM_PAGINATION_DEBUG && cssClass === 'j-narrative') {
+      const chunkWords = chunkText.trim().split(/\s+/).filter(Boolean);
+      const remainingWordCountAfterChunk = Math.max(tokens.length - (start + bestCount), 0);
+      console.debug('[DreamPagination] narrative chunk', {
+        chunkIndex: chunks.length,
+        isFinalChunk: remainingWordCountAfterChunk === 0,
+        measuredChunkHeight: chunkHeight,
+        availableHeight: maxH,
+        chunkWordCount: chunkWords.length,
+        remainingWordCountAfterChunk
+      });
+    }
+    start += bestCount;
   }
-  if (batch.length) chunks.push(batch.join('\n\n'));
+
   document.body.removeChild(probe);
   return chunks.length > 1 ? chunks : [content];
 }
@@ -2180,6 +3191,8 @@ function paginateDreamPage(container, dreamPageSheet, data, pageStyle) {
   return added;
 }
 
+// Legacy single-section overflow paginator kept for older section paths and
+// Additional Notes. Interpretation/Application token-stream paths are active.
 // Paginate a single-section page (Interpretation, Application, Additional Notes).
 // Modifies the content element in-place, adds continuation pages to container.
 function paginateSingleSection(container, sheet, content, cssClass, sectionLabel, pageStyle) {
@@ -2320,6 +3333,7 @@ const LAYOUT_SIZES = {
 let _layoutStyleEl = null;
 function updateLayoutSize() {
   clearContBodyHCache(); // page dimensions changed — invalidate continuation-height cache
+  clearLayoutMeasurementCaches();
   // Reset preview zoom so any subsequent generation measures at native print dimensions.
   const pw = document.getElementById('previewWrap'); if (pw) pw.style.zoom = '';
   const key = (document.getElementById('printSize')?.value) || 'letter';
@@ -2419,6 +3433,7 @@ function clearAll() {
   document.getElementById('outputSection').classList.remove('show');
   document.getElementById('pagesContainer').innerHTML = '';
   const pw = document.getElementById('previewWrap'); if (pw) pw.style.zoom = '';
+  clearLayoutMeasurementCaches();
   applyPreset('dove');
 }
 function scrollToForm() { document.getElementById('editorSection').scrollIntoView({ behavior:'smooth' }); }
