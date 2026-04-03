@@ -67,6 +67,8 @@ Format per entry:
 
 **Verification:** Confirm mobile paste and mobile upload both generate successfully without the `Can't find variable: sectionTransitions` runtime error.
 
+**Notes:** The same scope repair was also mirrored into `index-v2.html` so the staged backup file stays aligned with the live entrypoint.
+
 ### Parser (Confirmed)
 
 **Issue:** Parser behavior was inconsistent across entry-splitting paths, and `labeled_sections` documents could mis-route content:

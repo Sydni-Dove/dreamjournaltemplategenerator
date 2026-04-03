@@ -3658,6 +3658,8 @@ function extractActionPhrasesFromNarrative(text) {
 // ── DREAM DATA EXTRACTION ───────────────────────────────
 function extractDreamData(raw, options = {}) {
   const result = {};
+  const sectionTransitions = [];
+  let laterSectionFallback = { collected: {}, decisions: [] };
   const parserInputSource = String(options.inputSource || '').trim().toLowerCase();
   if (parserInputSource) result._inputSource = parserInputSource;
   if (typeof window !== 'undefined') window.__DJ_BUILD = '20260403-structural-fix-02';
@@ -6133,7 +6135,6 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
   if (plainMatch && plainMatch[1].trim()) _plainNarrative = plainMatch[1].trim();
 
   const lineRecords = buildPageAwareLineRecords(bodyPages);
-  const sectionTransitions = [];
   // Strip doc-ID lines from top
   let startIdx = 0;
   while (startIdx < 3 && lineRecords[startIdx]?.line && /^\d{8,}$/.test(lineRecords[startIdx].line)) startIdx++;
@@ -6330,7 +6331,7 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
   };
   Object.entries(buf).forEach(([k,v]) => fill(k,v));
 
-  const laterSectionFallback = classifyLaterPages(bodyPages, sectionTransitions);
+  laterSectionFallback = classifyLaterPages(bodyPages, sectionTransitions);
   if (docMode === 'unlabeled_or_template' && !result.dreamInterpretation && laterSectionFallback.collected.dreamInterpretation) result.dreamInterpretation = laterSectionFallback.collected.dreamInterpretation;
   if (docMode === 'unlabeled_or_template' && !result.dreamApplication && laterSectionFallback.collected.dreamApplication) result.dreamApplication = laterSectionFallback.collected.dreamApplication;
   if (docMode === 'unlabeled_or_template' && isSinglePagePdf && bodyPages[0]) {
