@@ -13,6 +13,23 @@ Format per entry:
 
 ## Parser layer — 2026-04-03
 
+### Promotion (Confirmed) — Live entrypoint promotion to `index.html`
+
+**Issue:** Production was still serving `index.html` while the active parser and rendering fixes were living in `index-v2.html`.
+
+**Root Cause:** Deployment was updating the repository, but the live app entrypoint still pointed to the older `index.html` file instead of the tested `index-v2.html` build.
+
+**Fix:**
+- created `index-old.html` as a backup of the previous live entrypoint
+- copied/promoted the full contents of `index-v2.html` into `index.html`
+- retained `index-v2.html` in place for comparison and rollback
+
+**Scope:** Entrypoint promotion only. No parser, rendering, pagination, CSS, auth, or print logic was changed during this step.
+
+**Verification:** Confirmed that `index.html` now matches `index-v2.html` exactly, so the production root entrypoint reflects the tested parser and rendering fixes.
+
+**Notes:** `index-v2.html` was intentionally kept temporarily so the promoted live file can still be compared against the staged candidate or rolled back quickly if needed.
+
 ### Parser (Confirmed) — Pasted dream parser stabilization (reflection-note fix)
 
 **Issue:** In pasted dreams with an explicit `Brainstorming` heading, pre-Brainstorming dream-scene prose was still being diverted into `dreamAdditionalNotes` instead of staying in `dreamNarrative`.
