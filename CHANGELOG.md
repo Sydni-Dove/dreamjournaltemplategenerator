@@ -52,6 +52,21 @@ Format per entry:
 
 **Notes:** This is a pasted-only guard for the explicit-boundary case. Uploaded parsing and non-pasted unlabeled behavior were intentionally left alone.
 
+### Parser (Confirmed) — Mobile generate crash: `sectionTransitions` undefined
+
+**Issue:** Mobile upload and pasted generation could fail with `Can't find variable: sectionTransitions`, blocking review generation.
+
+**Root Cause:** `sectionTransitions` was declared only inside the `unlabeled_or_template` branch of `extractDreamData(...)`, but later shared-tail debug/reporting code referenced it outside that block. `laterSectionFallback` had the same scope problem.
+
+**Fix:**
+- lifted `sectionTransitions` to top scope inside `extractDreamData(...)`
+- lifted `laterSectionFallback` to the same shared scope
+- removed the inner shadowing assignment so all branches use the same shared state
+
+**Scope:** `extractDreamData(...)` scope/initialization only. No parser classification, pagination, rendering, lined-page, or CSS changes.
+
+**Verification:** Confirm mobile paste and mobile upload both generate successfully without the `Can't find variable: sectionTransitions` runtime error.
+
 ### Parser (Confirmed)
 
 **Issue:** Parser behavior was inconsistent across entry-splitting paths, and `labeled_sections` documents could mis-route content:
