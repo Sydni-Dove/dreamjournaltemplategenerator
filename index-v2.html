@@ -233,35 +233,45 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .meta-item:last-child  { border-right: none; padding-right: 0; }
 .meta-label { font-family: 'Playfair Display', serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--pg-primary); display: block; margin-bottom: 0.02in; }
 .meta-value { font-family: 'Lora', serif; font-size: 0.86rem; color: var(--pg-text); min-height: 1em; line-height: 1.35; word-wrap: break-word; overflow-wrap: break-word; }
-.journal-body { display: flex; flex-direction: column; gap: 0.18in; flex: 1; min-height: 0; overflow: visible; }
+.journal-body { display: flex; flex-direction: column; gap: 0.18in; flex: 1; min-height: 0; min-width: 0; overflow: visible; }
 .j-sec-head { display: flex; align-items: center; gap: 0.1in; margin-bottom: 0.08in; min-width: 0; }
 .j-sec-label { font-family: 'Playfair Display', serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--pg-primary); white-space: nowrap; flex-shrink: 0; }
 .j-sec-rule { flex: 1; min-width: 0.1in; height: 1px; background: linear-gradient(to right, var(--pg-accent), transparent); opacity: 0.55; }
-.j-sec-wrap { position: relative; }
-.j-writing-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
-.j-writing-shell { position: relative; flex: 1 1 auto; min-height: 0; }
+.j-sec-wrap { position: relative; min-width: 0; max-width: 100%; }
+.j-writing-wrap { flex: 1 1 auto; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+.j-writing-shell { position: relative; flex: 1 1 auto; min-height: 0; min-width: 0; max-width: 100%; }
 .j-writing-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; background: none; }
-.j-writing-content { position: relative; z-index: 1; min-height: 0; }
-.j-narrative { font-family: 'Lora', serif; font-size: 0.92rem; font-style: italic; color: var(--pg-text); line-height: 1.82; padding: 0.04in 0 0.04in 14px; min-height: 2in; height: auto; border-left: 3px solid var(--pg-primary); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
+.j-writing-content { position: relative; z-index: 1; min-height: 0; min-width: 0; max-width: 100%; }
+.j-narrative { font-family: 'Lora', serif; font-size: 0.92rem; font-style: italic; color: var(--pg-text); line-height: 1.82; padding: 0.04in 0 0.04in 14px; min-height: 2in; height: auto; max-width: 100%; border-left: 3px solid var(--pg-primary); word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; overflow: visible; display: block; }
 .j-narrative p, .j-prose p, .j-scripture p { margin: 0 0 0.22em 0; }
 .j-narrative p:last-child, .j-prose p:last-child, .j-scripture p:last-child { margin-bottom: 0; }
-.j-prose { font-family: 'Lora', serif; font-size: 0.88rem; color: var(--pg-text); line-height: 1.86; padding: 0.04in 0.04in 0.04in 12px; height: auto; background: transparent; border: none; border-left: 1.5px solid rgba(var(--pg-primary-rgb), 0.22); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
+.j-prose { font-family: 'Lora', serif; font-size: 0.88rem; color: var(--pg-text); line-height: 1.86; padding: 0.04in 0.04in 0.04in 12px; height: auto; max-width: 100%; background: transparent; border: none; border-left: 1.5px solid rgba(var(--pg-primary-rgb), 0.22); word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; overflow: visible; display: block; }
 .j-prose.medium { min-height: 1.5in; }
 .j-prose.large  { min-height: 2in; }
 .j-brainstorm-body { line-height: 1.82; }
-.j-panel-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.1in; flex: 1; }
-.j-panel { background: var(--pg-panel); border-radius: 4px; padding: 0.1in 0.12in; display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.j-panel-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.1in; flex: 1; min-width: 0; max-width: 100%; }
+.j-panel { background: var(--pg-panel); border-radius: 4px; padding: 0.1in 0.12in; display: flex; flex-direction: column; min-width: 0; max-width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .j-panel-label { font-family: 'Playfair Display', serif; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--pg-primary); margin-bottom: 0.05in; border-bottom: 1px solid rgba(230,167,66,0.4); padding-bottom: 0.04in; }
-.j-panel-body { font-family: 'Lora', serif; font-size: 0.86rem; color: var(--pg-text); line-height: 1.76; flex: 1; min-height: 2in; word-wrap: break-word; overflow-wrap: break-word; }
+.j-panel-body { font-family: 'Lora', serif; font-size: 0.86rem; color: var(--pg-text); line-height: 1.76; flex: 1; min-height: 2in; min-width: 0; max-width: 100%; word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; }
 .j-panel-body p { margin: 0 0 0.3em 0; }
 .j-panel-body p:last-child { margin-bottom: 0; }
-.j-scripture { font-family: 'Lora', serif; font-size: 0.88rem; font-style: italic; color: var(--pg-text); line-height: 1.7; padding: 0.04in 0.1in 0.04in 12px; min-height: 0.3in; height: auto; background: transparent; border: none; border-left: 1.5px solid var(--pg-accent); word-wrap: break-word; overflow-wrap: break-word; overflow: visible; display: block; }
+.j-scripture { font-family: 'Lora', serif; font-size: 0.88rem; font-style: italic; color: var(--pg-text); line-height: 1.7; padding: 0.04in 0.1in 0.04in 12px; min-height: 0.3in; height: auto; max-width: 100%; background: transparent; border: none; border-left: 1.5px solid var(--pg-accent); word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; overflow: visible; display: block; }
 .j-narrative,
 .j-prose,
 .j-panel-body,
 .j-scripture {
   overflow: visible;
+  overflow-wrap: anywhere;
   word-break: break-word;
+}
+.j-narrative p,
+.j-prose p,
+.j-panel-body p,
+.j-scripture p {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 }
 .header-fields { display: flex; flex-direction: column; gap: 0.15in; flex: 1; justify-content: flex-start; padding-top: 0.28in; }
 .hf-row { display: flex; gap: 0.15in; }
@@ -555,10 +565,18 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   display: flex;
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: var(--white);
+  z-index: 140;
+  background: rgba(255,255,255,0.94);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
+  backdrop-filter: saturate(180%) blur(10px);
   border-bottom: 1px solid var(--pale-pink);
   box-shadow: 0 2px 8px rgba(27,23,23,0.06);
+}
+@media (min-width: 768px) {
+  body:not(.has-desktop-sticky-tabs) .m-tab-nav {
+    position: relative;
+    top: auto;
+  }
 }
 /* On mobile: move to a fixed bottom tab bar (standard mobile nav pattern).
    The floating action bar sits above it. */
@@ -570,6 +588,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
     left: 0;
     right: 0;
     z-index: 100;
+    background: var(--white);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     border-bottom: none;
     border-top: 1px solid var(--pale-pink);
     box-shadow: 0 -2px 8px rgba(27,23,23,0.06);
@@ -697,6 +718,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
 /* ── GENERATE STRIP (sticky CTA on mobile) ──────────────────── */
+.desktop-editor-action-bar { display: none; }
 .generate-strip {
   position: sticky;
   bottom: 0;
@@ -711,6 +733,32 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 @media (min-width: 768px) {
   .generate-strip { position: static; background: none; padding: 0; margin-top: 2.8rem; }
+}
+
+@media (min-width: 768px) {
+  .desktop-editor-action-bar {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 145;
+    margin: 0 -1.5rem 1.5rem;
+    background: rgba(253,253,253,0.96);
+    border-top: 1px solid rgba(242,223,216,0.75);
+    border-bottom: 1px solid rgba(242,223,216,0.9);
+    box-shadow: 0 2px 8px rgba(27,23,23,0.05);
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+  }
+
+  .desktop-editor-action-bar .desktop-editor-action-inner {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
 }
 
 /* ── REVIEW PANEL ────────────────────────────────────────────── */
@@ -1272,6 +1320,12 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
 <!-- EDITOR (TAB: FORM) — id="editorSection" kept for bridge/clearAll compatibility -->
 <div class="editor-section" id="editorSection">
+  <div class="desktop-editor-action-bar" id="desktopEditorActionBar">
+    <div class="desktop-editor-action-inner">
+      <button class="btn-ghost" type="button" onclick="clearAll()">Clear</button>
+      <button class="btn-generate" type="button" onclick="handleGenerate()">Generate</button>
+    </div>
+  </div>
 
   <!-- ══ ACCORDION: INPUT ══════════════════════════════════════ -->
   <!-- Upload + Paste — open by default -->
@@ -1470,8 +1524,8 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
   <!-- ══ STICKY GENERATE CTA (Step 1 → Step 2) ════════════════ -->
   <div class="generate-strip">
-    <button class="btn-ghost" onclick="clearAll()">Clear Generator</button>
-    <button class="btn-generate" id="generateDreamBtn" type="button">Generate &amp; Review</button>
+    <button class="btn-ghost" onclick="clearAll()">Clear</button>
+    <button class="btn-generate" id="generateDreamBtn" type="button">Generate</button>
   </div>
 
 </div><!-- /editorSection --></div>
@@ -1652,6 +1706,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 </div>
 
 <script>
+console.warn('*** INDEX-V2 LIVE DEBUG MARKER ***');
 if (typeof pdfjsLib !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
@@ -1942,13 +1997,28 @@ async function importMultipleFiles(files, options = {}) {
   return dataArray;
 }
 
+function materializeStructuredDocxEntries(structuredPayload, options = {}) {
+  if (!(structuredPayload && typeof structuredPayload === 'object' && structuredPayload.__djDocxStructured)) {
+    return [];
+  }
+  console.log('[DJ][docx] using structured DOCX path', {
+    __djDocxStructured: true,
+    entryCount: Array.isArray(structuredPayload.entries) ? structuredPayload.entries.length : 0,
+    filename: options.filename || ''
+  });
+  console.log('[DJ][docx] bypassing extractDreamData', {
+    reason: 'structured DOCX extraction succeeded'
+  });
+  return (structuredPayload.entries || []).map(entry => normalizeDreamEntry({ ...entry }, {
+    rawText: structuredPayload.rawText || '',
+    filename: options.filename || '',
+    label: options.label || ''
+  }));
+}
+
 function parseDreamEntriesFromText(text, options = {}) {
   if (text && typeof text === 'object' && text.__djDocxStructured) {
-    return (text.entries || []).map(entry => parseSingleDreamEntry({
-      __djStructuredDreamData: true,
-      data: entry,
-      rawText: text.rawText || ''
-    }, options));
+    return materializeStructuredDocxEntries(text, options);
   }
   const source = String(text || '').trim();
   if (!source) return [];
@@ -2137,6 +2207,11 @@ function recoverBrainstormFromRawText(dreamData) {
   if (!dreamData) return dreamData;
   if (String(dreamData.dreamBrainstorm || '').trim()) return dreamData;
 
+  // If the parser already produced a meaningful narrative, trust its structural decisions.
+  // A non-empty dreamNarrative means the parser routed content intentionally —
+  // an empty dreamBrainstorm is the parser's choice, not a miss. Do not backfill from raw.
+  if (String(dreamData.dreamNarrative || '').trim()) return dreamData;
+
   const raw = String(dreamData._raw || '')
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n');
@@ -2275,6 +2350,57 @@ async function processSingleUploadFlow(file, pastedText, { reportStatus }) {
 
     reportStatus('⚙️ Analyzing dream content…', 'spin');
     await new Promise(r => setTimeout(r, 200));
+    if (combinedText && typeof combinedText === 'object' && combinedText.__djDocxStructured) {
+      console.log('[DJ][docx] structured extraction succeeded', {
+        __djDocxStructured: true,
+        fileName: file?.name || '',
+        entryCount: Array.isArray(combinedText.entries) ? combinedText.entries.length : 0
+      });
+      const structuredEntries = materializeStructuredDocxEntries(combinedText, {
+        filename: file.name,
+        label: file.name.replace(/\.[^.]+$/, '')
+      });
+      if (structuredEntries.length > 1) {
+        reportStatus(`🔍 Found ${structuredEntries.length} entries…`, 'spin');
+        await new Promise(r => setTimeout(r, 150));
+        const first = structuredEntries[0] || null;
+        return finalizeUploadFlowResult({
+          mode: 'single',
+          clearPendingEntries: false,
+          pendingEntries: structuredEntries,
+          populateData: first,
+          parserDebug: first ? {
+            data: first,
+            meta: { build: window.__DJ_BUILD || 'unknown', entryCount: String(structuredEntries.length), rawText: getImportedRawText(combinedText) }
+          } : null,
+          message: `✓ ${structuredEntries.length} entries found — first entry loaded into the form. Click Generate to create all journal page sets.`,
+          messageType: 'ok'
+        });
+      }
+      const importedEntry = structuredEntries[0] || null;
+      if (importedEntry) {
+        return finalizeUploadFlowResult({
+          mode: 'single',
+          clearPendingEntries: true,
+          populateData: importedEntry,
+          parserDebug: {
+            data: importedEntry,
+            meta: { build: window.__DJ_BUILD || 'unknown', entryCount: '1', rawText: getImportedRawText(combinedText) }
+          },
+          message: '✓ Content imported — generating journal pages…',
+          messageType: 'ok',
+          shouldGenerate: true,
+          generateDelayMs: 300
+        });
+      }
+      console.log('[DJ][docx] fell back to raw text parsing', {
+        reason: 'structured DOCX payload contained no entries'
+      });
+    } else {
+      console.log('[DJ][docx] fell back to raw text parsing', {
+        reason: '__djDocxStructured not present'
+      });
+    }
     const entries = parseDreamEntriesFromText(combinedText);
 
     if (entries.length > 1) {
@@ -2508,47 +2634,81 @@ function collectWordNodeText(node, parts = []) {
   }
   if (node.nodeType !== Node.ELEMENT_NODE) return parts;
   const local = wordLocalName(node);
-  if (local === 'tab') parts.push('\t');
-  else if (local === 'br' || local === 'cr') parts.push('\n');
-  else if (local === 't') parts.push(node.textContent || '');
+  if (local === 'tab') {
+    parts.push('\t');
+    return parts;
+  }
+  if (local === 'br' || local === 'cr') {
+    parts.push('\n');
+    return parts;
+  }
+  if (local === 't' || local === 'instrText') {
+    parts.push(node.textContent || '');
+    return parts;
+  }
   Array.from(node.childNodes || []).forEach(child => collectWordNodeText(child, parts));
   return parts;
 }
 function extractWordParagraphText(paragraphNode) {
-  return collectWordNodeText(paragraphNode, [])
+  const text = collectWordNodeText(paragraphNode, [])
     .join('')
     .replace(/\u00a0/g, ' ')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n[ \t]+/g, '\n')
     .replace(/[ \t]{2,}/g, ' ')
     .trim();
+  if (text) {
+    console.log('[DJ][docx][extractWordParagraphText] paragraph emitted once', {
+      textLength: text.length,
+      textPreview: text.slice(0, 160)
+    });
+  }
+  return text;
 }
 function extractWordCellText(cellNode) {
   const lines = Array.from(cellNode?.childNodes || [])
     .filter(node => wordLocalName(node) === 'p')
     .map(extractWordParagraphText)
     .filter(Boolean);
+  if (lines.length) {
+    console.log('[DJ][docx][extractWordCellText] cell paragraphs', {
+      paragraphCount: lines.length,
+      paragraphs: lines
+    });
+  }
   return lines.join('\n').trim();
 }
-function extractWordTablesFromDocumentXml(xmlText) {
+function extractWordBodyBlocksFromDocumentXml(xmlText) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, 'application/xml');
   if (xml.querySelector('parsererror')) return [];
   const body = xml.getElementsByTagNameNS('*', 'body')[0];
   if (!body) return [];
-  const tables = [];
+  const blocks = [];
   Array.from(body.childNodes || []).forEach(node => {
-    if (wordLocalName(node) !== 'tbl') return;
-    const rows = Array.from(node.childNodes || [])
-      .filter(child => wordLocalName(child) === 'tr')
-      .map(rowNode => Array.from(rowNode.childNodes || [])
-        .filter(child => wordLocalName(child) === 'tc')
-        .map(extractWordCellText)
-        .map(value => String(value || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim()))
-      .filter(row => row.some(Boolean));
-    if (rows.length) tables.push(rows);
+    const local = wordLocalName(node);
+    if (local === 'tbl') {
+      const rows = Array.from(node.childNodes || [])
+        .filter(child => wordLocalName(child) === 'tr')
+        .map(rowNode => Array.from(rowNode.childNodes || [])
+          .filter(child => wordLocalName(child) === 'tc')
+          .map(extractWordCellText)
+          .map(value => String(value || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim()))
+        .filter(row => row.some(Boolean));
+      if (rows.length) blocks.push({ type: 'table', rows });
+      return;
+    }
+    if (local === 'p') {
+      const text = extractWordParagraphText(node);
+      if (text) blocks.push({ type: 'paragraph', text });
+    }
   });
-  return tables;
+  return blocks;
+}
+function extractWordTablesFromDocumentXml(xmlText) {
+  return extractWordBodyBlocksFromDocumentXml(xmlText)
+    .filter(block => block.type === 'table')
+    .map(block => block.rows);
 }
 function normalizeStructuredTableHeading(text) {
   const normalized = normalizeSimpleSectionHeading(text);
@@ -2556,7 +2716,7 @@ function normalizeStructuredTableHeading(text) {
   const value = String(text || '').trim().toLowerCase().replace(/\s+/g, ' ');
   if (/^(?:dream|dream narrative|vision|dream scene)$/.test(value)) return 'dreamNarrative';
   if (/^(?:brain ?storm|brainstorming|notes|observations)$/.test(value)) return 'dreamBrainstorm';
-  if (/^(?:long interpretation|interpretation|possible meaning)$/.test(value)) return 'dreamInterpretation';
+  if (/^(?:possible interpretation|long interpretation|interpretation|possible meaning)$/.test(value)) return 'dreamInterpretation';
   if (/^(?:application|response|how i will respond)$/.test(value)) return 'dreamApplication';
   return null;
 }
@@ -2570,6 +2730,90 @@ function normalizeStructuredMetaLabel(text) {
   if (/^(?:context|context \/ source|source|context source)$/.test(value)) return 'dreamContextSource';
   if (/^theme$/.test(value)) return 'dreamTheme';
   return '';
+}
+function splitStructuredCellParagraphs(textValue) {
+  return String(textValue || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map(part => String(part || '').trim())
+    .filter(Boolean);
+}
+function normalizeStructuredHeaderScalar(textValue) {
+  let normalized = String(textValue || '')
+    .replace(/[’']/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/^[\s:;,\-–—.]+|[\s:;,\-–—.]+$/g, '');
+
+  const collapseExactHalfDuplication = value => {
+    const text = String(value || '');
+    if (!text || text.length % 2 !== 0) return text;
+    const half = text.length / 2;
+    const first = text.slice(0, half);
+    const second = text.slice(half);
+    return first && first === second ? first : text;
+  };
+
+  const collapseRepeatedWordDuplication = value => {
+    const words = String(value || '').split(/\s+/).filter(Boolean);
+    if (!words.length || words.length % 2 !== 0) return String(value || '');
+    const half = words.length / 2;
+    const first = words.slice(0, half).join(' ');
+    const second = words.slice(half).join(' ');
+    return first && first === second ? first : String(value || '');
+  };
+
+  let prev = '';
+  while (normalized && normalized !== prev) {
+    prev = normalized;
+    normalized = collapseRepeatedWordDuplication(normalized);
+    normalized = collapseExactHalfDuplication(normalized);
+  }
+
+  return normalized;
+}
+function parseStructuredInlineMetaParagraph(textValue) {
+  const raw = String(textValue || '').trim();
+  if (!raw) return { field: '', value: '' };
+  const inlineMatch = raw.match(/^([^:]+):\s*(.*)$/);
+  if (inlineMatch) {
+    const field = normalizeStructuredMetaLabel(inlineMatch[1]);
+    if (field) return { field, value: String(inlineMatch[2] || '').trim() };
+  }
+  return {
+    field: normalizeStructuredMetaLabel(raw),
+    value: ''
+  };
+}
+function analyzeStructuredCell(textValue) {
+  const cellText = String(textValue || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  const headerParagraphs = splitStructuredCellParagraphs(cellText);
+  const headerTextRaw = headerParagraphs[0] || '';
+  const headerTextNormalized = normalizeStructuredHeaderScalar(headerTextRaw);
+  const headingField =
+    normalizeStructuredTableHeading(headerTextRaw) ||
+    normalizeStructuredTableHeading(headerTextNormalized) ||
+    '';
+  const metaInfo = parseStructuredInlineMetaParagraph(headerTextRaw);
+  const shouldStripHeader = !!(headingField || metaInfo.field);
+  const bodyParagraphs = shouldStripHeader ? headerParagraphs.slice(1) : headerParagraphs.slice();
+  console.log('[DJ][docx][analyzeStructuredCell] analyzed cell', {
+    firstParagraphRaw: headerTextRaw,
+    normalizedHeaderScalar: headerTextNormalized,
+    bodyText: bodyParagraphs.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+  });
+  return {
+    cellText,
+    headerParagraphs,
+    headerTextRaw,
+    headerTextNormalized,
+    headingField,
+    metaField: metaInfo.field,
+    metaValue: metaInfo.value,
+    bodyText: bodyParagraphs.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+  };
 }
 function stripStandaloneSectionHeadingLines(textValue) {
   return String(textValue || '')
@@ -2646,24 +2890,41 @@ function lightPostProcessStructuredDreamData(data) {
     result.dreamBrainstorm,
     result.dreamInterpretation
   ].filter(Boolean).join('\n'));
-  const refinedSymbols = prioritizeListedSymbols(
-    refinedSymbolCandidates,
-    result.dreamNarrative || '',
-    result.dreamBrainstorm || '',
-    result.dreamInterpretation || ''
-  );
-  if (refinedSymbols.length) {
-    result.dreamSymbols = refinedSymbols.join('\n');
-  } else {
-    const inferredSymbols = extractSymbolEntriesFromText([result.dreamBrainstorm, result.dreamInterpretation].filter(Boolean).join('\n'));
-    if (inferredSymbols.length) result.dreamSymbols = inferredSymbols.join('\n');
+  const canFinalizeSymbols =
+    hasStrictSymbolGlossaryEvidence(result.dreamSymbols) ||
+    hasStrictSymbolGlossaryEvidence(result.dreamBrainstorm) ||
+    hasStrictSymbolGlossaryEvidence(result.dreamInterpretation) ||
+    looksLikeEnumeratedSymbolGlossary(result.dreamSymbols);
+  if (canFinalizeSymbols) {
+    const refinedSymbols = prioritizeListedSymbols(
+      refinedSymbolCandidates,
+      result.dreamNarrative || '',
+      result.dreamBrainstorm || '',
+      result.dreamInterpretation || ''
+    );
+    if (refinedSymbols.length) {
+      result.dreamSymbols = refinedSymbols.join('\n');
+    } else {
+      const inferredSymbols = extractSymbolEntriesFromText([result.dreamBrainstorm, result.dreamInterpretation].filter(Boolean).join('\n'));
+      if (inferredSymbols.length) result.dreamSymbols = inferredSymbols.join('\n');
+    }
+  }
+  if (result.dreamSymbols) {
+    result.dreamNarrative = stripExactSymbolLinesFromText(result.dreamNarrative, result.dreamSymbols);
+    result.dreamBrainstorm = stripExactSymbolLinesFromText(result.dreamBrainstorm, result.dreamSymbols);
+    result.dreamInterpretation = stripExactSymbolLinesFromText(result.dreamInterpretation, result.dreamSymbols);
   }
   return result;
 }
 async function extractStructuredDreamDocx(arrayBuffer) {
   const documentXml = await extractZipEntryText(arrayBuffer, 'word/document.xml');
   if (!documentXml) return null;
-  const tables = extractWordTablesFromDocumentXml(documentXml);
+  const bodyBlocks = extractWordBodyBlocksFromDocumentXml(documentXml);
+  const tables = bodyBlocks.filter(block => block.type === 'table').map(block => block.rows);
+  console.log('[DJ][docx][extractStructuredDreamDocx] start', {
+    bodyBlockCount: bodyBlocks.length,
+    tableCount: tables.length
+  });
   if (!tables.length) return null;
 
   const structured = {
@@ -2690,101 +2951,255 @@ async function extractStructuredDreamDocx(arrayBuffer) {
     if (!cleaned) return;
     structured[field] = [structured[field], cleaned].filter(Boolean).join('\n\n').trim();
   };
-  const normalizeCellValue = value => String(value || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-  const rowHasAnyStructuredHeading = row => row.some(cell => !!normalizeStructuredTableHeading(cell));
-  const rowHeadingFields = row => row.map(cell => normalizeStructuredTableHeading(cell));
-  const collectColumnBodyFromRow = (rows, headingRowIndex, colIndex) => rows
-    .slice(headingRowIndex + 1)
-    .map(row => normalizeCellValue(row[colIndex]))
+  const analyzeStructuredRows = rows => rows.map(row => row.map(analyzeStructuredCell));
+  const rowHeadingFields = analyzedRow => analyzedRow.map(cell => cell.headingField || '');
+  const flattenTableHeaderDiagnostics = analyzedRows => analyzedRows.flatMap((row, rowIndex) => row.map((cell, cellIndex) => ({
+    rowIndex,
+    cellIndex,
+    rawFirstParagraph: cell.headerTextRaw,
+    normalizedHeaderScalar: cell.headerTextNormalized
+  })));
+  const collectColumnBodyFromAnalyzedRows = (analyzedRows, headingRowIndex, colIndex) => analyzedRows
+    .slice(headingRowIndex)
+    .map((row, relativeIndex) => {
+      const cell = row[colIndex];
+      if (!cell) return '';
+      return relativeIndex === 0 ? (cell.bodyText || '') : (cell.cellText || '');
+    })
     .filter(Boolean)
     .join('\n\n')
     .trim();
-  const collectRowsBodyAfter = (rows, headingRowIndex) => rows
-    .slice(headingRowIndex + 1)
-    .map(row => row.map(normalizeCellValue).filter(Boolean).join('\n'))
+  const collectRowsBodyAfterAnalyzed = (analyzedRows, headingRowIndex, headingCellIndex) => analyzedRows
+    .slice(headingRowIndex)
+    .map((row, relativeIndex) => row
+      .map((cell, cellIndex) => {
+        if (!cell) return '';
+        if (relativeIndex === 0 && cellIndex < headingCellIndex) return '';
+        if (relativeIndex === 0 && cellIndex === headingCellIndex) return cell.bodyText || '';
+        return cell.cellText || '';
+      })
+      .filter(Boolean)
+      .join('\n'))
     .filter(Boolean)
     .join('\n\n')
     .trim();
-  const applyMetadataTable = rows => {
+  const countMetadataHits = analyzedRows => {
     let hits = 0;
-    rows.forEach(row => {
-      for (let i = 0; i < row.length; i += 2) {
-        const label = normalizeStructuredMetaLabel(row[i]);
-        const value = String(row[i + 1] || '').trim();
-        if (!label || !value) continue;
-        structured[label] = value;
-        hits++;
-      }
+    analyzedRows.forEach(row => {
+      row.forEach(cell => {
+        if (cell.metaField) hits++;
+      });
     });
-    return hits >= 2;
+    return hits;
   };
-  const applyTwoColumnSectionTable = rows => {
-    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-      const row = rows[rowIndex] || [];
+  const applyMetadataTable = analyzedRows => {
+    let labels = 0;
+    analyzedRows.forEach(row => {
+      row.forEach((cell, index) => {
+        if (!cell.metaField) return;
+        labels++;
+        let value = cell.metaValue || '';
+        if (!value) {
+          const nextCell = row[index + 1];
+          if (nextCell && !nextCell.metaField && !nextCell.headingField) {
+            value = nextCell.cellText || '';
+          }
+        }
+        if (value) structured[cell.metaField] = value;
+      });
+    });
+    return labels >= 2;
+  };
+  const applyTwoColumnSectionTable = analyzedRows => {
+    for (let rowIndex = 0; rowIndex < analyzedRows.length; rowIndex++) {
+      const row = analyzedRows[rowIndex] || [];
       const headings = rowHeadingFields(row);
       const hasNarrativeBrainstorm = headings.includes('dreamNarrative') && headings.includes('dreamBrainstorm');
       const hasInterpretationApplication = headings.includes('dreamInterpretation') && headings.includes('dreamApplication');
       if (!hasNarrativeBrainstorm && !hasInterpretationApplication) continue;
       headings.forEach((field, index) => {
         if (!field) return;
-        appendField(field, collectColumnBodyFromRow(rows, rowIndex, index));
+        appendField(field, collectColumnBodyFromAnalyzedRows(analyzedRows, rowIndex, index));
       });
       return true;
     }
     return false;
   };
-  const applySingleSectionTable = rows => {
-    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-      const row = rows[rowIndex] || [];
+  const applySingleSectionTable = analyzedRows => {
+    for (let rowIndex = 0; rowIndex < analyzedRows.length; rowIndex++) {
+      const row = analyzedRows[rowIndex] || [];
       for (let cellIndex = 0; cellIndex < row.length; cellIndex++) {
-        const headingField = normalizeStructuredTableHeading(row[cellIndex]);
+        const headingField = row[cellIndex]?.headingField || '';
         if (!headingField) continue;
-        const sameRowRemainder = row
-          .slice(cellIndex + 1)
-          .map(normalizeCellValue)
-          .filter(Boolean)
-          .join('\n')
-          .trim();
-        const laterBody = collectRowsBodyAfter(rows, rowIndex);
-        const bodyText = [sameRowRemainder, laterBody].filter(Boolean).join('\n\n').trim();
-        if (!bodyText) continue;
-        appendField(headingField, bodyText);
+        const bodyText = collectRowsBodyAfterAnalyzed(analyzedRows, rowIndex, cellIndex);
+        if (bodyText) appendField(headingField, bodyText);
         return true;
       }
     }
     return false;
   };
+  const appendStructuredParagraphToActiveField = (field, textValue) => {
+    if (!field) return false;
+    const cleaned = String(textValue || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    if (!cleaned) return false;
+    appendField(field, cleaned);
+    return true;
+  };
 
   let matchedStructuredTables = 0;
-  tables.forEach(rows => {
-    if (!rows.length) return;
-    if (applyMetadataTable(rows)) return;
-    if (applyTwoColumnSectionTable(rows)) {
-      matchedStructuredTables++;
+  let matchedStructuredParagraphSections = 0;
+  let activeStructuredParagraphField = '';
+  let detectedDreamBrainstormTable = false;
+  let tableIndex = -1;
+
+  bodyBlocks.forEach(block => {
+    if (block.type === 'table') {
+      tableIndex++;
+      const rows = block.rows || [];
+      const analyzedRows = analyzeStructuredRows(rows);
+      activeStructuredParagraphField = '';
+      if (!rows.length) return;
+      const headerDiagnostics = flattenTableHeaderDiagnostics(analyzedRows);
+      const hasDreamBrainstormTable = analyzedRows.some(row => {
+        const headings = rowHeadingFields(row);
+        return headings.includes('dreamNarrative') && headings.includes('dreamBrainstorm');
+      });
+      const hasApplicationTable = analyzedRows.some(row => rowHeadingFields(row).includes('dreamApplication'));
+      if (hasDreamBrainstormTable) detectedDreamBrainstormTable = true;
+      let matchedAsMetadata = false;
+      let matchedAsDreamBrainstorm = false;
+      let matchedAsApplication = false;
+      if (applyMetadataTable(analyzedRows)) {
+        matchedAsMetadata = true;
+        console.log('[DJ][docx][extractStructuredDreamDocx] table analysis', {
+          tableIndex,
+          rowCount: rows.length,
+          headerCells: headerDiagnostics,
+          matchedAsMetadata,
+          matchedAsDreamBrainstorm,
+          matchedAsApplication
+        });
+        return;
+      }
+      if (applyTwoColumnSectionTable(analyzedRows)) {
+        matchedStructuredTables++;
+        matchedAsDreamBrainstorm = hasDreamBrainstormTable;
+        matchedAsApplication = hasApplicationTable;
+        console.log('[DJ][docx][extractStructuredDreamDocx] table analysis', {
+          tableIndex,
+          rowCount: rows.length,
+          headerCells: headerDiagnostics,
+          matchedAsMetadata,
+          matchedAsDreamBrainstorm,
+          matchedAsApplication
+        });
+        return;
+      }
+      if (applySingleSectionTable(analyzedRows)) {
+        matchedStructuredTables++;
+        matchedAsApplication = hasApplicationTable;
+      }
+      console.log('[DJ][docx][extractStructuredDreamDocx] table analysis', {
+        tableIndex,
+        rowCount: rows.length,
+        headerCells: headerDiagnostics,
+        matchedAsMetadata,
+        matchedAsDreamBrainstorm,
+        matchedAsApplication
+      });
       return;
     }
-    if (applySingleSectionTable(rows)) {
-      matchedStructuredTables++;
+    if (block.type !== 'paragraph') return;
+
+    const paragraphText = String(block.text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    if (!paragraphText) return;
+
+    const headingField = normalizeStructuredTableHeading(paragraphText);
+    if (headingField) {
+      activeStructuredParagraphField = headingField;
+      matchedStructuredParagraphSections++;
+      return;
     }
+
+    appendStructuredParagraphToActiveField(activeStructuredParagraphField, paragraphText);
   });
 
-  if (!matchedStructuredTables || (!structured.dreamNarrative && !structured.dreamBrainstorm && !structured.dreamInterpretation && !structured.dreamApplication)) {
+  if (
+    !matchedStructuredTables ||
+    (!structured.dreamNarrative && !structured.dreamBrainstorm && !structured.dreamInterpretation && !structured.dreamApplication)
+  ) {
+    console.log('[DJ][docx][extractStructuredDreamDocx] no structured result', {
+      bodyBlockCount: bodyBlocks.length,
+      matchedStructuredTables,
+      matchedStructuredParagraphSections,
+      detectedDreamBrainstormTable,
+      narrativeLen: String(structured.dreamNarrative || '').length,
+      brainstormLen: String(structured.dreamBrainstorm || '').length,
+      interpretationLen: String(structured.dreamInterpretation || '').length,
+      applicationLen: String(structured.dreamApplication || '').length
+    });
     return null;
   }
+  structured._structuredDocx = true;
+  structured._structuredDocxBodyBlockCount = bodyBlocks.length;
+  structured._structuredDocxTableCount = matchedStructuredTables;
+  structured._structuredDocxParagraphSectionCount = matchedStructuredParagraphSections;
+  structured._structuredDocxDetectedDreamBrainstormTable = detectedDreamBrainstormTable;
+  structured._dreamNarrativeSource = structured.dreamNarrative ? 'structured_docx_table_or_paragraph' : '';
+  structured._dreamBrainstormSource = structured.dreamBrainstorm ? 'structured_docx_table_or_paragraph' : '';
+  console.log('[DJ][docx][extractStructuredDreamDocx] structured result', {
+    structuredDocx: true,
+    bodyBlockCount: structured._structuredDocxBodyBlockCount,
+    matchedStructuredTables,
+    matchedStructuredParagraphSections,
+    detectedDreamBrainstormTable,
+    narrativeLen: String(structured.dreamNarrative || '').length,
+    brainstormLen: String(structured.dreamBrainstorm || '').length,
+    interpretationLen: String(structured.dreamInterpretation || '').length,
+    applicationLen: String(structured.dreamApplication || '').length,
+    narrativeSource: structured._dreamNarrativeSource || '',
+    brainstormSource: structured._dreamBrainstormSource || ''
+  });
   return lightPostProcessStructuredDreamData(structured);
 }
 async function readDOCX(file) {
   const buf = await file.arrayBuffer();
-  const rawResult = await mammoth.extractRawText({ arrayBuffer: buf });
-  const rawText = rawResult?.value || '';
+  console.log('[DJ][docx][readDOCX] start', {
+    fileName: file?.name || '',
+    fileSize: Number(file?.size || 0)
+  });
   const structured = await extractStructuredDreamDocx(buf);
   if (structured) {
+    const rawResult = await mammoth.extractRawText({ arrayBuffer: buf });
+    const rawText = rawResult?.value || '';
+    console.log('[DJ][docx][readDOCX] using structured extraction', {
+      structuredExtractionSucceeded: true,
+      __djDocxStructured: true,
+      fallbackFlattenedParsingUsed: false,
+      bodyBlockCount: Number(structured._structuredDocxBodyBlockCount || 0),
+      matchedStructuredTables: Number(structured._structuredDocxTableCount || 0),
+      matchedStructuredParagraphSections: Number(structured._structuredDocxParagraphSectionCount || 0),
+      detectedDreamBrainstormTable: !!structured._structuredDocxDetectedDreamBrainstormTable,
+      finalNarrativeLen: String(structured.dreamNarrative || '').length,
+      finalBrainstormLen: String(structured.dreamBrainstorm || '').length,
+      narrativeSource: structured._dreamNarrativeSource || '',
+      brainstormSource: structured._dreamBrainstormSource || '',
+      rawTextLen: rawText.length
+    });
     return {
       __djDocxStructured: true,
       rawText,
       entries: [structured]
     };
   }
+  const rawResult = await mammoth.extractRawText({ arrayBuffer: buf });
+  const rawText = rawResult?.value || '';
+  console.log('[DJ][docx][readDOCX] falling back to flattened raw text', {
+    structuredExtractionSucceeded: false,
+    __djDocxStructured: false,
+    fallbackFlattenedParsingUsed: true,
+    rawTextLen: rawText.length
+  });
   return rawText;
 }
 
@@ -2808,7 +3223,7 @@ function isSceneMarker(line) {
   const t = String(line || '').trim().toLowerCase();
   if (!t) return false;
   return (
-    /^scene(?:\s+change|\s+changes)?[.!…,:;]*$/i.test(t) ||
+    /^scene(?:\s+change[ds]?)?[.!…,:;]*$/i.test(t) ||
     /^(another|other|next|new)\s+scene[.!…,:;]*$/i.test(t) ||
     /^another\s+dream\s+or\s+scene[.!…,:;]*$/i.test(t) ||
     /^there\s+was\s+another\s+scene\b/i.test(t) ||
@@ -2869,6 +3284,44 @@ function isDreamReflectionLine(line) {
   );
 }
 
+function isLikelyBrainstormLine(line) {
+  if (!line) return false;
+
+  const lower = line.toLowerCase().trim();
+
+  return (
+    lower.includes('?') ||
+    lower.startsWith('i ') ||
+    lower.startsWith('maybe') ||
+    lower.startsWith('this is') ||
+    lower.includes('i think') ||
+    lower.includes('could be') ||
+    lower.includes('might be')
+  );
+}
+
+function isRealDreamStart(line) {
+  const normalized = String(line || '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return false;
+  if (isDateHeading(normalized)) return false;
+  if (isSceneMarker(normalized)) return true;
+  if (/^(?:i|we)\b/i.test(normalized) && /[.!?]/.test(normalized) && normalized.split(/\s+/).filter(Boolean).length >= 6) return true;
+  if (/^(?:me|me and|my friend|my child|my mom)\b/i.test(normalized) && normalized.split(/\s+/).filter(Boolean).length >= 5) return true;
+  if (/^(?:there\s+was|there\s+were|someone\s+was|then\s+i|at\s+first|the\s+dream\s+started|it\s+started\s+with)\b/i.test(normalized) && normalized.split(/\s+/).filter(Boolean).length >= 4) return true;
+  if (
+    /(?:^|\b)(?:I|we|he|she|they)\s+(?:was|were|went|saw|heard|felt|walked|ran|looked|found|noticed|remember|remembered|kept|started|thought|knew|woke|woke up)\b/i.test(normalized) ||
+    /^(?:then\s+(?:we|i|he|she|they)\b|then\s+we\s+go\b|then\s+i\s+go\b)/i.test(normalized) ||
+    /^(?:we|i|he|she|they)\s+go(?:\s+to|\s+into|\s+back|\s+over|\s+up|\s+down|\s+through|\s+around)?\b/i.test(normalized) ||
+    /^(?:travel(?:ing)?|driv(?:ing)?|walk(?:ing)?|rid(?:ing)?|work(?:ing)?)\b/i.test(normalized) ||
+    /^(?:at|in|inside|outside|near|by)\s+(?:a|an|the|my|our|this)\b/i.test(normalized) ||
+    /^i['’]?(?:am|m)\s+at\b/i.test(normalized) ||
+    /^there\s+(?:is|are|was|were)\b/i.test(normalized)
+  ) {
+    return normalized.split(/\s+/).filter(Boolean).length >= 4;
+  }
+  return false;
+}
+
 function isInterpretationLikeLine(line) {
   const t = String(line || '').trim();
   if (!t) return false;
@@ -2906,7 +3359,7 @@ function normalizeSimpleSectionHeading(line) {
   if (!t) return null;
   if (/^(?:dream|dream narrative|vision|dream scene|vision scene)$/.test(t)) return 'dreamNarrative';
   if (/^(?:brain\s*storm(?:ing)?|notes?|observations?)$/.test(t)) return 'dreamBrainstorm';
-  if (/^(?:(?:short|long|polished)\s+interpretation|interpretation|possible meaning|possible meaning interpretation)$/.test(t)) return 'dreamInterpretation';
+  if (/^(?:(?:possible|short|long|polished)\s+interpretation|interpretation|possible meaning|possible meaning interpretation)$/.test(t)) return 'dreamInterpretation';
   if (/^application$/.test(t)) return 'dreamApplication';
   if (/^(?:key symbols?|symbols?|objects?)$/.test(t)) return 'dreamSymbols';
   if (/^(?:scriptures?|scripture references?|verse)$/.test(t)) return 'dreamScriptures';
@@ -2926,15 +3379,54 @@ function detectRepeatedSimpleSectionBlocks(text) {
   const lines = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   const blocks = [];
   let currentHeading = null;
+  let currentHeadingKey = null;
   let currentLines = [];
   const prefaceLines = [];
   let sawHeading = false;
-  let repeatedCount = 0;
+  const normalizeRepeatedHeadingKey = line => String(line || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/[\s:;,.!?–—\-]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const normalizeRepeatedPreview = value => String(value || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+  const looksLikeNarrativePrefaceLine = line => {
+    const normalized = String(line || '').trim();
+    if (!normalized) return false;
+    const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+    return (
+      /^(?:my\s+\w+|me\s+and|i\s+(?:was|went|saw|heard|remember(?:ed)?|am)|we\s+were|he\s+was|she\s+was|they\s+were)\b/i.test(normalized) ||
+      /^(?:then\s+(?:we|i|he|she|they)\b|then\s+we\s+go\b|then\s+i\s+go\b)/i.test(normalized) ||
+      /^(?:we|i|he|she|they)\s+go(?:\s+to|\s+into|\s+back|\s+over|\s+up|\s+down|\s+through|\s+around)?\b/i.test(normalized) ||
+      /^(?:travel(?:ing)?|driv(?:ing)?|walk(?:ing)?|rid(?:ing)?|work(?:ing)?)\b/i.test(normalized) ||
+      /^(?:at|in|inside|outside|near|by)\s+(?:a|an|the|my|our|this)\b/i.test(normalized) ||
+      /^i['’]?(?:am|m)\s+at\b/i.test(normalized) ||
+      /^there\s+(?:is|are|was|were)\b/i.test(normalized) ||
+      /\b(?:said|told|asked|heard|looked|working|walking|running|traveling|riding|driving)\b/i.test(normalized) ||
+      (/[.!?]$/.test(normalized) && wordCount >= 8)
+    );
+  };
+  const computeNarrativePrefaceSignal = prefaceText => {
+    const prefaceLines = String(prefaceText || '').split('\n').map(line => String(line || '').trim()).filter(Boolean);
+    const narrativeLineCount = prefaceLines.filter(looksLikeNarrativePrefaceLine).length;
+    const wordCount = String(prefaceText || '').split(/\s+/).filter(Boolean).length;
+    return {
+      wordCount,
+      narrativeLineCount,
+      looksLikeNarrativePreface: wordCount >= 18 && narrativeLineCount >= Math.min(2, prefaceLines.length || 0)
+    };
+  };
 
   const flush = () => {
     if (!currentHeading && !currentLines.length) return;
-    blocks.push({ heading: currentHeading, text: currentLines.join('\n').replace(/\n{3,}/g, '\n\n').trim() });
+    blocks.push({
+      heading: currentHeading,
+      headingKey: currentHeadingKey,
+      text: currentLines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+    });
     currentHeading = null;
+    currentHeadingKey = null;
     currentLines = [];
   };
 
@@ -2944,10 +3436,10 @@ function detectRepeatedSimpleSectionBlocks(text) {
     const normalizedHeading = normalizeSimpleSectionHeading(trimmed);
 
     if (normalizedHeading) {
-      if (sawHeading) repeatedCount += 1;
       sawHeading = true;
       flush();
       currentHeading = normalizedHeading;
+      currentHeadingKey = normalizeRepeatedHeadingKey(trimmed);
       continue;
     }
 
@@ -2962,25 +3454,40 @@ function detectRepeatedSimpleSectionBlocks(text) {
   flush();
 
   const meaningfulBlocks = blocks.filter(block => block.heading && String(block.text || '').trim());
-  // Require at least 2 meaningful heading blocks and 1+ heading repetitions.
-  if (meaningfulBlocks.length < 2 || repeatedCount < 1) return null;
-  // Broadened trigger: activate if ANY section heading is repeated, OR if the
-  // document has 3+ distinct section types (structured multi-section template).
-  // Previously required 3+ narrative/brainstorm blocks specifically — too strict.
+  if (meaningfulBlocks.length < 2) return null;
   const headingCounts = {};
+  const rawHeadingCounts = {};
   meaningfulBlocks.forEach(block => {
     headingCounts[block.heading] = (headingCounts[block.heading] || 0) + 1;
+    if (block.headingKey) rawHeadingCounts[block.headingKey] = (rawHeadingCounts[block.headingKey] || 0) + 1;
   });
-  const hasAnyRepeatedHeading = Object.values(headingCounts).some(count => count > 1);
-  const hasMultipleSectionTypes = Object.keys(headingCounts).length >= 3;
+  const hasAnyRepeatedHeading = Object.values(rawHeadingCounts).some(count => count > 1);
+  const prefaceNonEmpty = prefaceLines.map(line => String(line || '').trim()).filter(Boolean);
+  const prefaceBodyRaw = prefaceNonEmpty.join('\n').trim();
+  const prefaceNarrativeSignal = computeNarrativePrefaceSignal(prefaceBodyRaw);
   console.log('[DJ][parser] detectRepeatedSimpleSectionBlocks:', {
     meaningfulBlockCount: meaningfulBlocks.length,
-    repeatedCount,
     headingCounts,
+    rawHeadingCounts,
     hasAnyRepeatedHeading,
-    hasMultipleSectionTypes
+    prefacePreview: normalizeRepeatedPreview(prefaceBodyRaw),
+    prefaceWordCount: prefaceNarrativeSignal.wordCount,
+    prefaceNarrativeLineCount: prefaceNarrativeSignal.narrativeLineCount,
+    prefaceLooksLikeNarrative: prefaceNarrativeSignal.looksLikeNarrativePreface
   });
-  if (!hasAnyRepeatedHeading && !hasMultipleSectionTypes) return null;
+  if (hasAnyRepeatedHeading && prefaceNarrativeSignal.looksLikeNarrativePreface) {
+    console.log('[DJ][parser] detectRepeatedSimpleSectionBlocks: rejected repeated mode due to substantive unlabeled narrative preface', {
+      prefacePreview: normalizeRepeatedPreview(prefaceBodyRaw),
+      headingCounts,
+      rawHeadingCounts
+    });
+    return null;
+  }
+  // Template-style multi-section documents without repeated headings belong to
+  // the labeled_sections parser. That parser owns locked heading ranges and
+  // paired column-header recovery for Dream/Brainstorm and
+  // Interpretation/Application layouts.
+  if (!hasAnyRepeatedHeading) return null;
 
   const sectionBuckets = {
     dreamNarrative: [],
@@ -2995,7 +3502,6 @@ function detectRepeatedSimpleSectionBlocks(text) {
     if (sectionBuckets[block.heading]) sectionBuckets[block.heading].push(block.text);
   });
 
-  const prefaceNonEmpty = prefaceLines.map(line => String(line || '').trim()).filter(Boolean);
   let inferredTitle = '';
   let additionalNotes = '';
 
@@ -3015,11 +3521,20 @@ function detectRepeatedSimpleSectionBlocks(text) {
     const prefaceBody = (firstLooksLikeTitle ? restLines : prefaceNonEmpty).join('\n').trim();
 
     if (prefaceBody) {
+      let assignedPrefaceTarget = '';
       if (!sectionBuckets.dreamNarrative.length) {
         sectionBuckets.dreamNarrative.push(prefaceBody);
+        assignedPrefaceTarget = 'dreamNarrative';
       } else {
         additionalNotes = prefaceBody;
+        assignedPrefaceTarget = 'dreamAdditionalNotes';
       }
+      console.log('[DJ][parser] detectRepeatedSimpleSectionBlocks: preface assignment', {
+        firstLinePreview: normalizeRepeatedPreview(first),
+        inferredTitleCandidate: inferredTitle,
+        assignedPrefaceTarget,
+        prefaceBodyPreview: normalizeRepeatedPreview(prefaceBody)
+      });
     }
   }
 
@@ -3107,6 +3622,19 @@ function splitNarrativeLikeContentFromInterpretation(text) {
   };
 }
 
+function isNarrativeUncertaintyLine(line) {
+  const text = String(line || '').trim();
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  if (!/^(?:i\s+think|i\s+guess|maybe|not\s+sure\s+if)\b/.test(lower)) return false;
+  if (/\b(?:this\s+dream|the\s+dream|god|the\s+lord|means?|represents?|symboli[sz]es?|could\s+mean|may\s+mean|may\s+represent|wants?\s+(?:me|us|you)\s+to)\b/i.test(text)) return false;
+  return (
+    /^(?:i\s+think|i\s+guess)\s+(?:i(?:'m| am| was)?|we|she|he|they|it|there|someone|my|the|pastor)\b/i.test(text) ||
+    /^maybe\s+(?:i|we|she|he|they|it|there|someone|my|the|pastor)\b/i.test(text) ||
+    /^not\s+sure\s+if\b/i.test(text)
+  ) && /\b(?:was|were|is|are|did|do|went|came|had|looked|seemed|told|telling|said|saw|heard|remember(?:ed)?|would|could|should|needed|wanted|began|started|turned|held|led|supposed)\b/i.test(text);
+}
+
 function splitNarrativeAndInterpretationLines(narrativeText, interpretationText) {
   const lines = String(narrativeText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   const keptNarrative = [];
@@ -3119,7 +3647,7 @@ function splitNarrativeAndInterpretationLines(narrativeText, interpretationText)
       continue;
     }
 
-    if (isDreamReflectionLine(line) || isInterpretationLikeLine(line)) {
+    if (!isNarrativeUncertaintyLine(line) && (isDreamReflectionLine(line) || isInterpretationLikeLine(line))) {
       movedToInterpretation.push(line);
       continue;
     }
@@ -3227,37 +3755,225 @@ function parseEntries(rawText) {
     }
     return '';
   };
+  const getMeaningfulLookahead = (startIndex, limit = 6) => {
+    const collected = [];
+    for (let i = startIndex + 1; i < lines.length && collected.length < limit; i++) {
+      const candidate = String(lines[i] || '').trim();
+      if (!candidate) continue;
+      collected.push(candidate);
+    }
+    return collected;
+  };
+  const isStandaloneEntryBoundaryLine = line => {
+    const normalized = String(line || '')
+      .trim()
+      .replace(/[.!?,:;\-–—]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
+    if (!normalized) return false;
+    return (
+      /^another dream$/.test(normalized) ||
+      /^in another dream$/.test(normalized) ||
+      /^i had another dream$/.test(normalized) ||
+      /^i had a second dream$/.test(normalized) ||
+      /^in a separate dream$/.test(normalized) ||
+      /^this was another dream$/.test(normalized) ||
+      /^this was a different dream$/.test(normalized) ||
+      /^another dream i had$/.test(normalized) ||
+      /^(?:the )?second dream$/.test(normalized) ||
+      /^(?:the )?third dream$/.test(normalized) ||
+      /^separate dream$/.test(normalized) ||
+      /^dream \d+$/.test(normalized)
+    );
+  };
+  const isTitleLikeBoundaryLine = nextLine => {
+    const candidate = String(nextLine || '').trim();
+    if (!candidate) return false;
+    if (normalizeSimpleSectionHeading(candidate)) return false;
+    if (isDateHeading(candidate)) return false;
+    if (isSceneMarker(candidate)) return false;
+    return !/[.!?]/.test(candidate) && candidate.split(/\s+/).filter(Boolean).length <= 12;
+  };
+  const nextLineLooksLikeNewEntryStart = nextLine => {
+    const candidate = String(nextLine || '').trim();
+    if (!candidate) return false;
+    if (isDateHeading(candidate)) return true;
+    if (/^dream\s+\d+\s*$/i.test(candidate)) return true;
+    if (isRealDreamStart(candidate)) return true;
+    if (isTitleLikeBoundaryLine(candidate)) return true;
+    return false;
+  };
+  const separatorLookaheadSupportsNewEntry = lookahead => {
+    const first = String(lookahead[0] || '').trim();
+    const second = String(lookahead[1] || '').trim();
+    const laterSectionHeading = lookahead.slice(0, 4).find(candidate => normalizeSimpleSectionHeading(candidate)) || '';
+    const firstLooksReflective =
+      isDreamReflectionLine(first) ||
+      isInterpretationLikeLine(first) ||
+      isLikelyBrainstormLine(first);
+    if (!first) {
+      return {
+        supportsNewEntry: false,
+        firstLooksReflective,
+        laterSectionHeading,
+        firstIsDateHeading: false,
+        firstIsNumberedDream: false,
+        firstIsNarrativeStart: false,
+        firstIsTitleLike: false,
+        secondIsNarrativeStart: false
+      };
+    }
+
+    const firstIsDateHeading = isDateHeading(first);
+    const firstIsNumberedDream = /^dream\s+\d+\s*$/i.test(first);
+    const firstIsNarrativeStart = isRealDreamStart(first);
+    const firstIsTitleLike = isTitleLikeBoundaryLine(first);
+    const secondIsNarrativeStart = isRealDreamStart(second);
+
+    const supportsNewEntry =
+      firstIsDateHeading ||
+      firstIsNumberedDream ||
+      (!firstLooksReflective && !laterSectionHeading && firstIsNarrativeStart) ||
+      (!firstLooksReflective && !laterSectionHeading && firstIsTitleLike && secondIsNarrativeStart);
+
+    return {
+      supportsNewEntry,
+      firstLooksReflective,
+      laterSectionHeading,
+      firstIsDateHeading,
+      firstIsNumberedDream,
+      firstIsNarrativeStart,
+      firstIsTitleLike,
+      secondIsNarrativeStart
+    };
+  };
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index];
     const trimmed = String(line || '').trim();
+    const logEntryBoundaryDecision = (reason, didSplit, extra = {}) => {
+      try {
+        console.log('[DJ][parser][parseEntries] boundary decision', {
+          reason,
+          didSplit,
+          lineIndex: index,
+          linePreview: String(trimmed || '').replace(/\s+/g, ' ').slice(0, 180),
+          currentEntryLength: current?.text?.trim()?.length || 0,
+          currentEntryHasNarrative: current ? hasSubstantialNarrative(current.text) : false,
+          nextLinePreview: String(nextMeaningfulLine(index) || '').replace(/\s+/g, ' ').slice(0, 180),
+          ...extra
+        });
+      } catch (_) {}
+    };
     if (/^-{3,}$/.test(trimmed)) {
       if (current !== null && current.text.trim().length > 20) {
-        entries.push(current);
-        current = null;
+        const lookahead = getMeaningfulLookahead(index, 6);
+        const separatorEvidence = separatorLookaheadSupportsNewEntry(lookahead);
+        if (separatorEvidence.supportsNewEntry) {
+          logEntryBoundaryDecision('separator-boundary', true, {
+            separatorLookaheadSupportsNewEntry: true,
+            firstLooksReflective: separatorEvidence.firstLooksReflective,
+            firstIsDateHeading: separatorEvidence.firstIsDateHeading,
+            firstIsNumberedDream: separatorEvidence.firstIsNumberedDream,
+            firstIsNarrativeStart: separatorEvidence.firstIsNarrativeStart,
+            firstIsTitleLike: separatorEvidence.firstIsTitleLike,
+            secondLinePreview: String(lookahead[1] || '').replace(/\s+/g, ' ').slice(0, 180),
+            secondIsNarrativeStart: separatorEvidence.secondIsNarrativeStart,
+            laterSectionHeadingPreview: String(separatorEvidence.laterSectionHeading || '').replace(/\s+/g, ' ').slice(0, 180)
+          });
+          entries.push(current);
+          current = null;
+        } else {
+          logEntryBoundaryDecision('separator-boundary', false, {
+            separatorLookaheadSupportsNewEntry: false,
+            firstLooksReflective: separatorEvidence.firstLooksReflective,
+            firstIsDateHeading: separatorEvidence.firstIsDateHeading,
+            firstIsNumberedDream: separatorEvidence.firstIsNumberedDream,
+            firstIsNarrativeStart: separatorEvidence.firstIsNarrativeStart,
+            firstIsTitleLike: separatorEvidence.firstIsTitleLike,
+            secondLinePreview: String(lookahead[1] || '').replace(/\s+/g, ' ').slice(0, 180),
+            secondIsNarrativeStart: separatorEvidence.secondIsNarrativeStart,
+            laterSectionHeadingPreview: String(separatorEvidence.laterSectionHeading || '').replace(/\s+/g, ' ').slice(0, 180)
+          });
+        }
       }
     }
     else if (isDateHeading(line)) {
       if (current !== null && looksLikeTemplatePreamble(current.text)) {
         current.text += line + '\n';
       } else {
+        logEntryBoundaryDecision('date-boundary', true);
         if (current !== null) entries.push(current);
         current = { text: line + '\n' };
       }
     }
     // Numbered dream headings (Dream 1, Dream 2…) start a new entry
     else if (/^Dream\s+\d+\s*$/i.test(trimmed) && current !== null && current.text.trim().length > 20) {
+      logEntryBoundaryDecision('explicit-new-dream-marker', true, {
+        standaloneBoundary: true,
+        nextLooksLikeBoundaryStart: true
+      });
       entries.push(current); current = { text: line + '\n' };
     }
     else if (!isSceneMarker(trimmed) && !isDreamReflectionLine(trimmed) && (isExplicitNewDreamMarker(trimmed) || isNarrativeResetLine(trimmed)) && current !== null && hasSubstantialNarrative(current.text)) {
-      entries.push(current);
-      current = { text: line + '\n' };
+      const lookahead = getMeaningfulLookahead(index, 6);
+      const nextLine = lookahead[0] || '';
+      const secondLine = lookahead[1] || '';
+      const explicitNewDreamMarker = isExplicitNewDreamMarker(trimmed);
+      const narrativeResetLine = isNarrativeResetLine(trimmed);
+      const standaloneBoundary = isStandaloneEntryBoundaryLine(trimmed);
+      const nextLooksLikeBoundaryStart = nextLineLooksLikeNewEntryStart(nextLine);
+      const titleLikeBoundary = isTitleLikeBoundaryLine(nextLine);
+      const nextSectionHeading = normalizeSimpleSectionHeading(nextLine);
+      const laterSectionHeading = lookahead.slice(0, 4).find(candidate => normalizeSimpleSectionHeading(candidate)) || '';
+      const secondLineStartsNarrative = isRealDreamStart(secondLine);
+      const strongBoundary =
+        standaloneBoundary &&
+        (
+          isDateHeading(nextLine) ||
+          /^dream\s+\d+\s*$/i.test(nextLine) ||
+          (isRealDreamStart(nextLine) && !laterSectionHeading) ||
+          (titleLikeBoundary && secondLineStartsNarrative && !laterSectionHeading)
+        );
+      if (strongBoundary) {
+        logEntryBoundaryDecision(explicitNewDreamMarker ? 'explicit-new-dream-marker' : 'narrative-reset-line', true, {
+          explicitNewDreamMarker,
+          narrativeResetLine,
+          standaloneBoundary,
+          nextLooksLikeBoundaryStart,
+          titleLikeBoundary,
+          secondLinePreview: String(secondLine || '').replace(/\s+/g, ' ').slice(0, 180),
+          secondLineStartsNarrative,
+          laterSectionHeadingPreview: String(laterSectionHeading || '').replace(/\s+/g, ' ').slice(0, 180)
+        });
+        entries.push(current);
+        current = { text: line + '\n' };
+      } else {
+        logEntryBoundaryDecision(titleLikeBoundary ? 'title-like-boundary' : 'rejected-weak-boundary', false, {
+          explicitNewDreamMarker,
+          narrativeResetLine,
+          standaloneBoundary,
+          nextLooksLikeBoundaryStart,
+          titleLikeBoundary,
+          secondLinePreview: String(secondLine || '').replace(/\s+/g, ' ').slice(0, 180),
+          secondLineStartsNarrative,
+          nextSectionHeading: nextSectionHeading || '',
+          laterSectionHeadingPreview: String(laterSectionHeading || '').replace(/\s+/g, ' ').slice(0, 180)
+        });
+        current.text += line + '\n';
+      }
     }
     else if (!isSceneMarker(trimmed) && isAmbiguousNewDreamMarker(trimmed) && current !== null && hasSubstantialNarrative(current.text)) {
       const nextLine = nextMeaningfulLine(index);
       if (nextLine && !isSceneMarker(nextLine) && (isRealDreamStart(nextLine) || /^(?:i\s+dream(?:ed|t)?|i\s+was|we\s+were|me\s+and|there\s+was|there\s+were|someone\s+was|then\s+i|at\s+first|the\s+dream\s+started|it\s+started\s+with)\b/i.test(nextLine))) {
+        logEntryBoundaryDecision('explicit-new-dream-marker', true, {
+          ambiguousMarker: true
+        });
         entries.push(current);
         current = { text: line + '\n' };
       } else if (current !== null) {
+        logEntryBoundaryDecision('rejected-weak-boundary', false, {
+          ambiguousMarker: true
+        });
         current.text += line + '\n';
       } else {
         current = { text: line + '\n' };
@@ -3382,7 +4098,6 @@ function extractSymbolEntriesFromText(text) {
   lines.forEach(line => {
     const patterns = [
       /^(?:doing\s+)?([^=:\-–—]{2,40}?)\s*=\s*(.+)$/i,
-      /^([^:]{2,40}?)\s+(?:represents|symboli(?:zes|ses)|speaks?\s+to|points?\s+to|is)\s+(.+)$/i,
       /^([^:\-–—]{2,40}?)\s*[-–—:]\s*(.+)$/i,
       /^the meaning of\s+([^:]{2,40}?)(?:\s+is)?\s*[:\-–—]?\s*(.+)$/i
     ];
@@ -3392,11 +4107,22 @@ function extractSymbolEntriesFromText(text) {
       const symbol = m[1].replace(/^(?:the|a|an)\s+/i, '').trim();
       const meaning = (m[2] || '').replace(/\s+/g, ' ').trim();
       if (!symbol || !meaning) return;
-      if (symbol.split(/\s+/).length > 5) return;
+      if (!isValidSymbolLabelCandidate(symbol)) return;
+      if (!looksLikeStrictSymbolMeaning(meaning)) return;
       addEntry(`${symbol} / ${meaning.split(/[.;]/)[0].trim().split(/\s+/).slice(0, 5).join(' ')}`);
     });
   });
   return entries.slice(0, 12);
+}
+function isUrlLikeSymbolNoise(value) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  return (
+    /^https?:/i.test(text) ||
+    /^www\./i.test(text) ||
+    /^\/\//.test(text) ||
+    /^[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:\/|$)/.test(text)
+  );
 }
 function countEnumeratedSymbolLabels(text) {
   const source = String(text || '');
@@ -3414,36 +4140,100 @@ function looksLikeEnumeratedSymbolGlossary(text) {
   if (labelCount >= 1 && numberedMeanings >= 4 && wordCount >= 12) return true;
   return false;
 }
+function isValidSymbolLabelCandidate(value) {
+  const original = String(value || '').trim().replace(/^[\-*•]\s*/, '');
+  const normalized = normalizeSymbolToken(original);
+  if (!normalized) return false;
+  if (isUrlLikeSymbolNoise(original) || isUrlLikeSymbolNoise(normalized)) return false;
+  const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+  if (wordCount < 1 || wordCount > 5) return false;
+  if (/^(?:dream|vision|plot(?:\s+\d+)?|scene(?:\s+\d+)?|interpretation|application|brainstorm(?:ing)?|summary|message|transcript|here'?s\s+the\s+transcript|update|context|title|date|time|thank\s+you|holy\s+spirit)$/i.test(normalized)) return false;
+  if (/^(?:i|we|he|she|they|it|this|that|these|those|here|there|someone|something|anything|everything|because|anyway|also|then|but|and)\b/i.test(normalized)) return false;
+  if (/\b(?:is|are|was|were|am|be|being|been|have|has|had|do|does|did|will|would|should|could|can|may|might|must)\b/i.test(normalized) && wordCount >= 3) return false;
+  if (/^(?:(?:[1-3]\s+)?)?(?:genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|chronicles|ezra|nehemiah|esther|job|psalm|psalms|proverbs|ecclesiastes|song|isaiah|jeremiah|lamentations|ezekiel|daniel|hosea|joel|amos|obadiah|jonah|micah|nahum|habakkuk|zephaniah|haggai|zechariah|malachi|matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|jude|revelation)\b/i.test(original)) return false;
+  return true;
+}
+function looksLikeStrictSymbolMeaning(value) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return false;
+  if (isUrlLikeSymbolNoise(text)) return false;
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  if (/\(\d+\)/.test(text)) return true;
+  if ((/[;•]/.test(text) || /\b(?:or|and)\b/i.test(text)) && wordCount <= 80 && !/[.!?].+[.!?]/.test(text)) return true;
+  if (wordCount > 24) return false;
+  if (/[.!?].+[.!?]/.test(text)) return false;
+  if (/https?:\/\//i.test(text)) return false;
+  if (/^(?:the\s+dream|god|the\s+lord|holy\s+spirit|i\s+think|i\s+wonder|if\s+everyone|someone|something|anything|update)\b/i.test(text)) return false;
+  return true;
+}
+function isStrictSymbolGlossaryLine(line) {
+  const text = String(line || '').trim().replace(/^[\-*•]\s*/, '');
+  if (!text) return false;
+  if (/^(?:["“].+[”"]|https?:\/\/|www\.)/i.test(text)) return false;
+  if (isUrlLikeSymbolNoise(text)) return false;
+  const structured = text.match(/^([A-Za-z0-9][A-Za-z0-9'’()\/& ]{0,32})\s*[-–—:=]\s*(.+)$/);
+  if (structured) {
+    const label = structured[1].trim();
+    const meaning = structured[2].trim();
+    return isValidSymbolLabelCandidate(label) && looksLikeStrictSymbolMeaning(meaning);
+  }
+  const sentencePatterns = [
+    /^(?:the\s+)?([^,.;:\n]{2,28}?)\s+(?:may\s+represent|can\s+represent|represents?|symboli(?:zes|ses)|could\s+mean|might\s+mean|means)\s+(.+)$/i,
+    /^the\s+meaning\s+of\s+([^,.;:\n]{2,28}?)\s+(?:is|may\s+be)\s+(.+)$/i
+  ];
+  return sentencePatterns.some(re => {
+    const match = text.match(re);
+    if (!match) return false;
+    return isValidSymbolLabelCandidate(match[1].trim()) && looksLikeStrictSymbolMeaning(match[2].trim());
+  });
+}
+function hasStrictSymbolGlossaryEvidence(text) {
+  return String(text || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .some(isStrictSymbolGlossaryLine);
+}
+function stripExactSymbolLinesFromText(textValue, symbolsValue) {
+  const text = String(textValue || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const symbolLines = String(symbolsValue || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+  if (!text.trim() || !symbolLines.length) return String(textValue || '').trim();
+  const removable = new Set(symbolLines.filter(line => looksLikeEnumeratedSymbolGlossary(line) || isStrictSymbolGlossaryLine(line)));
+  if (!removable.size) return String(textValue || '').trim();
+  return text
+    .split('\n')
+    .filter(line => !removable.has(String(line || '').trim()))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 function extractNarrativeSymbolGlossary(text) {
   const source = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
   if (!source) return { narrative: '', symbols: '' };
-
-  const lines = source.split('\n').map(line => line.trim());
-  const firstGlossaryIndex = lines.findIndex(line => looksLikeEnumeratedSymbolGlossary(line));
-  if (firstGlossaryIndex >= 0) {
-    const narrativeLines = lines.slice(0, firstGlossaryIndex).filter(Boolean);
-    const symbolLines = lines.slice(firstGlossaryIndex).filter(Boolean);
-    return {
-      narrative: narrativeLines.join('\n').trim(),
-      symbols: symbolLines.join('\n').trim()
-    };
-  }
-
-  const paragraphs = source.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
   const kept = [];
-  const symbolParas = [];
-
-  paragraphs.forEach(paragraph => {
-    if (looksLikeEnumeratedSymbolGlossary(paragraph)) {
-      symbolParas.push(paragraph);
-    } else {
-      kept.push(paragraph);
+  const symbolLines = [];
+  source.split('\n').forEach(rawLine => {
+    const line = String(rawLine || '').trim();
+    if (!line) {
+      kept.push('');
+      return;
     }
+    if (looksLikeEnumeratedSymbolGlossary(line) || isStrictSymbolGlossaryLine(line)) {
+      symbolLines.push(line);
+      return;
+    }
+    kept.push(rawLine);
   });
-
   return {
-    narrative: kept.join('\n\n').trim(),
-    symbols: symbolParas.join('\n\n').trim()
+    narrative: kept.join('\n').replace(/\n{3,}/g, '\n\n').trim(),
+    symbols: symbolLines.join('\n').trim()
   };
 }
 function looksLikePrimaryNarrativeBlock(text) {
@@ -3465,6 +4255,9 @@ function normalizeSymbolToken(value) {
 function normalizeBaseSymbol(value) {
   return normalizeSymbolToken(String(value || '').replace(/\([^)]*\)/g, ' '));
 }
+function escapeRegexLiteral(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 function symbolWordVariants(word) {
   const base = normalizeSymbolToken(word);
   if (!base) return [];
@@ -3480,18 +4273,19 @@ function isSymbolPresentInNarrative(symbol, narrative) {
   const narrativeNorm = normalizeSymbolToken(String(narrative || '').replace(/[^a-z0-9\s]/gi, ' '));
   if (!symbolNorm || !narrativeNorm) return false;
 
-  const phraseRe = new RegExp(`\\b${symbolNorm.replace(/\s+/g, '\\s+')}\\b`, 'i');
+  const phrasePattern = escapeRegexLiteral(symbolNorm).replace(/\s+/g, '\\s+');
+  const phraseRe = new RegExp(`\\b${phrasePattern}\\b`, 'i');
   if (phraseRe.test(narrativeNorm)) return true;
 
   const symbolWords = symbolNorm.split(' ').filter(Boolean);
   if (symbolWords.length === 1) {
-    return symbolWordVariants(symbolWords[0]).some(variant => new RegExp(`\\b${variant}\\b`, 'i').test(narrativeNorm));
+    return symbolWordVariants(symbolWords[0]).some(variant => new RegExp(`\\b${escapeRegexLiteral(variant)}\\b`, 'i').test(narrativeNorm));
   }
 
   const significantWords = symbolWords.filter(word => word.length > 2);
   if (!significantWords.length) return false;
   const matched = significantWords.filter(word =>
-    symbolWordVariants(word).some(variant => new RegExp(`\\b${variant}\\b`, 'i').test(narrativeNorm))
+    symbolWordVariants(word).some(variant => new RegExp(`\\b${escapeRegexLiteral(variant)}\\b`, 'i').test(narrativeNorm))
   );
   return matched.length >= Math.max(1, significantWords.length - 1);
 }
@@ -3526,7 +4320,7 @@ function extractListedSymbolEntries(text) {
     if (structured) {
       const symbol = structured[1].trim();
       const meaningText = structured[2].trim();
-      if (meaningText) pushEntry(symbol, meaningText);
+      if (isValidSymbolLabelCandidate(symbol) && looksLikeStrictSymbolMeaning(meaningText)) pushEntry(symbol, meaningText);
     }
 
     const sentencePatterns = [
@@ -3538,7 +4332,7 @@ function extractListedSymbolEntries(text) {
       if (!match) return;
       const symbol = match[1].trim();
       const meaningText = match[2].trim();
-      if (meaningText) pushEntry(symbol, meaningText);
+      if (isValidSymbolLabelCandidate(symbol) && looksLikeStrictSymbolMeaning(meaningText)) pushEntry(symbol, meaningText);
     });
   });
 
@@ -3550,7 +4344,8 @@ function countSymbolMentions(symbol, text) {
   if (!base || !normalizedText) return 0;
 
   let total = 0;
-  const phraseRe = new RegExp(`\\b${base.replace(/\s+/g, '\\s+')}\\b`, 'gi');
+  const phrasePattern = escapeRegexLiteral(base).replace(/\s+/g, '\\s+');
+  const phraseRe = new RegExp(`\\b${phrasePattern}\\b`, 'gi');
   const phraseMatches = normalizedText.match(phraseRe);
   if (phraseMatches?.length) total += phraseMatches.length;
 
@@ -3558,7 +4353,7 @@ function countSymbolMentions(symbol, text) {
     const words = base.split(' ').filter(Boolean);
     words.forEach(word => {
       symbolWordVariants(word).forEach(variant => {
-        const matches = normalizedText.match(new RegExp(`\\b${variant}\\b`, 'gi'));
+        const matches = normalizedText.match(new RegExp(`\\b${escapeRegexLiteral(variant)}\\b`, 'gi'));
         if (matches?.length) total += matches.length;
       });
     });
@@ -3578,10 +4373,11 @@ function scoreListedSymbol(symbol, narrative, brainstorm, interpretation) {
   if (brainstormCount > 0) score += 2;
   if (interpretationCount > 0) score += 2;
 
+  const basePattern = escapeRegexLiteral(base).replace(/\s+/g, '\\s+');
   const emotionalWindow = String(narrativeText || '')
     .split(/(?<=[.!?])\s+/)
     .filter(Boolean)
-    .filter(sentence => new RegExp(`\\b${base.replace(/\s+/g, '\\s+')}\\b`, 'i').test(normalizeSymbolToken(sentence.replace(/[^a-z0-9\s]/gi, ' '))))
+    .filter(sentence => new RegExp(`\\b${basePattern}\\b`, 'i').test(normalizeSymbolToken(sentence.replace(/[^a-z0-9\s]/gi, ' '))))
     .join(' ');
   if (/\b(?:afraid|fear|scared|terrified|evil|threat|chased|attack|cried|panic|shocked|warning|blood|weapon|trap|intimate|seduction)\b/i.test(emotionalWindow)) {
     score += 2;
@@ -3657,12 +4453,13 @@ function extractActionPhrasesFromNarrative(text) {
 
 // ── DREAM DATA EXTRACTION ───────────────────────────────
 function extractDreamData(raw, options = {}) {
+  console.warn('*** extractDreamData entered ***');
   const result = {};
   const sectionTransitions = [];
   let laterSectionFallback = { collected: {}, decisions: [] };
   const parserInputSource = String(options.inputSource || '').trim().toLowerCase();
   if (parserInputSource) result._inputSource = parserInputSource;
-  if (typeof window !== 'undefined') window.__DJ_BUILD = '20260403-structural-fix-02';
+  if (typeof window !== 'undefined') window.__DJ_BUILD = '20260404-two-phase-refactor';
   const TEMPLATE_OPTION_TERMS = [
     'destiny',
     'encouragement',
@@ -3765,7 +4562,7 @@ function extractDreamData(raw, options = {}) {
   function isSceneMarker(line) {
     const normalized = normalizeWhitespace(line);
     if (!normalized) return false;
-    return /^(?:scene(?:\s+change|\s+changes)?|another\s+scene|next\s+scene|new\s+scene|there\s+was\s+another\s+scene|in\s+another\s+scene|in\s+the\s+next\s+scene|in\s+the\s+first\s+scene|then\s+the\s+scene\s+changed|later\s+in\s+the\s+dream|after\s+this|after\s+that|then|at\s+this\s+point)\b/i.test(normalized);
+    return /^(?:scene(?:\s+change[ds]?)?|another\s+scene|next\s+scene|new\s+scene|there\s+was\s+another\s+scene|in\s+another\s+scene|in\s+the\s+next\s+scene|in\s+the\s+first\s+scene|then\s+the\s+scene\s+changed|later\s+in\s+the\s+dream|after\s+this|after\s+that|then|at\s+this\s+point)\b/i.test(normalized);
   }
   function isExplicitNewDreamMarker(line) {
     const normalized = normalizeWhitespace(line);
@@ -3817,9 +4614,16 @@ function extractDreamData(raw, options = {}) {
       if (METADATA_VALUE_RE.test(line)) continue;
       const explicitTitle = line.match(/^title\s*[-–—:]+\s*(.+)$/i);
       if (explicitTitle?.[1] && !isBadNarrativeTitleCandidate(explicitTitle[1])) {
+        console.log('[DJ][parser][extractTopDocumentTitle] selected explicit title', {
+          linePreview: line.slice(0, 180),
+          candidate: explicitTitle[1].trim()
+        });
         return { title: explicitTitle[1].trim(), date: findDateInText(line) || '', sourceLine: line };
       }
       if (/^(?:dream|vision)\s+\d{1,2}[\.\/-]\d{1,2}[\.\/-]\d{2,4}(?:\s+.*)?$/i.test(line)) {
+        console.log('[DJ][parser][extractTopDocumentTitle] selected dated dream heading', {
+          linePreview: line.slice(0, 180)
+        });
         return { title: line, date: findDateInText(line) || '', sourceLine: line };
       }
       if (isRealDreamStart(line) || isSceneMarker(line)) break;
@@ -3827,9 +4631,15 @@ function extractDreamData(raw, options = {}) {
         // A bare "Dream" or "Vision" with no qualifier is a section heading label, not a title.
         // Stop scanning — the real title wasn't in the header block.
         if (/^(?:dream|vision)$/i.test(line)) break;
+        console.log('[DJ][parser][extractTopDocumentTitle] selected dream/vision title candidate', {
+          linePreview: line.slice(0, 180)
+        });
         return { title: line, date: findDateInText(line) || '', sourceLine: line };
       }
       if (!isBadNarrativeTitleCandidate(line) && line.length <= 120) {
+        console.log('[DJ][parser][extractTopDocumentTitle] selected plain title candidate', {
+          linePreview: line.slice(0, 180)
+        });
         return { title: line, date: findDateInText(line) || '', sourceLine: line };
       }
     }
@@ -3865,7 +4675,7 @@ function extractDreamData(raw, options = {}) {
 
     if (cleaned.length < 3) return '';
 
-    if (/^(scene|scene change|scene changes|another scene|next scene)$/i.test(
+    if (/^(scene|scene change[ds]?|another scene|next scene)$/i.test(
       cleaned.slice(0, 2).join(' ')
     )) return '';
 
@@ -3905,6 +4715,12 @@ function extractDreamData(raw, options = {}) {
     const normalized = normalizeWhitespace(line);
     if (!normalized) return false;
     const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+    if (/^(?:then\s+(?:we|i|he|she|they)\b|then\s+we\s+go\b|then\s+i\s+go\b)/i.test(normalized)) return true;
+    if (/^(?:we|i|he|she|they)\s+go(?:\s+to|\s+into|\s+back|\s+over|\s+up|\s+down|\s+through|\s+around)?\b/i.test(normalized)) return true;
+    if (/^(?:travel(?:ing)?|driv(?:ing)?|walk(?:ing)?|rid(?:ing)?|work(?:ing)?)\b/i.test(normalized) && wordCount >= 3) return true;
+    if (/^(?:at|in|inside|outside|near|by)\s+(?:a|an|the|my|our|this)\b/i.test(normalized) && wordCount >= 4) return true;
+    if (/^i['’]?(?:am|m)\s+at\b/i.test(normalized)) return true;
+    if (/^there\s+(?:is|are|was|were)\b/i.test(normalized) && wordCount >= 4) return true;
     if (/(?:^|\b)(?:I|we|he|she|they)\s+(?:was|were|went|saw|heard|felt|walked|ran|looked|found|noticed|remember|remembered|kept|started|thought|knew|woke|woke up)\b/i.test(normalized)) return true;
     if (/^(?:me|me and|my friend|my child|my mom)\b/i.test(normalized) && wordCount >= 5) return true;
     if (isSceneMarker(normalized)) return true;
@@ -3912,6 +4728,42 @@ function extractDreamData(raw, options = {}) {
     if (/\b(?:then|after that|suddenly|at first|when I|as I|there was|we were|I was)\b/i.test(normalized) && wordCount >= 8) return true;
     if (/[.!?]$/.test(normalized) && wordCount >= 8) return true;
     return false;
+  }
+  function detectSceneNarrativeIndicators(line) {
+    const normalized = normalizeWhitespace(line);
+    if (!normalized) return [];
+    const indicators = [];
+    if (isSceneMarker(normalized)) indicators.push('scene-marker');
+    if (/^(?:then\s+(?:we|i|he|she|they)\b|then\s+we\s+go\b|then\s+i\s+go\b)/i.test(normalized)) indicators.push('then-transition');
+    if (/^(?:we|i|he|she|they)\s+go(?:\s+to|\s+into|\s+back|\s+over|\s+up|\s+down|\s+through|\s+around)?\b/i.test(normalized)) indicators.push('go-transition');
+    if (/^(?:travel(?:ing)?|driv(?:ing)?|walk(?:ing)?|rid(?:ing)?|work(?:ing)?)\b/i.test(normalized)) indicators.push('movement-action');
+    if (/^(?:at|in|inside|outside|near|by)\s+(?:a|an|the|my|our|this)\b/i.test(normalized)) indicators.push('setting-description');
+    if (/^i['’]?(?:am|m)\s+at\b/i.test(normalized)) indicators.push('i-am-at-setting');
+    if (/^there\s+(?:is|are|was|were)\b/i.test(normalized)) indicators.push('there-is-setting');
+    if (/\b(?:said|told|asked|heard|looked|working|walking|running|traveling|riding|driving)\b/i.test(normalized)) indicators.push('people-acting-speaking');
+    if (/\b(?:next\s+scene|scene\s+changed|scene\s+change[ds]?)\b/i.test(normalized)) indicators.push('scene-progression');
+    return indicators;
+  }
+  function detectNotesMetaIndicators(line) {
+    const normalized = normalizeWhitespace(line);
+    if (!normalized) return [];
+    const indicators = [];
+    if (/^(?:i\s+think|i\s+feel\s+like|maybe|perhaps)\b/i.test(normalized)) indicators.push('reflective-open');
+    if (/^(?:interesting\s+that|this\s+reminds\s+me|what\s+does\s+this\s+mean|not\s+sure\s+what\s+this\s+means?)\b/i.test(normalized)) indicators.push('meta-comment');
+    if (/\b(?:attached|included?|background|note|notes|before|after|wasn'?t\s+sure|was\s+not\s+sure|didn'?t\s+include|did\s+not\s+include)\b/i.test(normalized)) indicators.push('note-language');
+    if (/\b(?:could\s+mean|may\s+mean|might\s+mean|represent(?:s)?|symboli(?:zes|ses))\b/i.test(normalized)) indicators.push('interpretive-meta');
+    return indicators;
+  }
+  function logNarrativeNotesClassification(candidate, targetField, reason, sceneIndicators = [], metaIndicators = []) {
+    try {
+      console.log('[DJ][parser][splitDreamNarrativeBlocks] classify', {
+        candidatePreview: String(candidate || '').replace(/\s+/g, ' ').trim().slice(0, 180),
+        assignedTargetField: targetField,
+        reason,
+        sceneNarrativeIndicatorsDetected: sceneIndicators,
+        notesMetaIndicatorsDetected: metaIndicators
+      });
+    } catch (_) {}
   }
   function isRealDreamStart(line) {
     const normalized = normalizeWhitespace(line);
@@ -3974,6 +4826,13 @@ function extractDreamData(raw, options = {}) {
   function shouldResumeNarrativeFromBrainstorm(records, index) {
     const line = normalizeWhitespace(records[index]?.line || '');
     if (!line) return false;
+    const looksNarrativeNow =
+      isNarrativeLike(line) ||
+      isRealDreamStart(line) ||
+      isSceneMarker(line);
+    if (looksNarrativeNow && !isLikelyBrainstormLine(line)) {
+      return true;
+    }
     // Do not pull interpretation-heavy, reflective, or application-heavy prose back into narrative.
     if (isInterpretationLikeLine(line)) return false;
     if (isDreamReflectionLine(line)) return false;
@@ -4148,29 +5007,55 @@ function extractDreamData(raw, options = {}) {
         if (current.length && current[current.length - 1] !== '') current.push('');
         continue;
       }
+      const sceneIndicators = detectSceneNarrativeIndicators(line);
+      const metaIndicators = detectNotesMetaIndicators(line);
+      const hasSceneNarrativeIndicators = sceneIndicators.length > 0;
+      const hasNotesMetaIndicators = metaIndicators.length > 0;
 
       if (isPlaceholderHeading(line) && !hasMeaningfulContentAhead(lines.map(entry => ({ line: entry })), i)) {
         continue;
       }
 
-      if (isDreamReflectionLine(line) && hasSubstantialNarrative(current.join(' '))) {
+      if (
+        !isNarrativeUncertaintyLine(line) &&
+        isDreamReflectionLine(line) &&
+        hasSubstantialNarrative(current.join(' ')) &&
+        !hasSceneNarrativeIndicators
+      ) {
         pushCurrent();
         notes.push(line);
+        logNarrativeNotesClassification(line, 'dreamAdditionalNotes', 'reflection-line-after-narrative', sceneIndicators, metaIndicators);
         continue;
       }
 
       if (isNarrativeResetLine(line) && hasSubstantialNarrative(current.join(' '))) {
         pushCurrent();
         current.push(line);
+        logNarrativeNotesClassification(line, 'dreamNarrative', 'narrative-reset-line', sceneIndicators, metaIndicators);
         continue;
       }
 
-      if (!current.length && !isRealDreamStart(line) && !isSceneMarker(line) && !isNarrativeResetLine(line)) {
+      if (
+        !current.length &&
+        !isRealDreamStart(line) &&
+        !isSceneMarker(line) &&
+        !isNarrativeResetLine(line) &&
+        !isNarrativeLike(line) &&
+        !hasSceneNarrativeIndicators
+      ) {
         notes.push(line);
+        logNarrativeNotesClassification(line, 'dreamAdditionalNotes', hasNotesMetaIndicators ? 'explicit-notes-meta-line' : 'non-narrative-orphan-line', sceneIndicators, metaIndicators);
         continue;
       }
 
       current.push(line);
+      logNarrativeNotesClassification(
+        line,
+        'dreamNarrative',
+        hasSceneNarrativeIndicators ? 'scene-narrative-continuation' : (current.length === 1 ? 'narrative-block-start' : 'narrative-block-continue'),
+        sceneIndicators,
+        metaIndicators
+      );
     }
 
     pushCurrent();
@@ -4299,6 +5184,13 @@ function extractDreamData(raw, options = {}) {
     const repeatedSymbols = String(repeatedBlocks?.dreamSymbols || '').trim();
     const repeatedScriptures = String(repeatedBlocks?.dreamScriptures || '').trim();
     const repeatedNotes = String(repeatedBlocks?.dreamAdditionalNotes || '').trim();
+    console.log('[DJ][parser][buildRepeatedBlocksResult] opening block assignment', {
+      repeatedTitlePreview: repeatedTitle.slice(0, 180),
+      repeatedNarrativePreview: repeatedNarrative.replace(/\s+/g, ' ').slice(0, 180),
+      repeatedNotesPreview: repeatedNotes.replace(/\s+/g, ' ').slice(0, 180),
+      repeatedNarrativeLen: repeatedNarrative.length,
+      repeatedNotesLen: repeatedNotes.length
+    });
 
     let repeatedResult = {
       dreamTitle: String(result.dreamTitle || repeatedTitle || '').trim(),
@@ -4512,6 +5404,99 @@ function extractDreamData(raw, options = {}) {
       if (/\b(?:be\s+willing\s+to|you\s+can|you\s+should|take\s+time\s+to|make\s+sure\s+you|walk\s+in|pray\s+for|encourage|disciple|mentor|teach|help\s+people)\b/i.test(text)) score += 3;
       return score;
     };
+    const isNarrativeSceneFragmentLine = lineValue => {
+      const line = String(lineValue || '').trim();
+      if (!line) return false;
+      if (isSceneMarker(line) || isRealDreamStart(line) || isNarrativeLike(line)) return true;
+      if (
+        /^(?:scene\s+\d+|next\s+(?:scene|day|morning|night)|other\s+scene|scene\s+change[ds]?|this\s+time\b|at\s+some\s+point|walk\s+into|go\s+upstairs|go\s+downstairs|in\s+(?:a|the)\s+(?:basement|bathroom|kitchen|bedroom|hallway|house|church|office|room|car|vehicle|building)|at\s+(?:women['’]?s\s+fellowship|a\s+place|the\s+\w+)|group\s+of\s+people|man\s+with|woman\s+with|people\s+are|doors\s+are|there\s+(?:is|are)|it['’]?s\s+(?:daylight|night)|power\s+of\s+god|someone\s+mention|his\s+dreads\s+are|by\s+the\s+way)\b/i.test(line)
+      ) {
+        return true;
+      }
+      if (
+        /^(?:i|we|he|she|they|someone|people|jo|jonathan|mom|mother|dad|father|aunt(?:ie)?|pastor|chris|christopher)\b.*\b(?:is|are|was|were|says?|said|complains?|complained|explains?|explained|touch(?:ed)?|pray(?:ed)?|run|ran|walk(?:ed)?|rush(?:ed)?|chase(?:d)?|follow(?:ed)?|laugh(?:ed)?|wake(?:s|up|d)?|leave|left|sit|sat|look(?:ed)?|reali[sz]e(?:d)?|remember(?:ed)?|tell|told|ask(?:ed)?|want(?:ed)?|know|knew|see|saw|come|came|put|puts|begin|began|touches?|follow(?:s|ed)|glares?|keeps?)\b/i.test(line)
+      ) {
+        return true;
+      }
+      const dashMatch = line.match(/^([A-Za-z][A-Za-z0-9'’()\/& ]{0,40})\s*[-–—:]\s*(.+)$/);
+      if (!dashMatch) return false;
+      const label = dashMatch[1].trim();
+      const gloss = dashMatch[2].trim();
+      const labelWords = label.split(/\s+/).filter(Boolean).length;
+      const looksLikeNarrativeDash =
+        /^\d/.test(gloss) ||
+        labelWords >= 4 ||
+        /^(?:at|in|on|by|with|from|to|group|man|woman|people|doors|stairs|basement|bathroom|kitchen|room|apartment|house|church|office|bedroom|hallway|car|vehicle|night|daylight|someone|jo|jonathan|mom|mother|dad|father|aunt(?:ie)?|pastor|chris|christopher|power)\b/i.test(label) ||
+        /\b(?:is|are|was|were|went|go|came|left|walked|ran|looked|felt|saw|heard|said|told|asked|complained|laughed|prayed|woke|sat|stood|touch(?:ed)?|follow(?:ed)?|changed?)\b/i.test(gloss);
+      return looksLikeNarrativeDash;
+    };
+    const classifyPairedBrainstormOpeningParagraph = textValue => {
+      const text = String(textValue || '').trim();
+      if (!text) return 'ambiguous';
+      const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+      if (!lines.length) return 'ambiguous';
+
+      let narrativeSignals = 0;
+      let reflectiveSignals = 0;
+
+      lines.forEach(line => {
+        if (isNarrativeSceneFragmentLine(line)) narrativeSignals += 2;
+        if (looksLikeNarrativeSceneLeadLine(line)) narrativeSignals += 2;
+        if (isInterpretationLikeLine(line)) reflectiveSignals += 3;
+        if (looksLikeQuotedCommentaryLine(line)) reflectiveSignals += 3;
+        if (isLikelyBrainstormLine(line) && !isNarrativeSceneFragmentLine(line)) reflectiveSignals += 2;
+      });
+
+      if (looksLikeEnumeratedSymbolGlossary(text)) reflectiveSignals += 5;
+      if (extractListedSymbolEntries(text).length) reflectiveSignals += 4;
+      if (/\b(?:means?|represent(?:s)?|symboli[sz]es?|allegory|cycle|opportunity|hidden\s+meaning|points?\s+to)\b/i.test(text)) reflectiveSignals += 2;
+
+      const narrativeScore = scoreNarrativeResidue(text) + narrativeSignals;
+      const brainstormScore = scoreBrainstormBlock(text) + reflectiveSignals;
+      const interpretationScore = scoreInterpretationBlock(text) + reflectiveSignals;
+
+      if (narrativeScore >= Math.max(4, brainstormScore + 1, interpretationScore + 1)) return 'narrative';
+      if (brainstormScore >= Math.max(4, narrativeScore + 2, interpretationScore) || interpretationScore >= Math.max(4, narrativeScore + 2, brainstormScore)) {
+        return 'brainstorm';
+      }
+      if (narrativeSignals > reflectiveSignals) return 'narrative';
+      if (reflectiveSignals > narrativeSignals) return 'brainstorm';
+      return 'ambiguous';
+    };
+    const extractContentValidatedNarrativeRunFromPairedBrainstorm = textValue => {
+      const paragraphs = splitParagraphBlocks(textValue);
+      if (!paragraphs.length) return { narrative: '', remainder: '' };
+
+      const moved = [];
+      let started = false;
+
+      for (let i = 0; i < paragraphs.length; i++) {
+        const paragraph = String(paragraphs[i] || '').trim();
+        if (!paragraph) continue;
+        const firstLine = paragraph.split('\n').map(line => line.trim()).find(Boolean) || '';
+        const explicitNarrativeLead =
+          isSceneMarker(firstLine) ||
+          /^(?:scene\s+\d+|next\s+scene|next\s+day|other\s+scene|scene\s+change[ds]?|this\s+time\b|walk\s+into\b|i\s+go\s+upstairs\b)\b/i.test(firstLine);
+        const paragraphClass = classifyPairedBrainstormOpeningParagraph(paragraph);
+
+        if (!started) {
+          const canOpenNarrative = explicitNarrativeLead || paragraphClass === 'narrative';
+          if (!canOpenNarrative) break;
+          moved.push(paragraph);
+          started = true;
+          continue;
+        }
+
+        if (paragraphClass === 'brainstorm' && !explicitNarrativeLead) break;
+        if (paragraphClass === 'ambiguous' && isLeadingBrainstormStopParagraph(paragraph) && !explicitNarrativeLead) break;
+        moved.push(paragraph);
+      }
+
+      return {
+        narrative: joinNonEmptyChunks(moved),
+        remainder: joinNonEmptyChunks(paragraphs.slice(moved.length))
+      };
+    };
     const splitPairedColumnBodies = (fieldA, fieldB, combinedText) => {
       const text = String(combinedText || '').replace(/\n{3,}/g, '\n\n').trim();
       if (!text) return { first: '', second: '' };
@@ -4587,6 +5572,96 @@ function extractDreamData(raw, options = {}) {
       };
 
       if (fieldA === 'dreamNarrative' && fieldB === 'dreamBrainstorm') {
+        // Flattened template/docx rows can arrive as consecutive headings:
+        //   Dream
+        //   Brainstorm
+        //   [dream scene prose...]
+        //   [later brainstorm prose...]
+        // In that shape, ownership must start at the first real body line after
+        // the heading sequence, and the leading scene run belongs to Dream.
+        const normalizedLeadingText = (() => {
+          const paragraphBlocks = splitParagraphBlocks(text);
+          if (paragraphBlocks.length < 2) return text;
+          const firstParagraph = String(paragraphBlocks[0] || '').trim();
+          const firstLines = firstParagraph.split('\n').map(line => line.trim()).filter(Boolean);
+          const firstLine = firstLines[0] || '';
+          const isStandaloneSceneParagraph =
+            firstLines.length === 1 &&
+            (isSceneMarker(firstLine) || /^(?:other\s+scene|scene\s+change[ds]?)\b/i.test(firstLine));
+          if (!isStandaloneSceneParagraph) return text;
+          return [
+            [paragraphBlocks[0], paragraphBlocks[1]].filter(Boolean).join('\n'),
+            ...paragraphBlocks.slice(2)
+          ].join('\n\n').trim();
+        })();
+        const contentValidatedLeadingNarrativeRun = extractContentValidatedNarrativeRunFromPairedBrainstorm(normalizedLeadingText);
+        const standardLeadingNarrativeRun = extractLeadingNarrativeRunFromBrainstorm(normalizedLeadingText);
+        const sceneAwareLeadingNarrativeRun = (() => {
+          const paragraphs = splitParagraphBlocks(normalizedLeadingText);
+          if (!paragraphs.length) return { narrative: '', remainder: '' };
+
+          const moved = [];
+          let started = false;
+
+          for (let i = 0; i < paragraphs.length; i++) {
+            const paragraph = paragraphs[i];
+            const firstLine = paragraph.split('\n').map(line => line.trim()).find(Boolean) || '';
+            const narrativeScore = scoreNarrativeResidue(paragraph);
+            const brainstormScore = scoreBrainstormBlock(paragraph);
+            const interpretationScore = scoreInterpretationBlock(paragraph);
+            const applicationScore = scoreApplicationBlock(paragraph);
+            const explicitNarrativeLead =
+              isSceneMarker(firstLine) ||
+              /^(?:scene\s+\d+|next\s+scene|next\s+day|other\s+scene|scene\s+change[ds]?|this\s+time\b|walk\s+into\b|i\s+go\s+upstairs\b)\b/i.test(firstLine);
+
+            if (!started) {
+              const canOpenNarrative =
+                explicitNarrativeLead ||
+                looksLikeNarrativeSceneLeadLine(firstLine) ||
+                narrativeScore >= Math.max(2, brainstormScore, interpretationScore, applicationScore);
+              if (!canOpenNarrative) break;
+              if (!explicitNarrativeLead && isLeadingBrainstormStopParagraph(paragraph)) break;
+              moved.push(paragraph);
+              started = true;
+              continue;
+            }
+
+            const continuesNarrativeParagraph =
+              explicitNarrativeLead ||
+              looksLikeNarrativeSceneLeadLine(firstLine) ||
+              /\b(?:I|we|he|she|they)\s+(?:am|is|are|was|were|go|went|saw|heard|felt|walked|ran|looked|found|noticed|remember(?:ed)?|kept|started|followed|moved|came|stood|stepped|turned|got|began|asked|told|laughed|focused|decided|realized|complained|woke|sat)\b/i.test(firstLine) ||
+              /^(?:at\s+some\s+point|in\s+(?:a|the)\s+(?:car|room|hallway|building|house|church|restaurant|vehicle|basement|bathroom|kitchen)|i\s+think\s+i\s+(?:said|was|went|saw|heard|told|got|had|walked|ran|looked|remember(?:ed)?|ended\s+up)|anyway\s+(?:so\s+)?(?:the|i|we|he|she|they)\b|women\s+complains?\b|someone\s+mention\b|his\s+dreads\s+are\b|there\s+is\b|there\s+are\b)\b/i.test(firstLine);
+            if (continuesNarrativeParagraph) {
+              moved.push(paragraph);
+              continue;
+            }
+            if (explicitNarrativeLead) {
+              moved.push(paragraph);
+              continue;
+            }
+            if (isLeadingBrainstormStopParagraph(paragraph)) break;
+            moved.push(paragraph);
+          }
+
+          return {
+            narrative: joinNonEmptyChunks(moved),
+            remainder: joinNonEmptyChunks(paragraphs.slice(moved.length))
+          };
+        })();
+        const candidateLeadingNarrativeRuns = [
+          contentValidatedLeadingNarrativeRun,
+          sceneAwareLeadingNarrativeRun,
+          standardLeadingNarrativeRun
+        ];
+        const leadingNarrativeRun = candidateLeadingNarrativeRuns.reduce((best, candidate) => (
+          String(candidate?.narrative || '').length > String(best?.narrative || '').length ? candidate : best
+        ), { narrative: '', remainder: '' });
+        if (leadingNarrativeRun.narrative) {
+          return {
+            first: leadingNarrativeRun.narrative,
+            second: leadingNarrativeRun.remainder || ''
+          };
+        }
         const firstMatch = splitAtFirstMatchingLine((line, firstText, secondText) => {
           const firstTail = splitParagraphBlocks(firstText).slice(-1)[0] || firstText;
           if (!isStrongNarrativeBlock(firstTail)) return false;
@@ -4727,6 +5802,7 @@ function extractDreamData(raw, options = {}) {
         const labelWords = label.split(/\s+/).filter(Boolean).length;
         const glossWords = gloss.split(/\s+/).filter(Boolean).length;
         const looksLikeReference = /\b(?:genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|chronicles|ezra|nehemiah|esther|job|psalm|psalms|proverbs|ecclesiastes|song|isaiah|jeremiah|lamentations|ezekiel|daniel|hosea|joel|amos|obadiah|jonah|micah|nahum|habakkuk|zephaniah|haggai|zechariah|malachi|matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|jude|revelation)\b/i.test(line);
+        const looksLikeUrlNoise = isUrlLikeSymbolNoise(line) || isUrlLikeSymbolNoise(label) || isUrlLikeSymbolNoise(gloss);
         if (
           labelWords >= 1 &&
           labelWords <= 4 &&
@@ -4734,6 +5810,7 @@ function extractDreamData(raw, options = {}) {
           glossWords <= 18 &&
           !normalizedLabelHeading &&
           !looksLikeReference &&
+          !looksLikeUrlNoise &&
           !/[.!?].+[.!?]/.test(gloss) &&
           !/^(?:this|that|anyway|because|she|he|it|they|we|i)\b/i.test(label.toLowerCase())
         ) {
@@ -4809,7 +5886,7 @@ function extractDreamData(raw, options = {}) {
       if (!line) return false;
       return (
         isSceneMarker(line) ||
-        /^(?:other\s+scene|scene\s+changes?)\b/i.test(line) ||
+        /^(?:other\s+scene|scene\s+change[ds]?)\b/i.test(line) ||
         /\b(?:I|we|he|she|they)\s+(?:was|were|go|went|saw|heard|felt|walked|ran|looked|found|noticed|remember(?:ed)?|kept|started|followed|moved|came|stood|stepped|turned|got|began)\b/i.test(line) ||
         /^(?:then\s+i|after\s+that|at\s+first|there\s+was|there\s+were|someone\s+was|go(?:ing)?\s+into|walk(?:ing)?\s+in|trying\s+to|with\s+(?:a\s+)?group|my\s+parents\s+were|pastor\s+\w.+\bwas\b|there\s+was\s+going\s+to\s+be|i\s+pass\b|i['’]?(?:am|m)\s+now\s+walking|i\s+see\b|we\s+focus\b|it\s+looked\s+like|the\s+metal\s+band|i\s+reali[sz]e|i\s+think\s+we\s+all\s+begin)\b/i.test(line)
       );
@@ -4823,22 +5900,87 @@ function extractDreamData(raw, options = {}) {
       const interpretationScore = scoreInterpretationBlock(text);
       const applicationScore = scoreApplicationBlock(text);
       const LEADING_RUN_MARGIN = 2;
+      const firstLineIsNarrative = looksLikeNarrativeSceneLeadLine(firstLine);
 
       if (looksLikeEnumeratedSymbolGlossary(text)) return true;
       if (extractListedSymbolEntries(text).length) return true;
-      if (/^[A-Za-z][A-Za-z0-9'’()\/& ]{0,28}\s*[-–—:]\s*.+$/.test(firstLine)) return true;
+      // Glossary-dash check: "Symbol - meaning" but NOT narrative dashes like
+      // "Group of people - 15 to 20" or "In basement - its daylight"
+      const dashMatch = firstLine.match(/^([A-Za-z][A-Za-z0-9’’()\/& ]{0,28})\s*[-–—:]\s*(.+)$/);
+      if (dashMatch) {
+        const label = dashMatch[1].trim();
+        const gloss = dashMatch[2].trim();
+        // Narrative-like dashes: right side starts with a number, or label has 5+ words,
+        // or label contains pronouns/verbs/fragments typical of narrative scene-setting
+        const labelWords = label.split(/\s+/).filter(Boolean).length;
+        const looksLikeNarrativeDash =
+          /^\d/.test(gloss) ||
+          labelWords >= 5 ||
+          /\b(?:i|we|he|she|they|my|his|her|our|their|its|also|but|then|still|just|maybe|possibly|idk|the|not|im|was|were|went|had)\b/i.test(label);
+        if (!looksLikeNarrativeDash) return true;
+      }
       if (/^(?:so|because|anyway|in\s+the\s+situation\s+with|this\s+reminds\s+me|what\s+does\s+this\s+mean|am\s+i\s+representing)\b/i.test(firstLine)) return true;
-      if (/\b(?:may|could|might)\s+(?:mean|represent|be|point\s+to)\b/i.test(text)) return true;
-      if (/\b(?:represents?|symboli[sz]es?|means?|points?\s+to)\b/i.test(text)) return true;
+      // Symbolic meaning patterns — only fire when firstLine is NOT narrative-like,
+      // because words like "could be", "means", "represent" appear in normal dream prose
+      if (!firstLineIsNarrative) {
+        if (/\b(?:may|could|might)\s+(?:mean|represent|be\s+(?:a\s+)?(?:sign|symbol|represent)|point\s+to)\b/i.test(text)) return true;
+        if (/\b(?:represents?|symboli[sz]es?|points?\s+to)\b/i.test(text)) return true;
+        // "means" only when used in symbolic context, not narrative "I didn’t mean anything"
+        if (/\b(?:means?)\b/i.test(text) && !/\b(?:didn['’]?t|don['’]?t|doesn['’]?t)\s+mean\b/i.test(text) && !/\bmean(?:s|t)?\s+(?:anything|nothing|much|it|that)\b/i.test(text)) return true;
+      }
       if (isInterpretationLikeLine(firstLine)) return true;
       if (applicationScore >= Math.max(3, narrativeScore + LEADING_RUN_MARGIN)) return true;
-      if (!looksLikeNarrativeSceneLeadLine(firstLine) && (brainstormScore >= narrativeScore + LEADING_RUN_MARGIN || interpretationScore >= narrativeScore + LEADING_RUN_MARGIN)) return true;
+      if (!firstLineIsNarrative && (brainstormScore >= narrativeScore + LEADING_RUN_MARGIN || interpretationScore >= narrativeScore + LEADING_RUN_MARGIN)) return true;
       return false;
     };
     const extractLeadingNarrativeRunFromBrainstorm = textValue => {
       const LEADING_RUN_MARGIN = 2;
       const paragraphs = splitParagraphBlocks(textValue);
       if (!paragraphs.length) return { narrative: '', remainder: '' };
+      if (paragraphs.length === 1) {
+        const lines = String(textValue || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+        const movedLines = [];
+        let started = false;
+
+        const lineLevelStop = lineValue => {
+          const text = String(lineValue || '').trim();
+          if (!text) return false;
+          if (looksLikeNarrativeSceneLeadLine(text)) return false;
+          if (isLeadingBrainstormStopParagraph(text)) return true;
+          return false;
+        };
+
+        for (let i = 0; i < lines.length; i++) {
+          const rawLine = lines[i];
+          const line = String(rawLine || '').trim();
+          if (!line) {
+            if (started) movedLines.push(rawLine);
+            continue;
+          }
+
+          if (!started) {
+            if (!looksLikeNarrativeSceneLeadLine(line) || lineLevelStop(line)) break;
+            movedLines.push(rawLine);
+            started = true;
+            continue;
+          }
+
+          if (lineLevelStop(line)) break;
+
+          const continuesNarrative =
+            looksLikeNarrativeSceneLeadLine(line) ||
+            /\b(?:I|we|he|she|they)\s+(?:am|is|are|was|were|go|went|saw|heard|felt|walked|ran|looked|found|noticed|remember(?:ed)?|kept|started|followed|moved|came|stood|stepped|turned|got|began|asked|told|laughed|focused|decided|realized|complained|woke|sat)\b/i.test(line) ||
+            /^(?:at\s+some\s+point|in\s+(?:a|the)\s+(?:car|room|hallway|building|house|church|restaurant|vehicle|basement|bathroom|kitchen)|i\s+think\s+i\s+(?:said|was|went|saw|heard|told|got|had|walked|ran|looked|remember(?:ed)?|ended\s+up)|anyway\s+(?:so\s+)?(?:the|i|we|he|she|they)\b|women\s+complains?\b|someone\s+mention\b|his\s+dreads\s+are\b|there\s+is\b|there\s+are\b|next\s+(?:day|scene|morning|night)\b|scene\s+change[ds]?\b)\b/i.test(line);
+
+          if (!continuesNarrative) break;
+          movedLines.push(rawLine);
+        }
+
+        return {
+          narrative: movedLines.join('\n').replace(/\n{3,}/g, '\n\n').trim(),
+          remainder: lines.slice(movedLines.length).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+        };
+      }
 
       const moved = [];
       let started = false;
@@ -4851,7 +5993,7 @@ function extractDreamData(raw, options = {}) {
         const interpretationScore = scoreInterpretationBlock(paragraph);
         const applicationScore = scoreApplicationBlock(paragraph);
         const explicitSceneMarker =
-          !!firstLine && (isSceneMarker(firstLine) || /^(?:other\s+scene|scene\s+changes?)\b/i.test(firstLine));
+          !!firstLine && (isSceneMarker(firstLine) || /^(?:other\s+scene|scene\s+change[ds]?)\b/i.test(firstLine));
 
         if (!started) {
           if (!looksLikeNarrativeSceneLeadLine(firstLine)) break;
@@ -4875,8 +6017,11 @@ function extractDreamData(raw, options = {}) {
       if (!labeledResult) return labeledResult;
       const REHOME_MARGIN = 2;
 
+      const hasBrainstormHeading = hasFieldHeading('dreamBrainstorm');
       const hasInterpretationHeading = hasFieldHeading('dreamInterpretation');
       const hasApplicationHeading = hasFieldHeading('dreamApplication');
+      const preserveExplicitBrainstormOwnership =
+        hasBrainstormHeading && (hasInterpretationHeading || hasApplicationHeading);
 
       let dreamNarrative = String(labeledResult.dreamNarrative || '').trim();
       let dreamBrainstorm = String(labeledResult.dreamBrainstorm || '').trim();
@@ -5059,11 +6204,11 @@ function extractDreamData(raw, options = {}) {
           const interpretationScore = scoreInterpretationBlock(working);
           const brainstormScore = scoreBrainstormBlock(working);
 
-          if ((hasApplicationHeading || !dreamApplication) && applicationScore >= Math.max(4, interpretationScore + REHOME_MARGIN, brainstormScore + REHOME_MARGIN)) {
+          if (!preserveExplicitBrainstormOwnership && (hasApplicationHeading || !dreamApplication) && applicationScore >= Math.max(4, interpretationScore + REHOME_MARGIN, brainstormScore + REHOME_MARGIN)) {
             movedToApplication.push(working);
             return;
           }
-          if ((hasInterpretationHeading || !dreamInterpretation) && interpretationScore >= Math.max(3, brainstormScore + REHOME_MARGIN)) {
+          if (!preserveExplicitBrainstormOwnership && (hasInterpretationHeading || !dreamInterpretation) && interpretationScore >= Math.max(3, brainstormScore + REHOME_MARGIN)) {
             movedToInterpretation.push(working);
             return;
           }
@@ -5247,6 +6392,20 @@ function extractDreamData(raw, options = {}) {
       }
     }
 
+    const finalNarrativeFromBuckets = joinSectionChunks(sectionBuckets.dreamNarrative);
+    const finalBrainstormFromBuckets = joinSectionChunks(sectionBuckets.dreamBrainstorm);
+    console.log('[DJ][parser][buildLabeledSectionsResult] before final narrative/brainstorm assignment', {
+      docMode: 'labeled_sections',
+      dreamNarrativeLen: String(finalNarrativeFromBuckets || '').length,
+      dreamBrainstormLen: String(finalBrainstormFromBuckets || '').length,
+      dreamNarrativeSource: sectionBuckets.dreamNarrative.length ? 'labeled_sections_buckets' : '',
+      dreamBrainstormSource: sectionBuckets.dreamBrainstorm.length ? 'labeled_sections_buckets' : '',
+      narrativeBucketCount: sectionBuckets.dreamNarrative.length,
+      brainstormBucketCount: sectionBuckets.dreamBrainstorm.length,
+      interpretationBucketCount: sectionBuckets.dreamInterpretation.length,
+      applicationBucketCount: sectionBuckets.dreamApplication.length
+    });
+
     let labeledResult = {
       dreamTitle: String(result.dreamTitle || '').trim(),
       dreamDate: String(result.dreamDate || findDateInText(text) || '').trim(),
@@ -5255,8 +6414,8 @@ function extractDreamData(raw, options = {}) {
       dreamTheme: String(result.dreamTheme || '').trim(),
       dreamType: String(result.dreamType || '').trim(),
       dreamerInvolvement: String(result.dreamerInvolvement || '').trim(),
-      dreamNarrative: joinSectionChunks(sectionBuckets.dreamNarrative),
-      dreamBrainstorm: joinSectionChunks(sectionBuckets.dreamBrainstorm),
+      dreamNarrative: finalNarrativeFromBuckets,
+      dreamBrainstorm: finalBrainstormFromBuckets,
       dreamActions: '',
       dreamSymbols: joinSectionChunks(sectionBuckets.dreamSymbols),
       dreamEmotions: '',
@@ -5407,6 +6566,7 @@ function extractDreamData(raw, options = {}) {
     result.dreamTitle = topDocumentTitleInfo.title;
     if (!result.dreamDate && topDocumentTitleInfo.date) result.dreamDate = topDocumentTitleInfo.date;
     _titleSourceLine = topDocumentTitleInfo.sourceLine || null;
+    console.warn('*** TITLE SOURCE SET ***', _titleSourceLine);
     result._finalTitleSource = 'top_document_title';
   }
 
@@ -5711,7 +6871,7 @@ function extractDreamData(raw, options = {}) {
     if (!h) return null;
 
     if (matchesKnownHeading(h, ['brainstorm', 'brainstorming', 'note', 'notes', 'observation', 'observations'])) return 'dreamBrainstorm';
-    if (matchesKnownHeading(h, ['interpretation', 'short interpretation', 'long interpretation', 'polished interpretation', 'possible meaning interpretation', 'possible meaning'])) return 'dreamInterpretation';
+    if (matchesKnownHeading(h, ['interpretation', 'possible interpretation', 'short interpretation', 'long interpretation', 'polished interpretation', 'possible meaning interpretation', 'possible meaning'])) return 'dreamInterpretation';
     if (matchesKnownHeading(h, ['application', 'reflection', 'reflection and response'])) return 'dreamApplication';
     if (matchesKnownHeading(h, ['scripture', 'scriptures', 'scripture references', 'verse'])) return 'dreamScriptures';
     if (matchesKnownHeading(h, ['symbol', 'symbols', 'key symbol', 'key symbols'])) return 'dreamSymbols';
@@ -5720,7 +6880,7 @@ function extractDreamData(raw, options = {}) {
     if (matchesKnownHeading(h, ['additional note', 'additional notes', 'background'])) return 'dreamAdditionalNotes';
 
     const isSceneHeading =
-      /^(?:scene(?:\s+\d+)?|scene\s+changes?)$/.test(h) ||
+      /^(?:scene(?:\s+\d+)?|scene\s+change[ds]?)$/.test(h) ||
       /^(?:dream|vision)\s+scene\s+\d+$/.test(h) ||
       /^(?:dream|vision)\s+\d+\s+scene\s+\d+$/.test(h);
 
@@ -5750,12 +6910,12 @@ function extractDreamData(raw, options = {}) {
   function isInterpretationHeading(line) {
     const normalized = normalizeOcrTolerantHeadingKey(normalizeInterpretationHeading(line));
     if (!normalized) return false;
-    return matchesKnownHeading(normalized, ['interpretation', 'short interpretation', 'long interpretation', 'polished interpretation', 'possible meaning interpretation', 'possible meaning']);
+    return matchesKnownHeading(normalized, ['interpretation', 'possible interpretation', 'short interpretation', 'long interpretation', 'polished interpretation', 'possible meaning interpretation', 'possible meaning']);
   }
   function extractInterpretationInlineContent(line) {
     const raw = normalizeWhitespace(line).replace(/^chatgpt\s*[:\-–—]*\s*/i, '').trim();
     if (!raw) return '';
-    const compactMatch = raw.match(/^(?:\*\*\s*)?(?:#+\s*)?(?:possible\s+meaning\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?(?:\s*\*\*)?\s*(.*)$/i);
+    const compactMatch = raw.match(/^(?:\*\*\s*)?(?:#+\s*)?(?:(?:possible\s+meaning|possible)\s*[\/\\]?\s*)?interpretation(?:\s*\([^)]*\))?(?:\s*\*\*)?\s*(.*)$/i);
     if (!compactMatch) return '';
     const rest = (compactMatch[1] || '').replace(/^[:\-–—]+/, '').trim();
     if (!rest) return '';
@@ -5767,7 +6927,7 @@ function extractDreamData(raw, options = {}) {
     const normalized = normalizeOcrTolerantHeadingKey(normalizeInterpretationHeading(line));
     if (matchesKnownHeading(normalized, ['interpretation summary', 'short interpretation summary', 'long interpretation summary', 'polished interpretation summary'])) return 'sumInterpretation';
     if (matchesKnownHeading(normalized, ['application summary'])) return 'sumApplication';
-    if (matchesKnownHeading(normalized, ['possible meaning', 'possible meaning interpretation'])) return 'dreamInterpretation';
+    if (matchesKnownHeading(normalized, ['possible meaning', 'possible meaning interpretation', 'possible interpretation'])) return 'dreamInterpretation';
     if (isInterpretationHeading(normalized) || /^(?:short|long|polished)\s+interpretation$/.test(normalized)) return 'dreamInterpretation';
     if (isApplicationHeading(normalized) || normalized === 'application')  return 'dreamApplication';
     return null;
@@ -6092,329 +7252,190 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
     return wordCount <= 60 && looksLikePreface && !/^dream(?:\s|$)/i.test(firstLine) && (!looksLikeNarrativeLead || /\banother\s+dream\b/i.test(text));
   }
 
-  switch (docMode) {
+  // ═════════════════════════════════════════════════════════════════════════
+  // TWO-PHASE PARSER: Structure detection + Content assignment
+  // ═════════════════════════════════════════════════════════════════════════
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PHASE 1: STRUCTURE DETECTION (scan-only, no content assignment yet)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Build a locked structure map: identify all section headings and their positions
+  const structureMap = [];
+  const lineRecords = buildPageAwareLineRecords(bodyPages);
+  let startIdx = 0;
+  while (startIdx < 3 && lineRecords[startIdx]?.line && /^\d{8,}$/.test(lineRecords[startIdx].line)) startIdx++;
+
+  for (let idx = startIdx; idx < lineRecords.length; idx++) {
+    const line = String(lineRecords[idx]?.line || '').trim();
+    if (!line || isDateHeading(line) || isTemplateNoiseLabel(line)) continue;
+
+    // Check for section heading
+    const headingField = detectHeading(line, lineRecords, idx, true, '');
+    if (headingField && MAJOR_SECTION_FIELDS.has(headingField)) {
+      structureMap.push({
+        lineIndex: idx,
+        field: headingField,
+        headingText: line
+      });
+    }
+  }
+
+  // Determine docMode based on locked structure map
+  let determinedDocMode = 'unlabeled_or_template';
+
+  if (repeatedBlocks && repeatedBlocks.detected) {
+    determinedDocMode = 'repeated_simple_sections';
+  } else if (structureMap.length >= 2) {
+    determinedDocMode = 'labeled_sections';
+  }
+
+  console.log('[DJ][two-phase] Phase 1 complete:', {
+    structureMapSize: structureMap.length,
+    detectedMode: determinedDocMode,
+    headingsFound: structureMap.map(m => `${m.field} @ line ${m.lineIndex}`)
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PHASE 2: CONTENT ASSIGNMENT (uses locked structure map)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  switch (determinedDocMode) {
     case 'repeated_simple_sections':
-      // FIX (parser-fix-05): was `return` — bypassed symbol/application post-processing
       Object.assign(result, buildRepeatedBlocksResult());
       break;
     case 'labeled_sections':
-      // FIX (parser-fix-05): was `return` — bypassed symbol/application post-processing
       Object.assign(result, buildLabeledSectionsResult());
       break;
     case 'unlabeled_or_template':
-    default:
+    default: {
+      // For unlabeled mode, use simplified assignment based on structure map
+      const buf = {};
+      let currentField = null;
+
+      // If structure map is empty, fall back to old behavior
+      if (structureMap.length === 0) {
+        // Pure prose with no headings — assign everything to dreamNarrative
+        for (let idx = startIdx; idx < lineRecords.length; idx++) {
+          const line = String(lineRecords[idx]?.line || '').trim();
+          if (!line || isDateHeading(line) || isTemplateNoiseLabel(line)) continue;
+
+          if (!buf['dreamNarrative']) buf['dreamNarrative'] = line;
+          else buf['dreamNarrative'] += '\n' + line;
+        }
+      } else {
+        // Structure map exists — assign content by range
+        for (let mapIdx = 0; mapIdx < structureMap.length; mapIdx++) {
+          const mapEntry = structureMap[mapIdx];
+          const nextMapEntry = mapIdx + 1 < structureMap.length ? structureMap[mapIdx + 1] : null;
+
+          const contentStart = mapEntry.lineIndex + 1;
+          const contentEnd = nextMapEntry ? nextMapEntry.lineIndex : lineRecords.length;
+
+          const contentLines = [];
+          for (let idx = contentStart; idx < contentEnd; idx++) {
+            const line = String(lineRecords[idx]?.line || '').trim();
+            if (line && !isDateHeading(line) && !isTemplateNoiseLabel(line)) {
+              contentLines.push(line);
+            }
+          }
+
+          if (contentLines.length > 0) {
+            const field = mapEntry.field;
+            const text = contentLines.join('\n').trim();
+            buf[field] = buf[field] ? `${buf[field]}\n\n${text}` : text;
+          }
+        }
+
+        // Pre-heading content (before first heading) goes to dreamNarrative
+        if (structureMap.length > 0) {
+          const firstHeadingIdx = structureMap[0].lineIndex;
+          const preheadingLines = [];
+          for (let idx = startIdx; idx < firstHeadingIdx; idx++) {
+            const line = String(lineRecords[idx]?.line || '').trim();
+            if (line && !isDateHeading(line) && !isTemplateNoiseLabel(line)) {
+              preheadingLines.push(line);
+            }
+          }
+
+          if (preheadingLines.length > 0) {
+            const text = preheadingLines.join('\n').trim();
+            buf['dreamNarrative'] = buf['dreamNarrative']
+              ? `${text}\n\n${buf['dreamNarrative']}`
+              : text;
+          }
+        }
+      }
+
+      // Apply buffered content to result
+      const PRELOOP_FIELDS = new Set(['dreamDate', 'dreamTitle', 'dreamType']);
+      const fill = (field, src) => {
+        if (!src || !src.trim()) return;
+        if (PRELOOP_FIELDS.has(field)) {
+          if (!result[field] && !isTemplatePlaceholderValue(src.trim(), field)) {
+            result[field] = src.trim();
+          }
+        } else {
+          result[field] = result[field] ? result[field] + '\n\n' + src.trim() : src.trim();
+        }
+      };
+      Object.entries(buf).forEach(([k, v]) => fill(k, v));
+
+      // Apply later-page classification for unlabeled mode
+      laterSectionFallback = classifyLaterPages(bodyPages, sectionTransitions);
+      if (!result.dreamInterpretation && laterSectionFallback.collected.dreamInterpretation) {
+        result.dreamInterpretation = laterSectionFallback.collected.dreamInterpretation;
+      }
+      if (!result.dreamApplication && laterSectionFallback.collected.dreamApplication) {
+        result.dreamApplication = laterSectionFallback.collected.dreamApplication;
+      }
+
+      // Single-page PDF narrative extraction
+      if (isSinglePagePdf && bodyPages[0]) {
+        const singlePageNarrative = extractNarrativeFromSinglePage(bodyPages[0].normalized);
+        if (singlePageNarrative && (!result.dreamNarrative || singlePageNarrative.length > (result.dreamNarrative || '').length)) {
+          result.dreamNarrative = singlePageNarrative;
+        }
+      }
+
+      // Apply cleanup for labeled_sections mode
+      if (determinedDocMode === 'labeled_sections' && !result._labeledCleanupApplied) {
+        result.dreamNarrative = stripPreNarrativeTemplateNoise(result.dreamNarrative || '');
+        if (result.dreamNarrative) {
+          const splitNarrative = splitDreamNarrativeBlocks(result.dreamNarrative);
+          if (splitNarrative.blocks.length) {
+            result.dreamNarrative = splitNarrative.blocks[0] || '';
+            const additionalBlocks = splitNarrative.blocks.slice(1).join('\n\n');
+            const combinedNotes = [result.dreamAdditionalNotes, splitNarrative.notes, additionalBlocks]
+              .filter(Boolean).join('\n\n').trim();
+            if (combinedNotes) result.dreamAdditionalNotes = combinedNotes;
+          }
+        }
+      }
+
       break;
-  }
-
-  // ── MAIN PARSE LOOP (unlabeled_or_template only) ─────────
-  // repeated_simple_sections and labeled_sections are fully handled by their
-  // respective builder functions above. All modes continue to the shared
-  // post-processing (symbol extraction, application routing, etc.) below.
-  const debugPageDump = bodyPages.map(page => ({
-    pageNumber: page.pageNumber,
-    raw: page.raw.slice(0, 4000),
-    normalized: page.normalized.slice(0, 4000)
-  }));
-
-  if (docMode === 'unlabeled_or_template') {
-  // Alternate templates can switch sections with page-title headings instead of
-  // field labels, while isolated decorative/sidebar labels should be ignored.
-  // Section capture stays local to the current active section until a new valid
-  // heading appears.
-  // Processes ALL lines (including blanks) to preserve paragraph structure.
-  // Blank lines within a section become paragraph breaks (\n\n).
-  const buf      = {};
-  let curField   = null;
-  let blanksSeen = 0;
-  let openingMajorField = null;
-  let seenMajorProse = false;
-
-  // Detect "Plain:" clean version block BEFORE main loop
-  let _plainNarrative = null;
-  const plainMatch = text.match(/(?:^|\n)plain:?\s*\n([\s\S]*?)(?:\n(?:brainstorm(?:ing)?|interpretation|application|symbols?|actions?|emotions?|scriptures?)\b|$)/i);
-  if (plainMatch && plainMatch[1].trim()) _plainNarrative = plainMatch[1].trim();
-
-  const lineRecords = buildPageAwareLineRecords(bodyPages);
-  // Strip doc-ID lines from top
-  let startIdx = 0;
-  while (startIdx < 3 && lineRecords[startIdx]?.line && /^\d{8,}$/.test(lineRecords[startIdx].line)) startIdx++;
-  let awaitingFirstBodyAfterTitle = !!_titleSourceLine;
-  const pastedExplicitBrainstormBoundary =
-    parserInputSource === 'pasted' &&
-    lineRecords.slice(startIdx).some(record => /^brain\s*storm(?:ing)?\s*[:\-–—]*\s*$/i.test(String(record?.line || '').trim()));
-  const repeatedSectionBlocks = parseSectionBlocks(lineRecords.slice(startIdx));
-  const useRepeatedSectionBlocks = shouldUseSectionBlocks(repeatedSectionBlocks);
-
-  if (useRepeatedSectionBlocks) {
-    const appendBlock = (field, textValue) => {
-      const text = String(textValue || '').replace(/\n{3,}/g, '\n\n').trim();
-      if (!text) return;
-      buf[field] = buf[field] ? `${buf[field]}\n\n${text}` : text;
-    };
-    const stripClaimedTitleLine = textValue => {
-      const lines = String(textValue || '').split('\n');
-      if (_titleSourceLine && normalizeWhitespace(lines[0] || '') === normalizeWhitespace(_titleSourceLine)) {
-        _titleSourceLine = null;
-        return lines.slice(1).join('\n').trim();
-      }
-      return String(textValue || '').trim();
-    };
-
-    repeatedSectionBlocks.forEach((block, index) => {
-      const blockText = block?.heading ? block.text : stripClaimedTitleLine(block?.text || '');
-      if (!blockText) return;
-      if (block.heading) {
-        appendBlock(block.heading, blockText);
-        sectionTransitions.push({ type: 'block-heading', field: block.heading, pageNumber: null, line: block.heading });
-        return;
-      }
-      if (index === 0 || isRealDreamStart(blockText.split('\n').find(Boolean) || '')) {
-        appendBlock('dreamNarrative', blockText);
-      } else if (shouldStoreUnlabelledAsAdditionalNotes(blockText, openingMajorField || curField, buf['dreamNarrative'])) {
-        appendBlock('dreamAdditionalNotes', blockText);
-      } else {
-        appendBlock('_unlabelled', blockText);
-      }
-    });
-  } else {
-    for (let li = startIdx; li < lineRecords.length; li++) {
-      const record = lineRecords[li];
-      const line = record?.line || '';
-      const splitHeading = detectSplitMajorHeading(lineRecords, li);
-
-      if (!line) {
-        // Blank line — mark a paragraph break in the current field
-        blanksSeen++;
-        if (curField && buf[curField] && !buf[curField].endsWith('\n\n')) {
-          buf[curField] += '\n';
-        }
-        continue;
-      }
-      blanksSeen = 0;
-
-      // Skip date headings — entry boundaries, not content
-      if (isDateHeading(line)) { curField = null; continue; }
-
-      // Skip isolated template/sidebar labels so they don't leak into section prose.
-      if (isTemplateNoiseLabel(line)) continue;
-
-      if (splitHeading) {
-        curField = splitHeading.field;
-        sectionTransitions.push({ type: 'split-heading', field: curField, pageNumber: record.pageNumber, line, nextLine: lineRecords[splitHeading.skipTo]?.line || '' });
-        li = splitHeading.skipTo;
-        continue;
-      }
-
-      // Standalone heading
-      const headingField = detectHeading(line, lineRecords, li, false, curField);
-      if (headingField) {
-        if (MAJOR_SECTION_FIELDS.has(headingField) && !seenMajorProse) {
-          if (!openingMajorField) {
-            openingMajorField = headingField;
-            curField = headingField;
-            sectionTransitions.push({ type: 'heading', field: headingField, pageNumber: record.pageNumber, line });
-            continue;
-          }
-          // Only skip a different major-section heading if there is NO real
-          // content following it. Previously skipped unconditionally when
-          // !seenMajorProse — this silently dropped valid section headings
-          // (e.g., "Brainstorm" after a bare "Dream" label on the title page).
-          if (openingMajorField !== headingField && !hasRealContentAhead(lineRecords, li)) {
-            console.log('[DJ][parser] MAJOR_SECTION guard: skipping empty heading:', line, '(openingMajorField:', openingMajorField + ')');
-            continue;
-          }
-        }
-        curField = headingField;
-        sectionTransitions.push({ type: 'heading', field: headingField, pageNumber: record.pageNumber, line });
-        continue;
-      }
-      if (isPlaceholderHeading(line) && !hasRealContentAhead(lineRecords, li)) {
-        curField = null;
-        sectionTransitions.push({ type: 'placeholder-heading', field: null, pageNumber: record.pageNumber, line });
-        continue;
-      }
-
-      // Inline label
-      const inlineMatch = detectInlineLabel(line);
-      if (inlineMatch) {
-        curField = inlineMatch.field;
-        if (inlineMatch.content && curField) {
-          const sep = buf[curField] ? '\n' : '';
-          buf[curField] = (buf[curField] || '') + sep + inlineMatch.content;
-          sectionTransitions.push({ type: 'inline', field: curField, pageNumber: record.pageNumber, line, captured: inlineMatch.content.slice(0, 200) });
-          if (MAJOR_SECTION_FIELDS.has(curField) && (inlineMatch.content.split(/\s+/).filter(Boolean).length >= 3 || /[.!?]/.test(inlineMatch.content))) {
-            seenMajorProse = true;
-          }
-        }
-        continue;
-      }
-
-      if (curField === 'dreamBrainstorm' && shouldResumeNarrativeFromBrainstorm(lineRecords, li)) {
-        curField = 'dreamNarrative';
-        sectionTransitions.push({ type: 'resume-narrative', from: 'dreamBrainstorm', field: curField, pageNumber: record.pageNumber, line });
-      }
-      if (!pastedExplicitBrainstormBoundary && isDreamReflectionLine(line) && (curField === 'dreamNarrative' || !!buf['dreamNarrative'])) {
-        curField = 'dreamAdditionalNotes';
-        const sep = buf[curField] ? '\n' : '';
-        buf[curField] = (buf[curField] || '') + sep + line;
-        sectionTransitions.push({ type: 'reflection-note', field: curField, pageNumber: record.pageNumber, line });
-        continue;
-      }
-
-      // Regular content — append with separator that respects paragraph breaks
-      if (curField) {
-        const sep = buf[curField] ? '\n' : '';
-        buf[curField] = (buf[curField] || '') + sep + line;
-        if (MAJOR_SECTION_FIELDS.has(curField) && (line.split(/\s+/).filter(Boolean).length >= 3 || /[.!?]/.test(line))) {
-          seenMajorProse = true;
-        }
-      } else {
-        // No heading yet — before any section headings appear, all real prose belongs to Dream Narrative.
-        // Skip the first occurrence of a line already claimed as dreamTitle by Strategy 6
-        // so the title text doesn't also appear at the start of dreamNarrative.
-        if (_titleSourceLine && line === _titleSourceLine) { _titleSourceLine = null; awaitingFirstBodyAfterTitle = true; continue; }
-        if (!openingMajorField && !buf['dreamNarrative']) {
-          if (awaitingFirstBodyAfterTitle) {
-            curField = 'dreamNarrative';
-            buf[curField] = line;
-            seenMajorProse = true;
-            awaitingFirstBodyAfterTitle = false;
-            continue;
-          }
-          if (!isRealDreamStart(line)) continue;
-          curField = 'dreamNarrative';
-          buf[curField] = line;
-          seenMajorProse = true;
-          awaitingFirstBodyAfterTitle = false;
-          continue;
-        }
-        if (!buf['_unlabelled'] && !isRealDreamStart(line)) continue;
-        awaitingFirstBodyAfterTitle = false;
-        const sep = buf['_unlabelled'] ? '\n' : '';
-        buf['_unlabelled'] = (buf['_unlabelled'] || '') + sep + line;
-      }
     }
   }
 
-  // Promote _unlabelled content: prepend to dreamNarrative if it exists, otherwise become it
-  if (buf['_unlabelled'] && buf['_unlabelled'].trim()) {
-    if (!buf['dreamNarrative'] || !buf['dreamNarrative'].trim()) {
-      buf['dreamNarrative'] = buf['_unlabelled'].trim();
-    } else if (shouldStoreUnlabelledAsAdditionalNotes(buf['_unlabelled'], openingMajorField || curField, buf['dreamNarrative'])) {
-      buf['dreamAdditionalNotes'] = [buf['dreamAdditionalNotes'], buf['_unlabelled']].filter(Boolean).join('\n\n').trim();
-    } else if (buf['dreamNarrative']) {
-      buf['dreamNarrative'] = buf['_unlabelled'] + '\n\n' + buf['dreamNarrative'];
-    } else {
-      buf['dreamNarrative'] = buf['_unlabelled'];
-    }
-  }
-  delete buf['_unlabelled'];
+  // ─────────────────────────────────────────────────────────────────────────
+  // PHASE 3: SHARED POST-PROCESSING (all modes)
+  // ─────────────────────────────────────────────────────────────────────────
 
-  // Promote "Plain:" clean version to dreamNarrative
-  if (_plainNarrative) buf['dreamNarrative'] = _plainNarrative;
-
-  // Paragraph-level reclassification for sticky line-based routing (non–block mode only).
-  if (!useRepeatedSectionBlocks && !pastedExplicitBrainstormBoundary) {
-    reclassifyUnlabeledStickyMajorFields(buf);
-  }
-
-  // ── APPLY BUFFERED CONTENT ───────────────────────────────
-  // Only protect pre-loop fields (date/title) from overwrite; content fields append
-  const PRELOOP_FIELDS = new Set(['dreamDate','dreamTitle','dreamType']);
-  const fill = (field, src) => {
-    if (!src || !src.trim()) return;
-    if (PRELOOP_FIELDS.has(field)) {
-      if (!result[field] && !isTemplatePlaceholderValue(src.trim(), field)) result[field] = src.trim();
-    } else {
-      result[field] = result[field] ? result[field] + '\n\n' + src.trim() : src.trim();
-    }
-  };
-  Object.entries(buf).forEach(([k,v]) => fill(k,v));
-
-  laterSectionFallback = classifyLaterPages(bodyPages, sectionTransitions);
-  if (docMode === 'unlabeled_or_template' && !result.dreamInterpretation && laterSectionFallback.collected.dreamInterpretation) result.dreamInterpretation = laterSectionFallback.collected.dreamInterpretation;
-  if (docMode === 'unlabeled_or_template' && !result.dreamApplication && laterSectionFallback.collected.dreamApplication) result.dreamApplication = laterSectionFallback.collected.dreamApplication;
-  if (docMode === 'unlabeled_or_template' && isSinglePagePdf && bodyPages[0]) {
-    const singlePageNarrative = extractNarrativeFromSinglePage(bodyPages[0].normalized);
-    if (singlePageNarrative && (!result.dreamNarrative || /^them[.,\s]/i.test(result.dreamNarrative) || singlePageNarrative.length > result.dreamNarrative.length)) {
-      result.dreamNarrative = singlePageNarrative;
-    }
-  }
+  // Title processing and fallback
   if (!result.dreamTitle || isTemplatePlaceholderValue(result.dreamTitle, 'dreamTitle')) {
     const inferredTitle = splitTemplatePreambleFromProse(result.dreamNarrative || '')?.titleCandidate || '';
     if (inferredTitle && !isTemplatePlaceholderValue(inferredTitle, 'dreamTitle') && !isDecorativeSidebarNoiseCluster(inferredTitle) && inferredTitle.length < 120) {
       result.dreamTitle = inferredTitle;
     }
   }
-  if (docMode === 'labeled_sections' && !result._labeledCleanupApplied) {
-    result.dreamNarrative = stripPreNarrativeTemplateNoise(result.dreamNarrative || '');
-    if (result.dreamNarrative) {
-      const splitNarrative = splitDreamNarrativeBlocks(result.dreamNarrative);
-      if (splitNarrative.blocks.length) {
-        result.dreamNarrative = splitNarrative.blocks[0] || '';
-        const additionalBlocks = splitNarrative.blocks.slice(1).join('\n\n');
-        const combinedNotes = [result.dreamAdditionalNotes, splitNarrative.notes, additionalBlocks].filter(Boolean).join('\n\n').trim();
-        if (combinedNotes) result.dreamAdditionalNotes = combinedNotes;
-      }
-    }
-    if (result.dreamNarrative) {
-      const interpretiveSplit = splitInterpretiveParagraphsFromNarrative(result.dreamNarrative);
-      if (interpretiveSplit.interpretation) {
-        result.dreamNarrative = interpretiveSplit.narrative;
-        result.dreamInterpretation = [result.dreamInterpretation, interpretiveSplit.interpretation].filter(Boolean).join('\n\n').trim();
-      }
-    }
-    if (result.dreamInterpretation) {
-      const repairedInterpretation = splitNarrativeLikeContentFromInterpretation(result.dreamInterpretation);
-      if (repairedInterpretation.narrative) {
-        result.dreamNarrative = [result.dreamNarrative, repairedInterpretation.narrative].filter(Boolean).join('\n\n').trim();
-      }
-      result.dreamInterpretation = repairedInterpretation.interpretation;
-    }
-  }
+
   let dreamNarrative = result.dreamNarrative || '';
   let dreamInterpretation = result.dreamInterpretation || '';
-  if (docMode === 'labeled_sections' && !result._labeledCleanupApplied) {
-    const split = splitNarrativeAndInterpretationLines(dreamNarrative || '', dreamInterpretation || '');
-    if (split.narrative) dreamNarrative = split.narrative;
-    if (split.interpretation) dreamInterpretation = split.interpretation;
-  }
-
-  if (docMode === 'labeled_sections' && !result._labeledCleanupApplied && (!dreamNarrative || dreamNarrative.trim().split(/\s+/).length < 12) && dreamInterpretation && dreamInterpretation.trim().split(/\s+/).length >= 20) {
-    const interpretationLooksNarrative = /\b(i|we|he|she|they)\s+(was|were|went|saw|followed|decided|looked|came)\b/i.test(dreamInterpretation);
-    // parser-fix-10: expanded to include Sydni's prophetic declaration style so interpretation
-    // content is never mis-classified as narrative and wiped from dreamInterpretation.
-    const interpretationLooksAnalytical = (
-      /(may\s+represent|this\s+dream\s+means|could\s+mean|symboli[sz]es|represents?)/i.test(dreamInterpretation) ||
-      /\bgod\s+(?:is|was|has|wants?|will)\b/i.test(dreamInterpretation) ||
-      /\bthe\s+lord\s+(?:is|was|has|wants?|will)\b/i.test(dreamInterpretation) ||
-      /\bi\s+believe\s+(?:the\s+dream|god|this)\b/i.test(dreamInterpretation) ||
-      /\bthe\s+dream\s+is\s+show(?:ing|s)\b/i.test(dreamInterpretation) ||
-      /\bgod\s+is\s+getting\s+ready\b/i.test(dreamInterpretation) ||
-      /\bgod\s+wants?\s+(?:me|us|you)\s+to\b/i.test(dreamInterpretation) ||
-      /\bhe\s+(?:is|has|will)\s+(?:orchestrat|guid|call|mov|speak|show|reveal)/i.test(dreamInterpretation) ||
-      /\bthis\s+(?:is|was)\s+(?:a\s+)?(?:call|season|time|message|word)\b/i.test(dreamInterpretation) ||
-      /\b(?:the\s+)?(?:lord|holy\s+spirit)\s+(?:is|was|has)\s+(?:show|reveal|call|speak|saying)\b/i.test(dreamInterpretation)
-    );
-    if (interpretationLooksNarrative && !interpretationLooksAnalytical) {
-      dreamNarrative = dreamInterpretation;
-      dreamInterpretation = '';
-    }
-  }
-  if (docMode === 'labeled_sections' && !result._labeledCleanupApplied && (!dreamNarrative || dreamNarrative.trim().split(/\s+/).length < 20) && dreamInterpretation) {
-    const recovered = recoverNarrativeFromInterpretation(dreamNarrative || '', dreamInterpretation || '');
-    if (recovered.narrative && recovered.narrative.trim().split(/\s+/).length > (dreamNarrative || '').trim().split(/\s+/).filter(Boolean).length) {
-      dreamNarrative = recovered.narrative;
-      dreamInterpretation = recovered.interpretation;
-    }
-  }
-
-  result.dreamNarrative = dreamNarrative;
-  result.dreamInterpretation = dreamInterpretation;
 
   ['dreamTitle', 'dreamTime', 'dreamDate', 'dreamType'].forEach(field => {
     if (isTemplatePlaceholderValue(result[field], field)) result[field] = '';
   });
+
   const leadingNarrativeCandidate = extractLeadingNarrativeCandidate(
     result.dreamNarrative || text || ''
   );
@@ -6422,11 +7443,9 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
   if (result.dreamTitle) {
     const normalizedTitle = String(result.dreamTitle).replace(/\s+/g, ' ').trim();
     const titleWords = normalizedTitle.split(/\s+/).filter(Boolean);
-
     const titleLooksLikeSidebarNoise = isDecorativeSidebarNoiseCluster(normalizedTitle);
     const titleIsTooShortNoise = titleWords.length <= 3 && titleLooksLikeSidebarNoise;
     const titleIsGeneric = /^(dream|vision)$/i.test(normalizedTitle);
-
     if (titleIsTooShortNoise || titleIsGeneric) {
       result.dreamTitle = '';
     } else {
@@ -6448,6 +7467,8 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
       result._finalTitleSource = result._finalTitleSource || 'blank';
     }
   }
+
+  // Clean up brainstorm, interpretation, application
   ['dreamBrainstorm', 'dreamInterpretation', 'dreamApplication'].forEach(field => {
     if (result[field]) result[field] = result[field]
       .split('\n')
@@ -6455,6 +7476,8 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
       .filter(line => line && !isStandaloneJunk(line) && !isTemplateNoiseLabel(line))
       .join('\n');
   });
+
+  // Symbol extraction and cleanup
   if (result.dreamNarrative) result.dreamNarrative = stripInlineSidebarNoise(result.dreamNarrative);
   if (result.dreamNarrative) {
     const glossaryExtraction = extractNarrativeSymbolGlossary(result.dreamNarrative);
@@ -6472,7 +7495,7 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
       const brainstormWordCount = (result.dreamBrainstorm || '').trim().split(/\s+/).filter(Boolean).length;
       const interpretationWordCountBefore = (result.dreamInterpretation || '').trim().split(/\s+/).filter(Boolean).length;
       const substantialBrainstormAndInterpretation =
-        docMode === 'unlabeled_or_template' &&
+        (determinedDocMode === 'unlabeled_or_template') &&
         brainstormWordCount >= 12 &&
         interpretationWordCountBefore >= 12;
       if (!result._labeledCleanupApplied && (!result.dreamNarrative || narrativeWordCount < 20) && looksLikePrimaryNarrativeBlock(interpretationRemainder)) {
@@ -6504,43 +7527,58 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
     }
     result.dreamSymbols = '';
   }
-  const refinedSymbolCandidates = extractListedSymbolEntries([
-    result.dreamSymbols,
-    result.dreamBrainstorm,
-    result.dreamInterpretation
-  ].filter(Boolean).join('\n'));
-  const refinedSymbols = prioritizeListedSymbols(
-    refinedSymbolCandidates,
-    result.dreamNarrative || '',
-    result.dreamBrainstorm || '',
-    result.dreamInterpretation || ''
-  );
-  if (refinedSymbols.length) {
-    result.dreamSymbols = refinedSymbols.join('\n');
+  const canFinalizeSymbols =
+    explicitSymbolEvidence ||
+    hasStrictSymbolGlossaryEvidence(result.dreamSymbols) ||
+    hasStrictSymbolGlossaryEvidence(result.dreamBrainstorm) ||
+    hasStrictSymbolGlossaryEvidence(result.dreamInterpretation) ||
+    looksLikeEnumeratedSymbolGlossary(result.dreamSymbols) ||
+    isLikelySymbolList(result.dreamSymbols);
+  if (canFinalizeSymbols) {
+    const refinedSymbolCandidates = extractListedSymbolEntries([
+      result.dreamSymbols,
+      result.dreamBrainstorm,
+      result.dreamInterpretation
+    ].filter(Boolean).join('\n'));
+    const refinedSymbols = prioritizeListedSymbols(
+      refinedSymbolCandidates,
+      result.dreamNarrative || '',
+      result.dreamBrainstorm || '',
+      result.dreamInterpretation || ''
+    );
+    if (refinedSymbols.length) {
+      result.dreamSymbols = refinedSymbols.join('\n');
+    }
+    const inferredSymbols = extractSymbolEntriesFromText([result.dreamBrainstorm, result.dreamInterpretation].filter(Boolean).join('\n'));
+    if (inferredSymbols.length && !refinedSymbols.length) {
+      const existing = (result.dreamSymbols || '').split('\n').map(line => line.trim()).filter(Boolean);
+      const merged = [...existing];
+      const seenSymbols = new Set(existing.map(line => line.toLowerCase()));
+      inferredSymbols.forEach(entry => {
+        const key = entry.toLowerCase();
+        if (!seenSymbols.has(key)) {
+          seenSymbols.add(key);
+          merged.push(entry);
+        }
+      });
+      result.dreamSymbols = merged.slice(0, 12).join('\n');
+    }
+  } else {
+    result.dreamSymbols = '';
   }
-  const inferredSymbols = extractSymbolEntriesFromText([result.dreamBrainstorm, result.dreamInterpretation].filter(Boolean).join('\n'));
-  if (inferredSymbols.length && !refinedSymbols.length) {
-    const existing = (result.dreamSymbols || '').split('\n').map(line => line.trim()).filter(Boolean);
-    const merged = [...existing];
-    const seenSymbols = new Set(existing.map(line => line.toLowerCase()));
-    inferredSymbols.forEach(entry => {
-      const key = entry.toLowerCase();
-      if (!seenSymbols.has(key)) {
-        seenSymbols.add(key);
-        merged.push(entry);
-      }
-    });
-    result.dreamSymbols = merged.slice(0, 12).join('\n');
+  if (result.dreamSymbols) {
+    result.dreamNarrative = stripExactSymbolLinesFromText(result.dreamNarrative, result.dreamSymbols);
+    result.dreamBrainstorm = stripExactSymbolLinesFromText(result.dreamBrainstorm, result.dreamSymbols);
+    result.dreamInterpretation = stripExactSymbolLinesFromText(result.dreamInterpretation, result.dreamSymbols);
   }
   const inferredActions = extractActionPhrasesFromNarrative(result.dreamNarrative || '');
   if (inferredActions.length) result.dreamActions = inferredActions.join('\n');
 
-  // ── DREAM TYPE: match to known values ────────────────────
+  // Dream type matching
   if (result.dreamType) {
     const known = ['Personal Dream','Warning Dream','Instruction Dream','Encouragement Dream','Prophetic Dream','Intercession Dream','Warfare Dream','Future Dream','Confirmation Dream','Teaching Dream','Destiny Dream','Correction Dream','Calling Dream','Identity Dream','Healing Dream','Deliverance Dream','Vision','Unknown'];
     const match = known.find(k => k.toLowerCase() === result.dreamType.toLowerCase());
     if (match) result.dreamType = match;
-    // If no match, leave the raw value — it may still be useful
   }
 
   // Auto-detect Vision type from first line
@@ -6548,8 +7586,7 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
     result.dreamType = 'Vision';
   }
 
-  // ── AUTO-EXTRACT SCRIPTURES from brainstorm/interpretation ───
-  // Pulls book+chapter:verse references if dreamScriptures not already set
+  // Scripture auto-extraction
   if (!result.dreamScriptures) {
     const bibleBooks = ['genesis','exodus','leviticus','numbers','deuteronomy','joshua','judges','ruth','samuel','kings','chronicles','ezra','nehemiah','esther','job','psalm','psalms','proverbs','ecclesiastes','song','isaiah','jeremiah','lamentations','ezekiel','daniel','hosea','joel','amos','obadiah','jonah','micah','nahum','habakkuk','zephaniah','haggai','zechariah','malachi','matthew','mark','luke','john','acts','romans','corinthians','galatians','ephesians','philippians','colossians','thessalonians','timothy','titus','philemon','hebrews','james','peter','jude','revelation'];
     const bibleRe = new RegExp('(?:(?:\\d\\s+)?(?:' + bibleBooks.join('|') + '))[\\s]+\\d+[:\\s]\\d+[\\-\\d]*', 'gi');
@@ -6558,8 +7595,7 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
     if (hits.length) result.dreamScriptures = hits.join('\n');
   }
 
-  // ── AUTO-EXTRACT EMOTIONS from brainstorm/interpretation ─────
-  // Pulls named feelings if dreamEmotions not already set
+  // Emotion auto-extraction
   if (!result.dreamEmotions) {
     const feelWords = ['afraid','agitated','angry','anxious','ashamed','bitter','burdened','calm','confused','confident','content','curious','desperate','disappointed','doubtful','encouraged','excited','exhausted','fearful','frustrated','glad','grieved','guilty','happy','hopeful','hopeless','humbled','hurt','insecure','joyful','lost','loved','nervous','overwhelmed','panicked','peaceful','proud','rejected','relieved','sad','scared','shameful','shocked','sorrowful','surprised','thankful','troubled','uncertain','uneasy','unsure','wary','weary','worried'];
     const feelRe = new RegExp('\\b(' + feelWords.join('|') + ')\\b', 'gi');
@@ -6568,11 +7604,11 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
     if (found.length) result.dreamEmotions = found.slice(0, 8).join(', ');
   }
 
-  // ── PREDICT DREAM TYPE from content ─────────────────────────
+  // Dream type prediction
   if (!result.dreamType && !PDF_TEMPLATE_DEBUG) result.dreamType = predictDreamType(result) || '';
   if (isTemplatePlaceholderValue(result.dreamType, 'dreamType')) result.dreamType = '';
 
-  // ── SCRIPTURE AUTO-DETECT ────────────────────────────────
+  // Scripture auto-detect from all text
   if (!result.dreamScriptures) {
     const bibleBooks = ['genesis','exodus','leviticus','numbers','deuteronomy','joshua','judges','ruth','samuel','kings','chronicles','ezra','nehemiah','esther','job','psalm','psalms','proverbs','ecclesiastes','song','isaiah','jeremiah','lamentations','ezekiel','daniel','hosea','joel','amos','obadiah','jonah','micah','nahum','habakkuk','zephaniah','haggai','zechariah','malachi','matthew','mark','luke','john','acts','romans','corinthians','galatians','ephesians','philippians','colossians','thessalonians','timothy','titus','philemon','hebrews','james','peter','jude','revelation'];
     const bibleRe = new RegExp(`(?:${bibleBooks.join('|')})[\\s]+\\d+[:\\s]\\d+`, 'gi');
@@ -6580,34 +7616,16 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
     if (hits.length) result.dreamScriptures = hits.join('\n');
   }
 
-  // ── FALLBACK NARRATIVE ───────────────────────────────────
-  // Only runs when no section headings were detected AT ALL (pure plain prose with no labels).
-  // If the parse loop filled ANY section (brainstorm, interpretation, etc.), we do NOT run
-  // the fallback — doing so would duplicate those sections' text into dreamNarrative.
-  const _anySectionFilled = Object.values(buf).some(v => v && String(v).trim());
-  if (docMode === 'unlabeled_or_template' && !result.dreamNarrative && !_anySectionFilled) {
-    const isHeadingOrLabel = s =>
-      detectHeading(s) !== null ||
-      detectInlineLabel(s) !== null ||
-      isDateHeading(s);
+  dreamNarrative = result.dreamNarrative || '';
+  dreamInterpretation = result.dreamInterpretation || '';
+  result.dreamNarrative = dreamNarrative;
+  result.dreamInterpretation = dreamInterpretation;
 
-    const groups     = text.split(/\n{2,}/);
-    const resultParas = [];
-    const seen       = new Set();
-    groups.forEach(group => {
-      const lines = group.split('\n')
-        .map(l => l.trim()).filter(l => l.length > 0)
-        .filter(l => !isHeadingOrLabel(l));
-      const unique = [];
-      lines.forEach(l => {
-        const k = l.toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
-        if (k && !seen.has(k)) { seen.add(k); unique.push(l); }
-      });
-      if (unique.length) resultParas.push(unique.join('\n'));
-    });
-    if (resultParas.length) result.dreamNarrative = resultParas.join('\n\n');
-  }
-  } // end if (docMode === 'unlabeled_or_template') — main parse loop + fallback narrative
+  const debugPageDump = bodyPages.map(page => ({
+    pageNumber: page.pageNumber,
+    raw: page.raw.slice(0, 4000),
+    normalized: page.normalized.slice(0, 4000)
+  }));
 
   if (PDF_TEMPLATE_DEBUG) {
     const parserDebugPayload = {
@@ -6641,14 +7659,14 @@ function shouldStoreUnlabelledAsAdditionalNotes(textValue, openingField, existin
     });
   }
 
-  result._docMode = docMode;
+  result._docMode = determinedDocMode;
   result._detectedHeadingCount = detectedHeadingCount;
   result._labeledSectionsDetected = labeledSectionsDetected;
   result._repeatedBlockDetected = repeatedBlocksDetected;
 
   // ── PARSER OUTPUT DEBUG LOG ──────────────────────────────────
   console.log('[DJ][parser] extractDreamData output:', {
-    docMode,
+    docMode: determinedDocMode,
     detectedHeadingCount,
     title: result.dreamTitle,
     narrativeLen: (result.dreamNarrative || '').length,
@@ -6691,7 +7709,7 @@ function enrichFromFilename(data, filename) {
 
     if (cleaned.length < 3) return '';
 
-    if (/^(scene|scene change|scene changes|another scene|next scene)$/i.test(
+    if (/^(scene|scene change[ds]?|another scene|next scene)$/i.test(
       cleaned.slice(0, 2).join(' ')
     )) return '';
 
@@ -9529,6 +10547,14 @@ let _libSearchTimer = null;
 // ── LAYER 1: 4-TAB MOBILE SWITCHER ──────────────────────────────
 // sessionStorage contract: only ever writes 'generator' or 'saved'
 // 'review' and 'print' are transient UI states (not persisted)
+function syncDesktopStickyTabsState(activeTab = document.body?.dataset.activeTab || 'generator') {
+  const body = document.body;
+  if (!body) return;
+  body.dataset.activeTab = activeTab || 'generator';
+  const shouldStick = window.matchMedia('(min-width: 768px)').matches && activeTab !== 'print';
+  body.classList.toggle('has-desktop-sticky-tabs', shouldStick);
+}
+
 function switchTab(tab) {
   // ── Panel elements
   const gen    = document.getElementById('editorSection');
@@ -9613,6 +10639,7 @@ function switchTab(tab) {
   }
 
   // Update mobile floating action bar to show buttons for the new stage
+  syncDesktopStickyTabsState(tab);
   if (typeof updateMobileFloatingBar === 'function') updateMobileFloatingBar(tab);
 }
 
@@ -10176,6 +11203,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btn) {
     btn.addEventListener('click', handleGenerateAndShowReview);
   }
+  syncDesktopStickyTabsState(document.body?.dataset.activeTab || 'generator');
+  window.addEventListener('resize', () => {
+    syncDesktopStickyTabsState(document.body?.dataset.activeTab || 'generator');
+  });
 });
 
 // ── INIT ──────────────────────────────────────────────────
