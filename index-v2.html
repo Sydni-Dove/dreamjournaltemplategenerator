@@ -811,45 +811,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   }
 }
 
-/* ── INPUT ACTION ROW ──────────────────────────────────────────── */
-.input-action-row {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .input-action-row {
-    display: none !important;
-  }
-}
-
-@media (max-width: 767px) {
-  .input-action-row {
-    display: flex;
-    position: static;
-    justify-content: flex-start;
-    gap: 0.75rem;
-    padding: 0.7rem 0 0.9rem;
-    margin-bottom: 0.2rem;
-    background: transparent;
-    border-bottom: 1px solid rgba(242,223,216,0.6);
-  }
-
-  .input-action-row .btn-generate,
-  .input-action-row .btn-ghost {
-    min-height: 48px;
-  }
-
-  .input-action-row .btn-generate {
-    flex: 1;
-    padding: 0.7rem 1.2rem;
-  }
-
-  .input-action-row .btn-ghost {
-    flex: 0 0 auto;
-    padding: 0.7rem 1.15rem;
-  }
-}
-
 /* ── GENERATE STRIP (sticky CTA on mobile) ──────────────────── */
 .generate-strip {
   position: sticky;
@@ -864,14 +825,28 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   margin-top: 1.8rem;
 }
 @media (min-width: 768px) {
-  .generate-strip { position: static; background: none; padding: 0; margin-top: 2.8rem; }
+  .generate-strip {
+    display: flex !important;
+    position: static;
+    background: none;
+    padding: 0;
+    margin-top: 2.8rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .generate-strip {
+    display: none !important;
+  }
 }
 
 /* ── REVIEW PANEL ────────────────────────────────────────────── */
 #tab-review {
+  width: 100%;
   max-width: 820px;
-  margin: 0 auto;
-  padding: 1.4rem 1.5rem 4rem;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem 4rem;
+  box-sizing: border-box;
 }
 .review-entry-nav { padding: 0 1.5rem; }
 .review-cards { padding: 0 1.5rem 1rem; }
@@ -982,19 +957,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 .review-empty p { margin-bottom: 0.5rem; }
 
-/* ── MOBILE POLISH: AUTH BAR ────────────────────────────────── */
-@media (max-width: 767px) {
-  .auth-bar { padding: 0.6rem 1rem; }
-  .auth-inner {
-    gap: 0.5rem 0.75rem;
-    row-gap: 0.5rem;
-  }
-  /* Stack the sign-in inputs + button on their own row */
-  .auth-input { width: 100%; max-width: 200px; }
-  /* Shrink the auth bar when signed in — just one row of text + buttons */
-  .auth-email-label { font-size: 0.74rem; }
-  .auth-btn { font-size: 0.76rem; padding: 0.4rem 0.85rem; min-height: 36px; }
-}
 
 /* ── MOBILE POLISH: REVIEW FILTER PILLS ─────────────────────── */
 @media (max-width: 767px) {
@@ -1050,11 +1012,108 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .m-tab-btn { min-width: 0; overflow: hidden; }
   .m-tab-btn > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* Mobile uses the inline Input action row. Hide the legacy bottom form buttons. */
-  .generate-strip { display: none !important; }
+  .gen-nav {
+    padding: 0.65rem 1rem;
+    gap: 0.45rem;
+  }
 
-  #editorSection {
-    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  .gen-nav-link {
+    min-height: 40px;
+    padding: 0.5rem 0.95rem;
+    font-size: 0.8rem;
+    justify-content: center;
+  }
+
+  .auth-bar {
+    padding: 0.75rem 1rem;
+  }
+
+  .auth-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem 0.75rem;
+    align-items: end;
+  }
+
+  .auth-label {
+    grid-column: 1 / -1;
+    margin-bottom: -0.1rem;
+  }
+
+  .auth-email-label,
+  .auth-msg {
+    grid-column: 1 / -1;
+  }
+
+  .auth-input {
+    width: 100%;
+    max-width: none;
+    min-height: 40px;
+  }
+
+  .auth-btn,
+  .auth-btn.ghost {
+    min-height: 42px;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .auth-link,
+  .auth-sep {
+    grid-column: 1 / -1;
+  }
+
+  .editor-section {
+    padding: 0 1rem;
+    margin-top: 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-eyebrow {
+    margin-top: 1.5rem;
+    margin-bottom: 0.85rem;
+    letter-spacing: 0.24em;
+  }
+
+  .acc-trigger {
+    padding: 0.72rem 0;
+  }
+
+  .acc-trigger-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.24em;
+    gap: 0.45rem;
+  }
+
+  .acc-trigger-label::after {
+    width: 24px;
+  }
+
+  .acc-trigger-tag {
+    font-size: 0.6rem;
+    max-width: 110px;
+    margin-right: 0.2rem;
+  }
+
+  .upload-zone {
+    padding: 1.35rem 1rem;
+    border-radius: 0.85rem;
+  }
+
+  .upload-zone p {
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .upload-zone p.upload-hint {
+    font-size: 0.73rem;
+    line-height: 1.5;
+  }
+
+  textarea,
+  input[type="text"],
+  select {
+    font-size: 0.95rem;
   }
 
   /* Review panel: must not exceed viewport width */
@@ -1070,6 +1129,10 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .review-cards { padding: 0 0 1rem; }
   .review-eyebrow { letter-spacing: 0.18em; }
   .review-title-label { font-size: 1.1rem; }
+
+  #editorSection {
+    padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ── PRINT PREVIEW STAGE ─────────────────────────────────────── */
@@ -1248,9 +1311,67 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
 /* ── MOBILE FLOATING ACTION BAR ─────────────────────────────── */
-/* Disabled on the form page — mobile now uses the inline Input action row. */
+/* Fixed to viewport bottom, stage-aware, safe-area padded.
+   Hidden on desktop — stage-action-bar handles desktop layout. */
 .mobile-floating-bar {
-  display: none !important;
+  display: none; /* desktop: hidden */
+}
+@media (max-width: 767px) {
+  .mobile-floating-bar {
+    display: block;
+    position: fixed;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: rgba(253, 253, 253, 0.97);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(99, 0, 0, 0.14);
+    padding: 0.65rem 1rem;
+    box-shadow: 0 -3px 16px rgba(27, 23, 23, 0.09);
+  }
+  .mfab-stage {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    width: 100%;
+  }
+  .mfab-back {
+    min-height: 48px;
+    padding: 0 1.1rem;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 1.5px solid rgba(27, 23, 23, 0.22);
+    border-radius: 100px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .mfab-back:active { background: rgba(27,23,23,0.06); }
+  .mfab-primary {
+    flex: 1;
+    min-height: 48px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fff;
+    background: linear-gradient(to right, var(--ui-accent), var(--coral));
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(99,0,0,0.22);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .mfab-primary:active  { opacity: 0.85; }
+  .mfab-primary:disabled { opacity: 0.38; cursor: default; box-shadow: none; }
 }
 
 /* ── PRINT: hide all mobile-only chrome ─────────────────────── */
@@ -1373,10 +1494,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <span class="acc-trigger-tag">Upload or paste</span>
       <span class="acc-caret">▾</span>
     </button>
-    <div class="input-action-row is-hidden" id="inputActionRow">
-      <button class="btn-ghost is-hidden" id="desktopClearBtn" type="button" onclick="clearAll(); updateDesktopActionVisibility();">Clear</button>
-      <button class="btn-generate is-hidden" id="desktopGenerateBtn" type="button" onclick="handleContinueToReview();">Continue to Review</button>
-    </div>
     <div class="acc-body" id="acc-body-input">
 
       <div class="form-block">
@@ -1577,7 +1694,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
     <button class="btn-generate" id="generateDreamBtn" type="button" onclick="handleContinueToReview();">Continue to Review</button>
   </div>
 
-</div><!-- /editorSection --></div>
+</div><!-- /editorSection -->
 
 <!-- ══ PRINT PREVIEW STAGE ════════════════════════════════════ -->
 <!-- outputSection is always in the DOM; shown/hidden by switchTab('print') -->
@@ -1711,7 +1828,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
   <!-- Print Preview bottom action bar -->
   <div class="stage-action-bar" id="printActionBar">
-    <button class="sab-back" onclick="switchTab('review')">← Review</button>
+    <button class="sab-back" onclick="closePrintPreview()">← Review</button>
     <button class="sab-primary" id="printBtn" onclick="handlePrint()">Print / Save as PDF</button>
   </div>
 
@@ -10629,6 +10746,8 @@ function syncDesktopStickyTabsState(activeTab = document.body?.dataset.activeTab
 }
 
 function switchTab(tab) {
+  const activeTab = ['generator', 'review', 'print', 'saved'].includes(tab) ? tab : 'generator';
+
   // ── Panel elements
   const gen    = document.getElementById('editorSection');
   const out    = document.getElementById('outputSection');
@@ -10647,25 +10766,23 @@ function switchTab(tab) {
     saved:     document.getElementById('mTabSaved'),
   };
 
-  // Hide all panels
-  if (gen)    gen.style.display    = 'none';
-  if (out)    out.style.display    = 'none';
-  if (saved)  saved.style.display  = 'none';
-  if (review) review.style.display = 'none';
+  // Explicit panel visibility — never rely on partial toggles or fallthrough.
+  if (gen)    gen.style.display    = activeTab === 'generator' ? 'block' : 'none';
+  if (review) review.style.display = activeTab === 'review'    ? 'block' : 'none';
+  if (out)    out.style.display    = activeTab === 'print'     ? 'block' : 'none';
+  if (saved)  saved.style.display  = activeTab === 'saved'     ? 'block' : 'none';
 
   // Clear all mobile tab active states
   Object.values(mBtns).forEach(b => { if (b) { b.classList.remove('is-active'); b.setAttribute('aria-selected','false'); } });
 
-  if (tab === 'saved') {
-    if (saved) saved.style.display = 'block';
+  if (activeTab === 'saved') {
     if (mBtns.saved)  { mBtns.saved.classList.add('is-active');  mBtns.saved.setAttribute('aria-selected','true'); }
     if (btnG) btnG.classList.remove('active');
     if (btnS) btnS.classList.add('active');
     try { sessionStorage.setItem('djTab', 'saved'); } catch {}
     loadMyJournal();
 
-  } else if (tab === 'review') {
-    if (review) review.style.display = 'block';
+  } else if (activeTab === 'review') {
     if (mBtns.review) { mBtns.review.classList.add('is-active'); mBtns.review.setAttribute('aria-selected','true'); }
     if (btnG) btnG.classList.add('active');
     if (btnS) btnS.classList.remove('active');
@@ -10673,11 +10790,10 @@ function switchTab(tab) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     renderReviewFromCurrentData();
 
-  } else if (tab === 'print') {
+  } else if (activeTab === 'print') {
     // Always show the print stage — empty state or pages depending on generation status.
     // Must use style.display = 'block' rather than '' because the CSS default is
     // display:none and .show is only added by _showPagesCore after generation.
-    if (out) out.style.display = 'block';
     // Force a synchronous reflow so outputSection.clientWidth is non-zero before
     // schedulePreviewFrameScale reads it. On iOS Safari, clientWidth returns 0
     // immediately after display:block because the browser hasn't committed the
@@ -10704,7 +10820,6 @@ function switchTab(tab) {
 
   } else {
     // default: 'generator'
-    if (gen) gen.style.display = '';
     if (mBtns.generator) { mBtns.generator.classList.add('is-active'); mBtns.generator.setAttribute('aria-selected','true'); }
     if (btnG) btnG.classList.add('active');
     if (btnS) btnS.classList.remove('active');
@@ -10712,8 +10827,8 @@ function switchTab(tab) {
   }
 
   // Update mobile floating action bar to show buttons for the new stage
-  syncDesktopStickyTabsState(tab);
-  if (typeof updateMobileFloatingBar === 'function') updateMobileFloatingBar(tab);
+  syncDesktopStickyTabsState(activeTab);
+  if (typeof updateMobileFloatingBar === 'function') updateMobileFloatingBar(activeTab);
 }
 
 // ── LAYER 1: PRINT STAGE HELPERS ────────────────────────────────
@@ -11235,20 +11350,11 @@ function syncMobileFloatingBarState() {
   if (mfabPrint)       mfabPrint.disabled       = !hasPages;
 }
 
-// ── GENERATE CONTROLLER ───────────────────────────────────
-function handleGenerateAndShowReview() {
-  handleGenerate(() => {
-    showClearAfterGenerate();
-    switchTab('review');
-    if (typeof syncMobileFloatingBarState === 'function') syncMobileFloatingBarState();
-  });
+function closePrintPreview() {
+  switchTab('review');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('generateDreamBtn');
-  if (btn) {
-    btn.addEventListener('click', handleGenerateAndShowReview);
-  }
   syncDesktopStickyTabsState(document.body?.dataset.activeTab || 'generator');
   window.addEventListener('resize', () => {
     syncDesktopStickyTabsState(document.body?.dataset.activeTab || 'generator');
@@ -11288,7 +11394,7 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
 
   <!-- Print stage: back to review, or print/export -->
   <div class="mfab-stage" id="mfabPrint" style="display:none">
-    <button class="mfab-back" onclick="switchTab('review')">← Review</button>
+    <button class="mfab-back" onclick="closePrintPreview()">← Review</button>
     <button class="mfab-primary" id="mfabPrintBtn" onclick="handlePrint()" disabled>Print / Save as PDF</button>
   </div>
 
@@ -11346,6 +11452,11 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
 <footer class="app-footer">Powered by Dove Expressions</footer>
 <script>
   function formHasMeaningfulContent() {
+    const pasteNotes = document.getElementById('pasteNotes');
+    if (pasteNotes && typeof pasteNotes.value === 'string' && pasteNotes.value.trim() !== '') {
+      return true;
+    }
+
     const fieldIds = [
       'dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm',
       'dreamInterpretation','dreamApplication','dreamSymbols','dreamScriptures','dreamAdditionalNotes'
@@ -11357,30 +11468,40 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
   }
 
   function updateDesktopActionVisibility() {
-    const actionRow = document.getElementById('inputActionRow');
-    const reviewBtn = document.getElementById('desktopGenerateBtn');
-    const clearBtn = document.getElementById('desktopClearBtn');
-    if (!actionRow || !reviewBtn || !clearBtn) return;
+    const mfabForm = document.getElementById('mfabForm');
 
-    if (formHasMeaningfulContent()) {
-      actionRow.classList.remove('is-hidden');
-      reviewBtn.classList.remove('is-hidden');
-      clearBtn.classList.remove('is-hidden');
-    } else {
-      actionRow.classList.add('is-hidden');
-      reviewBtn.classList.add('is-hidden');
-      clearBtn.classList.add('is-hidden');
+    const hasContent = formHasMeaningfulContent();
+
+    // Mobile floating bar — form stage only
+    if (mfabForm) {
+      mfabForm.style.display = hasContent ? 'flex' : 'none';
     }
   }
 
   function handleContinueToReview() {
-    if (typeof handleGenerate === 'function') {
-      handleGenerate(() => {
-        switchTab('review');
-        if (typeof syncMobileFloatingBarState === 'function') syncMobileFloatingBarState();
-      });
-    } else {
+    const onDone = () => {
       switchTab('review');
+    };
+
+    // If form fields are already populated (e.g. from upload or paste debounce),
+    // skip the re-parse path entirely — generate directly from the form and navigate.
+    const formFieldIds = ['dreamTitle','dreamDate','dreamNarrative','dreamBrainstorm','dreamInterpretation','dreamApplication'];
+    const formIsPopulated = formFieldIds.some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim() !== '';
+    });
+
+    if (formIsPopulated && typeof generateFromCurrentForm === 'function') {
+      generateFromCurrentForm();
+      onDone();
+      return;
+    }
+
+    // Form not yet populated — run full parse + generate flow (e.g. immediate tap after paste)
+    if (typeof handleGenerate === 'function') {
+      handleGenerate(onDone);
+    } else {
+      onDone();
     }
   }
 
@@ -11388,7 +11509,31 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
     const pasteEl = document.getElementById('pasteNotes');
     const fileEl = document.getElementById('fileInput');
 
-    if (pasteEl) pasteEl.addEventListener('input', updateDesktopActionVisibility);
+    if (pasteEl) {
+      let _pasteDebounce = null;
+
+      pasteEl.addEventListener('input', () => {
+        // Immediately refresh button visibility so Continue to Review appears on first keystroke
+        updateDesktopActionVisibility();
+
+        // Debounce the heavier parse + form population
+        clearTimeout(_pasteDebounce);
+        _pasteDebounce = setTimeout(() => {
+          const text = pasteEl.value.trim();
+          if (!text) return;
+          if (typeof parseDreamEntriesFromText === 'function' && typeof populateFormFromDreamData === 'function') {
+            const entries = parseDreamEntriesFromText(text, { inputSource: 'pasted' });
+            const first = entries && entries[0];
+            if (first) {
+              populateFormFromDreamData(first, { fallbackNarrativeToRaw: true });
+              if (typeof showPastedDebugFromText === 'function') showPastedDebugFromText(text, entries.length);
+              updateDesktopActionVisibility();
+            }
+          }
+        }, 500);
+      });
+    }
+
     if (fileEl) fileEl.addEventListener('change', updateDesktopActionVisibility);
 
     updateDesktopActionVisibility();
