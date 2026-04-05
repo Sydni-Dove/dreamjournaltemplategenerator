@@ -2619,11 +2619,70 @@ function extractScriptureAndRemainderFromText(textValue) {
     remainder: remainderLines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
   };
 }
+function extractLeadingStructuredNarrativeFromBrainstorm(textValue) {
+  const source = String(textValue || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  if (!source) return { narrative: '', brainstorm: '' };
+
+  const paragraphs = source
+    .split(/\n\s*\n+/)
+    .map(block => block.trim())
+    .filter(Boolean);
+  if (!paragraphs.length) return { narrative: '', brainstorm: '' };
+
+  const looksLikeNarrativeLead = line => {
+    const text = String(line || '').trim();
+    if (!text) return false;
+    return (
+      isSceneMarker(text) ||
+      /^(?:other\s+scene|another\s+scene|scene\s+change|scene\s+changes|there\s+is\s+another\s+scene|there\s+was\s+another\s+scene)\b/i.test(text) ||
+      /^(?:i\s+was|we\s+were|then\b|after\s+that\b|there\s+was\b|there\s+were\b|someone\s+was\b)\b/i.test(text)
+    );
+  };
+  const looksLikeBrainstormStop = textValue => {
+    const text = String(textValue || '').trim();
+    if (!text) return false;
+    const firstLine = text.split('\n').map(line => line.trim()).find(Boolean) || '';
+    if (looksLikeEnumeratedSymbolGlossary(text)) return true;
+    if (extractListedSymbolEntries(text).length) return true;
+    if (/^[A-Za-z][A-Za-z0-9'’()\/& ]{0,28}\s*[-–—:]\s*.+$/.test(firstLine)) return true;
+    if (/^(?:so|because|anyway|this\s+reminds\s+me|what\s+does\s+this\s+mean|am\s+i\s+representing|interesting\s+that)\b/i.test(firstLine)) return true;
+    if (/\b(?:means?|represents?|symboli[sz]es?|points?\s+to|could\s+mean|may\s+mean|might\s+mean|i\s+think|i\s+feel\s+like)\b/i.test(text)) return true;
+    return false;
+  };
+
+  const moved = [];
+  for (let i = 0; i < paragraphs.length; i++) {
+    const paragraph = paragraphs[i];
+    const firstLine = paragraph.split('\n').map(line => line.trim()).find(Boolean) || '';
+    if (i === 0) {
+      if (!looksLikeNarrativeLead(firstLine) || looksLikeBrainstormStop(paragraph)) break;
+      moved.push(paragraph);
+      continue;
+    }
+    if (looksLikeBrainstormStop(paragraph)) break;
+    const continuesNarrative =
+      looksLikeNarrativeLead(firstLine) ||
+      /\b(?:I|we|he|she|they)\s+(?:was|were|went|saw|heard|felt|walked|ran|looked|found|noticed|remember(?:ed)?|kept|started|followed|moved|came|stood|stepped|turned|got|began)\b/i.test(paragraph);
+    if (!continuesNarrative) break;
+    moved.push(paragraph);
+  }
+
+  return {
+    narrative: moved.join('\n\n').trim(),
+    brainstorm: paragraphs.slice(moved.length).join('\n\n').trim()
+  };
+}
 function lightPostProcessStructuredDreamData(data) {
   const result = { ...data };
   ['dreamNarrative','dreamBrainstorm','dreamInterpretation','dreamApplication','dreamSymbols','dreamScriptures','dreamAdditionalNotes'].forEach(field => {
     result[field] = stripStandaloneSectionHeadingLines(String(result[field] || ''));
   });
+
+  const structuredNarrativeRecovery = extractLeadingStructuredNarrativeFromBrainstorm(result.dreamBrainstorm || '');
+  if (structuredNarrativeRecovery.narrative) {
+    result.dreamNarrative = [result.dreamNarrative, structuredNarrativeRecovery.narrative].filter(Boolean).join('\n\n').trim();
+    result.dreamBrainstorm = structuredNarrativeRecovery.brainstorm;
+  }
 
   const brainstormGlossary = extractNarrativeSymbolGlossary(result.dreamBrainstorm || '');
   if (brainstormGlossary.symbols) {
@@ -4810,6 +4869,7 @@ function extractDreamData(raw, options = {}) {
       return (
         isSceneMarker(line) ||
         /^(?:other\s+scene|scene\s+changes?)\b/i.test(line) ||
+        /^(?:at\s+some\s+point|in\s+(?:a|the)\s+(?:car|room|hallway|building|house|church|restaurant|vehicle)|i\s+(?:go|walk|drive|run|move|head|enter|leave|follow|pass|find|get|got)|i\s+think\s+i\s+(?:said|was|went|saw|heard|told|got|had|walked|ran|looked|remember(?:ed)?|ended\s+up)|anyway\s+(?:so\s+)?(?:the|i|we|he|she|they)\b)\b/i.test(line) ||
         /\b(?:I|we|he|she|they)\s+(?:was|were|go|went|saw|heard|felt|walked|ran|looked|found|noticed|remember(?:ed)?|kept|started|followed|moved|came|stood|stepped|turned|got|began)\b/i.test(line) ||
         /^(?:then\s+i|after\s+that|at\s+first|there\s+was|there\s+were|someone\s+was|go(?:ing)?\s+into|walk(?:ing)?\s+in|trying\s+to|with\s+(?:a\s+)?group|my\s+parents\s+were|pastor\s+\w.+\bwas\b|there\s+was\s+going\s+to\s+be|i\s+pass\b|i['’]?(?:am|m)\s+now\s+walking|i\s+see\b|we\s+focus\b|it\s+looked\s+like|the\s+metal\s+band|i\s+reali[sz]e|i\s+think\s+we\s+all\s+begin)\b/i.test(line)
       );
@@ -4827,7 +4887,8 @@ function extractDreamData(raw, options = {}) {
       if (looksLikeEnumeratedSymbolGlossary(text)) return true;
       if (extractListedSymbolEntries(text).length) return true;
       if (/^[A-Za-z][A-Za-z0-9'’()\/& ]{0,28}\s*[-–—:]\s*.+$/.test(firstLine)) return true;
-      if (/^(?:so|because|anyway|in\s+the\s+situation\s+with|this\s+reminds\s+me|what\s+does\s+this\s+mean|am\s+i\s+representing)\b/i.test(firstLine)) return true;
+      if (/^(?:this\s+is\s+a|this\s+is\s+the|this\s+may\s+mean|it\s+represents?|it\s+means|so|because|in\s+the\s+situation\s+with|this\s+reminds\s+me|what\s+does\s+this\s+mean|am\s+i\s+representing)\b/i.test(firstLine)) return true;
+      if (/^anyway\b/i.test(firstLine) && !looksLikeNarrativeSceneLeadLine(firstLine)) return true;
       if (/\b(?:may|could|might)\s+(?:mean|represent|be|point\s+to)\b/i.test(text)) return true;
       if (/\b(?:represents?|symboli[sz]es?|means?|points?\s+to)\b/i.test(text)) return true;
       if (isInterpretationLikeLine(firstLine)) return true;

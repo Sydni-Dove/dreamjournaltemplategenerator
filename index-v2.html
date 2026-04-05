@@ -719,6 +719,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── GENERATE STRIP (sticky CTA on mobile) ──────────────────── */
 .desktop-editor-action-bar { display: none; }
+@media (max-width: 767px) {
+  .desktop-editor-action-bar { display: none !important; }
+}
 .generate-strip {
   position: sticky;
   bottom: 0;
@@ -738,26 +741,32 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 @media (min-width: 768px) {
   .desktop-editor-action-bar {
     display: block;
-    position: sticky;
-    top: 0;
-    z-index: 145;
-    margin: 0 -1.5rem 1.5rem;
+    position: fixed;
+    top: 180px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(820px, calc(100vw - 3rem));
+    z-index: 170;
     background: rgba(253,253,253,0.96);
-    border-top: 1px solid rgba(242,223,216,0.75);
-    border-bottom: 1px solid rgba(242,223,216,0.9);
-    box-shadow: 0 2px 8px rgba(27,23,23,0.05);
+    border: 1px solid rgba(242,223,216,0.9);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(27,23,23,0.08);
     backdrop-filter: saturate(180%) blur(10px);
     -webkit-backdrop-filter: saturate(180%) blur(10px);
   }
 
   .desktop-editor-action-bar .desktop-editor-action-inner {
-    max-width: 820px;
+    width: 100%;
     margin: 0 auto;
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 1rem;
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
     flex-wrap: wrap;
+  }
+
+  #editorSection {
+    padding-top: 6.5rem;
   }
 }
 
@@ -1214,6 +1223,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .acc-trigger        { display: none !important; }
   .acc-body           { max-height: none !important; opacity: 1 !important; pointer-events: auto !important; transition: none !important; }
   #tab-review         { display: none !important; }
+  .desktop-editor-action-bar { display: none !important; }
   .generate-strip     { display: none !important; }
   .stage-action-bar   { display: none !important; }
   .mobile-floating-bar { display: none !important; }
