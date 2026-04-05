@@ -811,37 +811,42 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   }
 }
 
-/* ── INPUT ACTION ROW (sticky Generate/Clear on desktop) ──────── */
+/* ── INPUT ACTION ROW ──────────────────────────────────────────── */
 .input-action-row {
   display: none;
 }
 
 @media (min-width: 768px) {
   .input-action-row {
-    display: flex;
-    position: sticky;
-    top: 0;
-    z-index: 124;
-    justify-content: flex-end;
-    gap: 0.55rem;
-    padding: 0.7rem 0 0.9rem;
-    margin-bottom: 0.2rem;
-    background: rgba(253,253,253,0.96);
-    border-bottom: 1px solid rgba(242,223,216,0.6);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
-
-  .input-action-row .btn-generate,
-  .input-action-row .btn-ghost {
-    min-height: 40px;
-    padding: 0.6rem 1.25rem;
+    display: none !important;
   }
 }
 
 @media (max-width: 767px) {
   .input-action-row {
-    display: none !important;
+    display: flex;
+    position: static;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    padding: 0.7rem 0 0.9rem;
+    margin-bottom: 0.2rem;
+    background: transparent;
+    border-bottom: 1px solid rgba(242,223,216,0.6);
+  }
+
+  .input-action-row .btn-generate,
+  .input-action-row .btn-ghost {
+    min-height: 48px;
+  }
+
+  .input-action-row .btn-generate {
+    flex: 1;
+    padding: 0.7rem 1.2rem;
+  }
+
+  .input-action-row .btn-ghost {
+    flex: 0 0 auto;
+    padding: 0.7rem 1.15rem;
   }
 }
 
@@ -1045,8 +1050,12 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .m-tab-btn { min-width: 0; overflow: hidden; }
   .m-tab-btn > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* On mobile the floating action bar handles Generate — hide the sticky strip to avoid duplicate */
-  .generate-strip { display: none; }
+  /* Mobile uses the inline Input action row. Hide the legacy bottom form buttons. */
+  .generate-strip { display: none !important; }
+
+  #editorSection {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
 
   /* Review panel: must not exceed viewport width */
   #tab-review {
@@ -1239,74 +1248,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
 /* ── MOBILE FLOATING ACTION BAR ─────────────────────────────── */
-/* Fixed to viewport bottom, stage-aware, safe-area padded.
-   Hidden on desktop (stage-action-bar stays visible there). */
+/* Disabled on the form page — mobile now uses the inline Input action row. */
 .mobile-floating-bar {
-  display: none; /* desktop: hidden */
-}
-@media (max-width: 767px) {
-  .mobile-floating-bar {
-    display: block;
-    position: fixed;
-    /* Sits just above the fixed bottom tab nav (60px) + safe area */
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-    left: 0;
-    right: 0;
-    z-index: 200; /* above tab nav z-index: 100 */
-    background: rgba(253, 253, 253, 0.97);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(99, 0, 0, 0.14);
-    padding: 0.65rem 1rem;
-    box-shadow: 0 -3px 16px rgba(27, 23, 23, 0.09);
-  }
-  .mfab-stage {
-    display: flex;
-    gap: 0.55rem;
-    align-items: center;
-    width: 100%;
-  }
-  .mfab-back {
-    min-height: 48px;
-    padding: 0 1.1rem;
-    font-family: 'Lato', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text);
-    background: transparent;
-    border: 1.5px solid rgba(27, 23, 23, 0.22);
-    border-radius: 100px;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .mfab-back:active { background: rgba(27,23,23,0.06); }
-  .mfab-primary {
-    flex: 1;
-    min-height: 48px;
-    font-family: 'Lato', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: #fff;
-    background: linear-gradient(to right, var(--ui-accent), var(--coral));
-    border: none;
-    border-radius: 100px;
-    cursor: pointer;
-    box-shadow: 0 3px 12px rgba(99,0,0,0.22);
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .mfab-primary:active  { opacity: 0.85; }
-  .mfab-primary:disabled { opacity: 0.38; cursor: default; box-shadow: none; }
-
-  /* Compensate bottom padding — content must clear both the floating bar (~70px)
-     AND the fixed tab nav (60px) — plus safe area inset */
-  #editorSection       { padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
-  #tab-review          { padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
-  .output-section      { padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
+  display: none !important;
 }
 
 /* ── PRINT: hide all mobile-only chrome ─────────────────────── */
@@ -11330,10 +11274,10 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
 ═══════════════════════════════════════════════════════════════ -->
 <div id="mobileFloatingBar" class="mobile-floating-bar" role="navigation" aria-label="Stage navigation">
 
-  <!-- Form stage: primary action is Generate & Review; secondary is Clear Generator -->
+  <!-- Form stage: primary action is Continue to Review -->
   <div class="mfab-stage" id="mfabForm">
     <button class="mfab-back" onclick="clearAll()">Clear</button>
-    <button class="mfab-primary" onclick="handleGenerateAndShowReview()">Generate &amp; Review</button>
+    <button class="mfab-primary" onclick="handleContinueToReview()">Continue to Review</button>
   </div>
 
   <!-- Review stage: back to form, or continue to Print Preview -->
