@@ -71,8 +71,67 @@ body { font-family: 'Lato', sans-serif; background: var(--soft-bg); color: var(-
 .upload-msg.ok  { color: #5a8a5a; }
 .upload-msg.err { color: #a04040; }
 .upload-msg.spin { color: var(--gold); }
-.debug-panel { margin-top: 0.9rem; border: 1px solid rgba(99,0,0,0.18); border-radius: 0.75rem; background: #fffaf7; padding: 0.9rem 1rem; display: none; }
+.debug-panel { margin-top: 0; border: none; border-top: 1px solid rgba(99,0,0,0.08); border-radius: 0; background: transparent; padding: 0.9rem 1rem; display: none; }
 .debug-panel.show { display: block; }
+
+.parser-debug-shell {
+  margin-top: 0.9rem;
+  border: 1px solid rgba(99,0,0,0.14);
+  border-radius: 0.75rem;
+  background: #fffaf7;
+  overflow: hidden;
+}
+
+.parser-debug-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.parser-debug-toggle-label {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.parser-debug-toggle-meta {
+  font-family: 'Lora', serif;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--text-light);
+  margin-left: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.parser-debug-toggle-caret {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.parser-debug-shell.is-open .parser-debug-toggle-caret {
+  transform: rotate(180deg);
+}
+
+@media (min-width: 768px) {
+  .parser-debug-shell {
+    margin-top: 1rem;
+  }
+}
 .debug-panel-title { font-family: 'Playfair Display', serif; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--primary); margin-bottom: 0.7rem; }
 .debug-grid { display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
 .debug-item { border-top: 1px solid rgba(99,0,0,0.08); padding-top: 0.55rem; }
@@ -97,6 +156,26 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-generate:hover { opacity: 0.92; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,0,0,0.3); }
 .btn-ghost { font-family: 'Lato', sans-serif; font-size: 0.88rem; font-weight: 500; color: var(--text); background: var(--pale-pink); border: 1px solid rgba(99,0,0,0.2); border-radius: 100px; padding: 0.7rem 1.8rem; cursor: pointer; transition: background 0.2s, color 0.2s; }
 .btn-ghost:hover { background: rgba(99,0,0,0.1); color: var(--primary); }
+.is-hidden {
+  display: none !important;
+}
+.acc-trigger-with-actions {
+  align-items: center;
+}
+.acc-trigger-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+.acc-trigger-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
 .btn-save { font-family: 'Lato', sans-serif; font-size: 0.88rem; font-weight: 500; color: var(--primary); background: transparent; border: 1.5px solid var(--primary); border-radius: 100px; padding: 0.7rem 2rem; cursor: pointer; transition: background 0.2s, color 0.2s; }
 .btn-save:hover { background: var(--primary); color: var(--white); }
 .extra-pages-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
@@ -238,8 +317,8 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .j-sec-label { font-family: 'Playfair Display', serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--pg-primary); white-space: nowrap; flex-shrink: 0; }
 .j-sec-rule { flex: 1; min-width: 0.1in; height: 1px; background: linear-gradient(to right, var(--pg-accent), transparent); opacity: 0.55; }
 .j-sec-wrap { position: relative; min-width: 0; max-width: 100%; }
-.j-writing-wrap { flex: 1 1 auto; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
-.j-writing-shell { position: relative; flex: 1 1 auto; min-height: 0; min-width: 0; max-width: 100%; }
+.j-writing-wrap { flex: 1 1 auto; min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.j-writing-shell { position: relative; flex: 1 1 auto; min-height: 0; min-width: 0; max-width: 100%; overflow: hidden; }
 .j-writing-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; background: none; }
 .j-writing-content { position: relative; z-index: 1; min-height: 0; min-width: 0; max-width: 100%; }
 .j-narrative { font-family: 'Lora', serif; font-size: 0.92rem; font-style: italic; color: var(--pg-text); line-height: 1.82; padding: 0.04in 0 0.04in 14px; min-height: 2in; height: auto; max-width: 100%; border-left: 3px solid var(--pg-primary); word-wrap: break-word; overflow-wrap: anywhere; word-break: break-word; overflow: visible; display: block; }
@@ -703,25 +782,70 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   padding-bottom: 1.2rem;
   transition: max-height 0.38s ease-in, opacity 0.25s ease 0.04s;
 }
-/* Desktop: all accordions always open, toggle chrome hidden */
 @media (min-width: 768px) {
-  .acc-trigger { pointer-events: none; }
-  .acc-caret   { display: none; }
   .acc-group:first-child { margin-top: 0; }
-  .acc-body, .acc-group.is-open .acc-body {
-    max-height: none !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    transition: none !important;
-    padding-bottom: 0 !important;
+
+  .acc-trigger {
+    pointer-events: auto;
+  }
+
+  .acc-caret {
+    display: inline-block;
+  }
+
+  .acc-body {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: max-height 0.28s ease-out, opacity 0.2s ease;
+    padding-bottom: 0;
+  }
+
+  .acc-group.is-open .acc-body {
+    max-height: 6000px;
+    opacity: 1;
+    pointer-events: auto;
+    padding-bottom: 1.2rem;
+    transition: max-height 0.38s ease-in, opacity 0.25s ease 0.04s;
+  }
+}
+
+/* ── INPUT ACTION ROW (sticky Generate/Clear on desktop) ──────── */
+.input-action-row {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .input-action-row {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 124;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    padding: 0.7rem 0 0.9rem;
+    margin-bottom: 0.2rem;
+    background: rgba(253,253,253,0.96);
+    border-bottom: 1px solid rgba(242,223,216,0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .input-action-row .btn-generate,
+  .input-action-row .btn-ghost {
+    min-height: 40px;
+    padding: 0.6rem 1.25rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .input-action-row {
+    display: none !important;
   }
 }
 
 /* ── GENERATE STRIP (sticky CTA on mobile) ──────────────────── */
-.desktop-editor-action-bar { display: none; }
-@media (max-width: 767px) {
-  .desktop-editor-action-bar { display: none !important; }
-}
 .generate-strip {
   position: sticky;
   bottom: 0;
@@ -736,38 +860,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 @media (min-width: 768px) {
   .generate-strip { position: static; background: none; padding: 0; margin-top: 2.8rem; }
-}
-
-@media (min-width: 768px) {
-  .desktop-editor-action-bar {
-    display: block;
-    position: fixed;
-    top: 180px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(820px, calc(100vw - 3rem));
-    z-index: 170;
-    background: rgba(253,253,253,0.96);
-    border: 1px solid rgba(242,223,216,0.9);
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(27,23,23,0.08);
-    backdrop-filter: saturate(180%) blur(10px);
-    -webkit-backdrop-filter: saturate(180%) blur(10px);
-  }
-
-  .desktop-editor-action-bar .desktop-editor-action-inner {
-    width: 100%;
-    margin: 0 auto;
-    padding: 0.75rem 1rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  #editorSection {
-    padding-top: 6.5rem;
-  }
 }
 
 /* ── REVIEW PANEL ────────────────────────────────────────────── */
@@ -1223,7 +1315,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .acc-trigger        { display: none !important; }
   .acc-body           { max-height: none !important; opacity: 1 !important; pointer-events: auto !important; transition: none !important; }
   #tab-review         { display: none !important; }
-  .desktop-editor-action-bar { display: none !important; }
   .generate-strip     { display: none !important; }
   .stage-action-bar   { display: none !important; }
   .mobile-floating-bar { display: none !important; }
@@ -1330,13 +1421,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
 <!-- EDITOR (TAB: FORM) — id="editorSection" kept for bridge/clearAll compatibility -->
 <div class="editor-section" id="editorSection">
-  <div class="desktop-editor-action-bar" id="desktopEditorActionBar">
-    <div class="desktop-editor-action-inner">
-      <button class="btn-ghost" type="button" onclick="clearAll()">Clear</button>
-      <button class="btn-generate" type="button" onclick="handleGenerate()">Generate</button>
-    </div>
-  </div>
-
   <!-- ══ ACCORDION: INPUT ══════════════════════════════════════ -->
   <!-- Upload + Paste — open by default -->
   <div class="acc-group is-open" id="acc-input">
@@ -1345,6 +1429,10 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
       <span class="acc-trigger-tag">Upload or paste</span>
       <span class="acc-caret">▾</span>
     </button>
+    <div class="input-action-row is-hidden" id="inputActionRow">
+      <button class="btn-ghost is-hidden" id="desktopClearBtn" type="button" onclick="clearAll(); updateDesktopActionVisibility();">Clear</button>
+      <button class="btn-generate is-hidden" id="desktopGenerateBtn" type="button" onclick="handleContinueToReview();">Continue to Review</button>
+    </div>
     <div class="acc-body" id="acc-body-input">
 
       <div class="form-block">
@@ -1358,30 +1446,37 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
           <p class="upload-hint">Upload PDF, DOCX, TXT, or a photo of handwritten notes • Multiple dated entries split into separate journal page sets automatically • Sections labeled Dream:, Symbols:, Interpretation:, etc. map to the right fields</p>
         </div>
         <div class="upload-msg" id="uploadMsg"></div>
-        <div class="debug-panel" id="debugPanel">
-          <div class="debug-panel-title">Parser Debug</div>
-          <div class="debug-grid">
-            <div class="debug-meta">
-              <div class="debug-item"><div class="debug-label">Build</div><div class="debug-value" id="dbgBuild"></div></div>
-              <div class="debug-item"><div class="debug-label">Detected Entry Count</div><div class="debug-value" id="dbgEntryCount"></div></div>
-              <div class="debug-item"><div class="debug-label">Doc Mode</div><div class="debug-value" id="dbgDocMode"></div></div>
-              <div class="debug-item"><div class="debug-label">Detected Heading Count</div><div class="debug-value" id="dbgHeadingCount"></div></div>
-              <div class="debug-item"><div class="debug-label">Labeled Sections</div><div class="debug-value" id="dbgLabeledDetected"></div></div>
-              <div class="debug-item"><div class="debug-label">Repeated Blocks</div><div class="debug-value" id="dbgRepeatedDetected"></div></div>
+        <div class="parser-debug-shell" id="parserDebugShell">
+          <button class="parser-debug-toggle" id="parserDebugToggle" type="button" onclick="toggleParserDebug()" aria-expanded="false" aria-controls="debugPanel">
+            <span class="parser-debug-toggle-label">Parser Debug</span>
+            <span class="parser-debug-toggle-meta">Show extraction details</span>
+            <span class="parser-debug-toggle-caret" id="parserDebugCaret">▾</span>
+          </button>
+          <div class="debug-panel" id="debugPanel">
+            <div class="debug-panel-title">Parser Debug</div>
+            <div class="debug-grid">
+              <div class="debug-meta">
+                <div class="debug-item"><div class="debug-label">Build</div><div class="debug-value" id="dbgBuild"></div></div>
+                <div class="debug-item"><div class="debug-label">Detected Entry Count</div><div class="debug-value" id="dbgEntryCount"></div></div>
+                <div class="debug-item"><div class="debug-label">Doc Mode</div><div class="debug-value" id="dbgDocMode"></div></div>
+                <div class="debug-item"><div class="debug-label">Detected Heading Count</div><div class="debug-value" id="dbgHeadingCount"></div></div>
+                <div class="debug-item"><div class="debug-label">Labeled Sections</div><div class="debug-value" id="dbgLabeledDetected"></div></div>
+                <div class="debug-item"><div class="debug-label">Repeated Blocks</div><div class="debug-value" id="dbgRepeatedDetected"></div></div>
+              </div>
+              <div class="debug-item"><div class="debug-label">Title</div><div class="debug-value" id="dbgTitle"></div></div>
+              <div class="debug-item"><div class="debug-label">Top Document Title Candidate</div><div class="debug-value" id="dbgTopTitleCandidate"></div></div>
+              <div class="debug-item"><div class="debug-label">Filename Title Candidate</div><div class="debug-value" id="dbgFilenameTitleCandidate"></div></div>
+              <div class="debug-item"><div class="debug-label">Narrative Title Candidate</div><div class="debug-value" id="dbgNarrativeTitleCandidate"></div></div>
+              <div class="debug-item"><div class="debug-label">Final Title Source</div><div class="debug-value" id="dbgFinalTitleSource"></div></div>
+              <div class="debug-item"><div class="debug-label">Date</div><div class="debug-value" id="dbgDate"></div></div>
+              <div class="debug-item"><div class="debug-label">Dream Narrative</div><div class="debug-value" id="dbgNarrative"></div></div>
+              <div class="debug-item"><div class="debug-label">Brainstorm</div><div class="debug-value" id="dbgBrainstorm"></div></div>
+              <div class="debug-item"><div class="debug-label">Interpretation</div><div class="debug-value" id="dbgInterpretation"></div></div>
+              <div class="debug-item"><div class="debug-label">Application</div><div class="debug-value" id="dbgApplication"></div></div>
+              <div class="debug-item"><div class="debug-label">Symbols</div><div class="debug-value" id="dbgSymbols"></div></div>
+              <div class="debug-item"><div class="debug-label">Additional Notes</div><div class="debug-value" id="dbgNotes"></div></div>
+              <div class="debug-item"><div class="debug-label">Raw Preview</div><div class="debug-value" id="dbgRawPreview"></div></div>
             </div>
-            <div class="debug-item"><div class="debug-label">Title</div><div class="debug-value" id="dbgTitle"></div></div>
-            <div class="debug-item"><div class="debug-label">Top Document Title Candidate</div><div class="debug-value" id="dbgTopTitleCandidate"></div></div>
-            <div class="debug-item"><div class="debug-label">Filename Title Candidate</div><div class="debug-value" id="dbgFilenameTitleCandidate"></div></div>
-            <div class="debug-item"><div class="debug-label">Narrative Title Candidate</div><div class="debug-value" id="dbgNarrativeTitleCandidate"></div></div>
-            <div class="debug-item"><div class="debug-label">Final Title Source</div><div class="debug-value" id="dbgFinalTitleSource"></div></div>
-            <div class="debug-item"><div class="debug-label">Date</div><div class="debug-value" id="dbgDate"></div></div>
-            <div class="debug-item"><div class="debug-label">Dream Narrative</div><div class="debug-value" id="dbgNarrative"></div></div>
-            <div class="debug-item"><div class="debug-label">Brainstorm</div><div class="debug-value" id="dbgBrainstorm"></div></div>
-            <div class="debug-item"><div class="debug-label">Interpretation</div><div class="debug-value" id="dbgInterpretation"></div></div>
-            <div class="debug-item"><div class="debug-label">Application</div><div class="debug-value" id="dbgApplication"></div></div>
-            <div class="debug-item"><div class="debug-label">Symbols</div><div class="debug-value" id="dbgSymbols"></div></div>
-            <div class="debug-item"><div class="debug-label">Additional Notes</div><div class="debug-value" id="dbgNotes"></div></div>
-            <div class="debug-item"><div class="debug-label">Raw Preview</div><div class="debug-value" id="dbgRawPreview"></div></div>
           </div>
         </div>
       </div>
@@ -1535,7 +1630,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   <!-- ══ STICKY GENERATE CTA (Step 1 → Step 2) ════════════════ -->
   <div class="generate-strip">
     <button class="btn-ghost" onclick="clearAll()">Clear</button>
-    <button class="btn-generate" id="generateDreamBtn" type="button">Generate</button>
+    <button class="btn-generate" id="generateDreamBtn" type="button" onclick="handleContinueToReview();">Continue to Review</button>
   </div>
 
 </div><!-- /editorSection --></div>
@@ -1741,6 +1836,7 @@ let pendingPages      = [];
 let lastGeneratedData = [];
 let lastParsedEntryForGeneration = null;
 let previewDebugEnabled = false;
+let currentInputSource = null; // 'paste' | 'upload' | null
 const PREVIEW_SCALE_SETTLE_DELAYS_MS = [120, 360];
 
 // ═════════════════════════════════════════════════════════════
@@ -1753,10 +1849,25 @@ function setDebugField(id, value) {
   el.textContent = text || '—';
 }
 
+function toggleParserDebug(forceOpen) {
+  const shell = document.getElementById('parserDebugShell');
+  const panel = document.getElementById('debugPanel');
+  const toggle = document.getElementById('parserDebugToggle');
+  if (!shell || !panel || !toggle) return;
+
+  const shouldOpen = typeof forceOpen === 'boolean'
+    ? forceOpen
+    : !shell.classList.contains('is-open');
+
+  shell.classList.toggle('is-open', shouldOpen);
+  panel.classList.toggle('show', shouldOpen);
+  toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+}
+
 function showParserDebug(data, meta = {}) {
   const panel = document.getElementById('debugPanel');
   if (!panel) return;
-  panel.classList.add('show');
+  toggleParserDebug(true);
 
   setDebugField('dbgBuild', meta.build || window.__DJ_BUILD || 'unknown');
   setDebugField('dbgEntryCount', meta.entryCount || '1');
@@ -1797,8 +1908,7 @@ function showPastedDebugFromText(rawText, entryCountOverride) {
 }
 
 function clearParserDebug() {
-  const panel = document.getElementById('debugPanel');
-  if (panel) panel.classList.remove('show');
+  toggleParserDebug(false);
   [
     'dbgBuild','dbgEntryCount','dbgDocMode','dbgHeadingCount','dbgLabeledDetected','dbgRepeatedDetected','dbgTitle','dbgDate','dbgNarrative',
     'dbgTopTitleCandidate','dbgFilenameTitleCandidate','dbgNarrativeTitleCandidate','dbgFinalTitleSource',
@@ -2483,6 +2593,7 @@ function applyUploadFlowResultToUi(result) {
   if (finalResult.populateData) {
     if (finalResult.pendingEntries?.length) populateFormFromPendingEntry(finalResult.populateData);
     else populateFormFromDreamData(finalResult.populateData, { fallbackNarrativeToRaw: true });
+    if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
   }
   if (finalResult.parserDebug?.data) {
     showParserDebug(finalResult.parserDebug.data, finalResult.parserDebug.meta || {});
@@ -2492,7 +2603,10 @@ function applyUploadFlowResultToUi(result) {
     document.getElementById('pasteNotes')?.scrollIntoView({ behavior:'smooth', block:'center' });
   }
   if (finalResult.shouldGenerate) {
-    setTimeout(() => generateFromCurrentState(), finalResult.generateDelayMs || 0);
+    setTimeout(() => {
+      generateFromCurrentState();
+      if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
+    }, finalResult.generateDelayMs || 0);
   }
 }
 
@@ -7797,7 +7911,7 @@ function setField(id, val) {
 }
 
 // ── GENERATION TRIGGER LAYER ────────────────────────────
-function handleGenerate() {
+function handleGenerate(onComplete) {
   console.log('[DJ] handleGenerate() called');
   const { files, pastedText } = collectInputSources();
   const hasFiles = files.length > 0;
@@ -7814,6 +7928,7 @@ function handleGenerate() {
     if (allData[0]) populateFormFromDreamData(allData[0], { fallbackNarrativeToRaw: true });
     console.log('[DJ] handleGenerate: batch from pendingPages, count:', allData.length);
     generateFromEntryArray(allData);
+    if (typeof onComplete === 'function') onComplete();
     return;
   }
 
@@ -7826,6 +7941,7 @@ function handleGenerate() {
       setMsg(`Detected ${parsedEntries.length} dated entries — generating ${parsedEntries.length} separate journal page sets.`, 'ok');
       console.log('[DJ] handleGenerate: batch from dated entries, count:', parsedEntries.length);
       generateFromEntryArray(parsedEntries);
+      if (typeof onComplete === 'function') onComplete();
       return;
     }
     // ── SINGLE: paste with single entry ───────────────────
@@ -7836,6 +7952,7 @@ function handleGenerate() {
       setMsg('✓ Fields populated. Review and edit freely.', 'ok');
       console.log('[DJ] handleGenerate: single entry from paste → form path');
       generateFromCurrentForm();
+      if (typeof onComplete === 'function') onComplete();
     }, 200);
     return;
   }
@@ -7843,6 +7960,7 @@ function handleGenerate() {
   // ── SINGLE: form-only / file already populated form ──────
   console.log('[DJ] handleGenerate: single entry from form');
   generateFromCurrentForm();
+  if (typeof onComplete === 'function') onComplete();
 }
 
 function generateFromForm() {
@@ -10355,6 +10473,7 @@ bindPrintVisibilityGuards();
 // ── CLEAR ──────────────────────────────────────────────
 function clearAll() {
   pendingPages = [];
+  currentInputSource = null;
   ['dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm','dreamActions','dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication','dreamAdditionalNotes','dreamContextSource','dreamTheme','sumDream','sumInterpretation','sumApplication','pasteNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['dreamType','dreamerInvolvement'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['xHeader','xDream','xBrainstorm','xKeys','xInterpretation','xApplication'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '0'; });
@@ -11174,38 +11293,11 @@ function syncMobileFloatingBarState() {
 
 // ── GENERATE CONTROLLER ───────────────────────────────────
 function handleGenerateAndShowReview() {
-  if (typeof handleGenerate !== 'function') return;
-
-  handleGenerate();
-
-  if (typeof renderReviewFromCurrentData === 'function') {
-    renderReviewFromCurrentData();
-  }
-
-  const data = (typeof collectCurrentDreamFormData === 'function')
-    ? collectCurrentDreamFormData()
-    : null;
-
-  const hasRenderableContent = !!(
-    data && (
-      String(data.dreamTitle || '').trim() ||
-      String(data.dreamNarrative || '').trim() ||
-      String(data.dreamBrainstorm || '').trim() ||
-      String(data.dreamInterpretation || '').trim() ||
-      String(data.dreamApplication || '').trim()
-    )
-  );
-
-  const reviewPrintBtn = document.getElementById('reviewPrintBtn');
-  if (reviewPrintBtn) {
-    reviewPrintBtn.disabled = !hasRenderableContent;
-  }
-  // Sync floating bar — pages may not exist yet (async), but content check sets initial state
-  if (typeof syncMobileFloatingBarState === 'function') syncMobileFloatingBarState();
-
-  if (hasRenderableContent && typeof switchTab === 'function') {
+  handleGenerate(() => {
+    showClearAfterGenerate();
     switchTab('review');
-  }
+    if (typeof syncMobileFloatingBarState === 'function') syncMobileFloatingBarState();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11308,5 +11400,55 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
   </div>
 </div>
 <footer class="app-footer">Powered by Dove Expressions</footer>
+<script>
+  function formHasMeaningfulContent() {
+    const fieldIds = [
+      'dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm',
+      'dreamInterpretation','dreamApplication','dreamSymbols','dreamScriptures','dreamAdditionalNotes'
+    ];
+    return fieldIds.some(id => {
+      const el = document.getElementById(id);
+      return el && typeof el.value === 'string' && el.value.trim() !== '';
+    });
+  }
+
+  function updateDesktopActionVisibility() {
+    const actionRow = document.getElementById('inputActionRow');
+    const reviewBtn = document.getElementById('desktopGenerateBtn');
+    const clearBtn = document.getElementById('desktopClearBtn');
+    if (!actionRow || !reviewBtn || !clearBtn) return;
+
+    if (formHasMeaningfulContent()) {
+      actionRow.classList.remove('is-hidden');
+      reviewBtn.classList.remove('is-hidden');
+      clearBtn.classList.remove('is-hidden');
+    } else {
+      actionRow.classList.add('is-hidden');
+      reviewBtn.classList.add('is-hidden');
+      clearBtn.classList.add('is-hidden');
+    }
+  }
+
+  function handleContinueToReview() {
+    if (typeof handleGenerate === 'function') {
+      handleGenerate(() => {
+        switchTab('review');
+        if (typeof syncMobileFloatingBarState === 'function') syncMobileFloatingBarState();
+      });
+    } else {
+      switchTab('review');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const pasteEl = document.getElementById('pasteNotes');
+    const fileEl = document.getElementById('fileInput');
+
+    if (pasteEl) pasteEl.addEventListener('input', updateDesktopActionVisibility);
+    if (fileEl) fileEl.addEventListener('change', updateDesktopActionVisibility);
+
+    updateDesktopActionVisibility();
+  });
+</script>
 </body>
 </html>
