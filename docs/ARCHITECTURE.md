@@ -48,6 +48,83 @@
 
 ---
 
+## Current UI Control Architecture
+
+### Breakpoint CTA model
+
+The generator now uses one CTA system per breakpoint for the Form stage:
+
+- Desktop Form CTA: `.generate-strip`
+- Mobile Form CTA: `.mobile-floating-bar`
+
+Current breakpoint truth:
+
+- `.generate-strip` is the desktop Form-stage CTA container.
+- `.generate-strip` is hidden on mobile.
+- `.mobile-floating-bar` is the mobile stage CTA container.
+- `.mobile-floating-bar` is hidden on desktop.
+
+This is the intended control architecture. There should be exactly one active CTA system per breakpoint.
+
+### Removed / legacy UI systems
+
+The following systems are removed / legacy and must not be treated as active architecture:
+
+- `.desktop-editor-action-bar`
+- `.desktop-editor-action-inner`
+- `desktopEditorActionBar`
+- `.input-action-row`
+- `inputActionRow`
+
+These systems were retired to eliminate overlapping action models, reduce UI regression risk, and keep breakpoint behavior deterministic.
+
+If stale remnants appear during merge resolution or partial cleanup, they are deprecated implementation residue, not current architecture.
+
+### Accordion behavior
+
+Current screen behavior:
+
+- Desktop accordions remain collapsible.
+- Mobile accordions remain collapsible.
+- There is no desktop force-open accordion override in the intended screen model.
+
+Current print behavior:
+
+- Print mode intentionally forces accordion content open at print time.
+- Print hides accordion triggers so collapsed sections do not disappear from print output.
+
+Screen interaction behavior and print-open behavior must remain separate concerns. Screen-state fixes should not be implemented by forcing screen accordions open, and print-state fixes should stay in print-specific behavior.
+
+### Stage / view model
+
+The current generator UX is stage-based:
+
+- Form stage — input, upload, and editing
+- Review stage — structured review of the current dream entry
+- Print stage — print preview / export controls and generated page sheets
+
+Stage intent:
+
+- Form controls should not leak into print output.
+- Review and Print should preserve stage intent rather than falling back to Form unless explicitly requested.
+- Non-active stages should not be treated as active UI surfaces for interaction design.
+
+### Implementation guardrails
+
+- Do not add multiple CTA systems for the same breakpoint.
+- Do not force desktop accordions open for screen UI.
+- Do not mix print behavior fixes into screen-stage interaction logic.
+- Do not reintroduce removed legacy action bars unless the current breakpoint model is intentionally replaced end-to-end.
+- Do not document deprecated UI remnants as active architecture.
+
+### Last updated to reflect
+
+- UI cleanup verification: legacy overlapping CTA systems were retired from the intended architecture and should not be restored implicitly.
+- Breakpoint CTA truth: desktop uses `.generate-strip`; mobile uses `.mobile-floating-bar`.
+- Merge conflict resolution guidance: keep the cleaned local breakpoint-control structure as the source of truth when reconciling stale UI remnants.
+
+---
+
 ## Generation Paths (canonical — as of stabilization-pass-01)
 
 There are exactly **two** paths into `_showPagesCore`. All generation must flow through one of them.

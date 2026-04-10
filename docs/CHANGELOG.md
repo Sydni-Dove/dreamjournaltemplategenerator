@@ -11,6 +11,104 @@ Format per entry:
 
 ---
 
+## UI cleanup pass — 2026-04-05
+
+### CTA system cleanup and breakpoint truth verification (Confirmed)
+
+**What Changed:** The Dream Journal Generator UI was cleaned up to re-establish a single active CTA system per breakpoint and remove overlapping legacy action systems from the current architecture model.
+
+Confirmed current-state changes:
+- removed the legacy desktop action bar system from the intended UI architecture
+- removed the old inline input action row system from the intended UI architecture
+- established one CTA system per breakpoint
+- desktop CTA truth: `.generate-strip`
+- mobile CTA truth: `.mobile-floating-bar`
+- confirmed desktop accordions remain collapsible
+- kept print-only accordion force-open behavior as valid print behavior
+- resolved merge conflict direction by keeping the cleaned local file structure as the source of truth
+
+**Why It Changed:** Multiple overlapping UI systems were creating confusion about which controls were actually active, causing stale verification results and increasing regression risk during cleanup, merge resolution, and follow-up UI work.
+
+**What Was Not Touched:**
+- parser logic remained untouched
+- pagination logic remained untouched
+- print logic was not rewritten; valid existing print behavior remained in place
+
+**Verification:** Cleanup was verified against the current `index-v2.html` file state using direct file inspection and exact selector / reference searches rather than stale snapshots or prior assumptions.
+
+**Risk / Follow-up:**
+- future UI work must preserve one CTA system per breakpoint
+- future verification should be performed against the current file state, not stale snapshots or outdated cleanup assumptions
+
+---
+
+## UI stabilization layer — 2026-04-05
+
+### Stage-based UI / navigation / action-flow stabilization (Confirmed)
+
+**Issue:** After the parser and pagination fixes were already in place, the generator UI still had several stage-management problems that made the app feel unstable even when parsing/rendering were correct:
+- Form / Review / Print did not consistently behave like isolated stages
+- upload- and paste-populated states could surface different CTA behavior
+- stale mobile and desktop action systems were still coexisting
+- Review / Print navigation could fall back to the wrong stage
+- screen preview behavior could diverge visually from print clipping in writing regions
+
+**Root Cause:** These were UI-layer coordination problems, not parser or pagination failures.
+
+The instability came from several overlapping causes:
+1. stage progression had drifted during iteration, so some flows auto-advanced while others expected manual advancement
+2. mobile action visibility was split across multiple partially overlapping CTA systems
+3. tab transitions were not all being treated as explicit stage isolates, which allowed inactive panels or malformed wrapper boundaries to create mixed layout behavior
+4. stale action-row and floating-action remnants were still present in markup / CSS / JS references
+5. screen-preview writing-region containment did not fully mirror print-time clipping expectations
+
+**Fix:** The UI flow was stabilized around a single intended stage model:
+- Form -> Review -> Print is now the intended user flow
+- upload and paste both remain on Form after content is populated
+- the user manually advances from Form to Review
+- the user manually advances from Review to Print
+
+Confirmed UI changes completed in `index-v2.html`:
+- restored the mobile floating action bar as the active mobile CTA system
+- ensured `Continue to Review` appears for both upload-populated and paste-populated states
+- treated pasted notes as meaningful content for CTA visibility
+- removed the stale duplicate mobile action-row path and dead JS references tied to it
+- made `switchTab()` explicit and deterministic for `generator`, `review`, `print`, and `saved`
+- stabilized Review routing so Review no longer falls back to Form during normal stage transitions
+- ensured Print -> Back to Review returns to Review
+- stabilized layout isolation so inactive tab panels no longer remain in the page flow when another main stage is active
+- normalized Form / Review stage container behavior so the desktop app no longer feels like two unrelated widths
+- removed stale `.input-action-row` UI remnants and kept `.mobile-floating-bar` as the single active mobile action system
+- fixed screen-preview writing-region containment so lined regions no longer visibly bleed into the footer area on screen and better match print clipping behavior
+
+**Scope:** UI / navigation / stage-isolation layer in `index-v2.html` only.
+
+This entry does **not** claim parser changes, extraction changes, pagination changes, journal-page render changes, or print-layout rewrites. It documents:
+- stage workflow stabilization
+- mobile / desktop action-flow cleanup
+- tab visibility isolation
+- review / print return-path fixes
+- screen-preview containment alignment
+
+**Verification:**
+- paste -> `Continue to Review` appears without requiring a second tap
+- upload -> `Continue to Review` appears after content is populated
+- Review -> Print -> Back to Review returns to Review, not Form
+- mobile sticky CTA visibility is driven by meaningful content state
+- inactive Form / Review / Print / Saved panels do not remain in layout flow when another tab is active
+- no screen-preview line bleed into the footer area
+
+Short checklist:
+- [ ] paste -> Continue to Review
+- [ ] upload -> Continue to Review
+- [ ] Review -> Print -> Back to Review
+- [ ] mobile sticky CTA visibility
+- [ ] no screen-preview line bleed into footer
+
+**Notes:** This was a stabilization / cleanup pass after the parser and pagination work, not a parser-history rewrite. Parser, pagination, print rendering, and routing internals were not otherwise rewritten as part of this UI entry.
+
+---
+
 ## DOCX ingestion layer — 2026-04-04
 
 ### Structured DOCX table parsing (Confirmed) — journal-style Word tables now load through structured extraction instead of flattened fallback
