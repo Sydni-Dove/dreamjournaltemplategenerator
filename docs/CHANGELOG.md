@@ -11,6 +11,19 @@ Format per entry:
 
 ---
 
+## 2026-04-15
+
+### Improvements
+- promoted the newer v2 Dream Generator build to the main deployed index file
+- widened the desktop workspace shell for the editor, review area, auth bar, and print-empty state
+- preserved centered structure and mobile spacing while improving desktop breathing room
+
+### Notes
+- printable page preview sizing remains unchanged
+- workspace width was increased without stretching the actual print layout
+
+---
+
 ## UI cleanup pass — 2026-04-05
 
 ### CTA system cleanup and breakpoint truth verification (Confirmed)
