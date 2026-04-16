@@ -11344,19 +11344,24 @@ function syncMobileFloatingBarState() {
 }
 
 // ── GENERATE CONTROLLER ───────────────────────────────────
-function handleGenerateAndShowReview() {
-  handleGenerate(() => {
-    showClearAfterGenerate();
+function showReviewAfterGenerate() {
+  showClearAfterGenerate();
+  renderReviewFromCurrentData();
+  const cardsEl = document.getElementById('reviewCards');
+  const hasRenderableContent = !!cardsEl?.querySelector('.review-card');
+  if (hasRenderableContent || formHasMeaningfulContent()) {
     switchTab('review');
     if (typeof syncMobileFloatingBarState === 'function') syncMobileFloatingBarState();
+  }
+}
+
+function handleGenerateAndShowReview() {
+  handleGenerate(() => {
+    showReviewAfterGenerate();
   });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('generateDreamBtn');
-  if (btn) {
-    btn.addEventListener('click', handleGenerateAndShowReview);
-  }
   syncDesktopStickyTabsState(document.body?.dataset.activeTab || 'generator');
   window.addEventListener('resize', () => {
     syncDesktopStickyTabsState(document.body?.dataset.activeTab || 'generator');
@@ -11482,11 +11487,8 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
   }
 
   function handleContinueToReview() {
-    if (typeof handleGenerate === 'function') {
-      handleGenerate(() => {
-        switchTab('review');
-        if (typeof syncMobileFloatingBarState === 'function') syncMobileFloatingBarState();
-      });
+    if (typeof handleGenerateAndShowReview === 'function') {
+      handleGenerateAndShowReview();
     } else {
       switchTab('review');
     }
