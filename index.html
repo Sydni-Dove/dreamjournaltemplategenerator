@@ -1812,6 +1812,7 @@ let lastGeneratedData = [];
 let lastParsedEntryForGeneration = null;
 let previewDebugEnabled = false;
 let currentInputSource = null; // 'paste' | 'upload' | null
+let pasteAutofillDebounceId = null;
 const PREVIEW_SCALE_SETTLE_DELAYS_MS = [120, 360];
 
 // ═════════════════════════════════════════════════════════════
@@ -2417,6 +2418,57 @@ function resolveUploadFlowMode(files) {
   return files.length === 1 ? 'single' : 'multi';
 }
 
+function buildSingleTextPopulateResult(rawText, {
+  filename = '',
+  label = '',
+  inputSource = '',
+  singleEntryMessage = '✓ Fields populated. Review and edit freely, then click Continue to Review.',
+  multiEntryMessage = ''
+} = {}) {
+  const source = String(rawText || '').trim();
+  if (!source) return buildUploadResult();
+
+  const parseOptions = {};
+  if (filename) parseOptions.filename = filename;
+  if (label) parseOptions.label = label;
+  if (inputSource) parseOptions.inputSource = inputSource;
+
+  const entries = parseDreamEntriesFromText(source, parseOptions);
+  const debugMeta = {
+    build: window.__DJ_BUILD || 'unknown',
+    rawText: getImportedRawText(source)
+  };
+
+  if (entries.length > 1) {
+    const first = entries[0] || null;
+    return finalizeUploadFlowResult({
+      mode: 'single',
+      clearPendingEntries: false,
+      pendingEntries: entries,
+      populateData: first,
+      parserDebug: first ? {
+        data: first,
+        meta: { ...debugMeta, entryCount: String(entries.length) }
+      } : null,
+      message: multiEntryMessage || `✓ ${entries.length} entries found — first entry loaded into the form. Click Continue to Review to generate all journal page sets.`,
+      messageType: 'ok'
+    });
+  }
+
+  const importedEntry = entries[0] || parseSingleDreamEntry(source, parseOptions);
+  return finalizeUploadFlowResult({
+    mode: 'single',
+    clearPendingEntries: true,
+    populateData: importedEntry,
+    parserDebug: {
+      data: importedEntry,
+      meta: { ...debugMeta, entryCount: '1' }
+    },
+    message: singleEntryMessage,
+    messageType: 'ok'
+  });
+}
+
 async function runUploadImportFlow({ files, pastedText }) {
   const reportStatus = (message, messageType) => setMsg(message, messageType);
   try {
@@ -2467,7 +2519,7 @@ async function processSingleUploadFlow(file, pastedText, { reportStatus }) {
             data: first,
             meta: { build: window.__DJ_BUILD || 'unknown', entryCount: String(structuredEntries.length), rawText: getImportedRawText(combinedText) }
           } : null,
-          message: `✓ ${structuredEntries.length} entries found — first entry loaded into the form. Click Generate to create all journal page sets.`,
+          message: `✓ ${structuredEntries.length} entries found — first entry loaded into the form. Click Continue to Review to generate all journal page sets.`,
           messageType: 'ok'
         });
       }
@@ -2481,10 +2533,8 @@ async function processSingleUploadFlow(file, pastedText, { reportStatus }) {
             data: importedEntry,
             meta: { build: window.__DJ_BUILD || 'unknown', entryCount: '1', rawText: getImportedRawText(combinedText) }
           },
-          message: '✓ Content imported — generating journal pages…',
-          messageType: 'ok',
-          shouldGenerate: true,
-          generateDelayMs: 300
+          message: '✓ Content imported — review and edit freely, then click Continue to Review.',
+          messageType: 'ok'
         });
       }
       console.log('[DJ][docx] fell back to raw text parsing', {
@@ -2495,39 +2545,11 @@ async function processSingleUploadFlow(file, pastedText, { reportStatus }) {
         reason: '__djDocxStructured not present'
       });
     }
-    const entries = parseDreamEntriesFromText(combinedText);
-
-    if (entries.length > 1) {
-      reportStatus(`🔍 Found ${entries.length} entries…`, 'spin');
-      await new Promise(r => setTimeout(r, 150));
-      const first = entries[0] || null;
-      return finalizeUploadFlowResult({
-        mode: 'single',
-        clearPendingEntries: false,
-        pendingEntries: entries,
-        populateData: first,
-        parserDebug: first ? {
-          data: first,
-          meta: { build: window.__DJ_BUILD || 'unknown', entryCount: String(entries.length), rawText: getImportedRawText(combinedText) }
-        } : null,
-        message: `✓ ${entries.length} entries found — first entry loaded into the form. Click Generate to create all journal page sets.`,
-        messageType: 'ok'
-      });
-    }
-
-    const importedEntry = parseSingleDreamEntry(combinedText, { filename: file.name });
-    return finalizeUploadFlowResult({
-      mode: 'single',
-      clearPendingEntries: true,
-      populateData: importedEntry,
-      parserDebug: {
-        data: importedEntry,
-        meta: { build: window.__DJ_BUILD || 'unknown', entryCount: '1', rawText: getImportedRawText(combinedText) }
-      },
-      message: '✓ Content imported — generating journal pages…',
-      messageType: 'ok',
-      shouldGenerate: true,
-      generateDelayMs: 300
+    return buildSingleTextPopulateResult(combinedText, {
+      filename: file.name,
+      label: file.name.replace(/\.[^.]+$/, ''),
+      singleEntryMessage: '✓ Content imported — review and edit freely, then click Continue to Review.',
+      multiEntryMessage: ''
     });
   } catch (fileErr) {
     return buildUploadResult({
@@ -2555,7 +2577,7 @@ async function processMultiUploadFlow(files, { reportStatus }) {
       data: first,
       meta: { build: window.__DJ_BUILD || 'unknown', entryCount: String(importedEntries.length), rawText: first._raw || '' }
     } : null,
-    message: `✓ ${importedEntries.length} entr${importedEntries.length > 1 ? 'ies' : 'y'} ready — click Generate to create ${importedEntries.length} journal page set${importedEntries.length > 1 ? 's' : ''}.`,
+    message: `✓ ${importedEntries.length} entr${importedEntries.length > 1 ? 'ies' : 'y'} ready — click Continue to Review to create ${importedEntries.length} journal page set${importedEntries.length > 1 ? 's' : ''}.`,
     messageType: 'ok'
   });
 }
@@ -10386,6 +10408,10 @@ bindPrintVisibilityGuards();
 function clearAll() {
   pendingPages = [];
   currentInputSource = null;
+  if (pasteAutofillDebounceId) {
+    clearTimeout(pasteAutofillDebounceId);
+    pasteAutofillDebounceId = null;
+  }
   ['dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm','dreamActions','dreamSymbols','dreamEmotions','dreamScriptures','dreamInterpretation','dreamApplication','dreamAdditionalNotes','dreamContextSource','dreamTheme','sumDream','sumInterpretation','sumApplication','pasteNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['dreamType','dreamerInvolvement'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   ['xHeader','xDream','xBrainstorm','xKeys','xInterpretation','xApplication'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '0'; });
@@ -11486,6 +11512,42 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
     }
   }
 
+  function autofillFromPastedText(rawText) {
+    const text = String(rawText || '').trim();
+    if (!text) {
+      queuePendingEntries([]);
+      clearParserDebug();
+      if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
+      return;
+    }
+
+    currentInputSource = 'paste';
+    clearParserDebug();
+    const result = buildSingleTextPopulateResult(text, {
+      inputSource: 'pasted',
+      singleEntryMessage: '✓ Fields populated. Review and edit freely, then click Continue to Review.'
+    });
+    applyUploadFlowResultToUi(result);
+  }
+
+  function schedulePasteAutofill(rawText) {
+    if (pasteAutofillDebounceId) clearTimeout(pasteAutofillDebounceId);
+
+    const text = String(rawText || '').trim();
+    if (!text) {
+      pasteAutofillDebounceId = null;
+      queuePendingEntries([]);
+      clearParserDebug();
+      if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
+      return;
+    }
+
+    pasteAutofillDebounceId = setTimeout(() => {
+      pasteAutofillDebounceId = null;
+      autofillFromPastedText(rawText);
+    }, 250);
+  }
+
   function handleContinueToReview() {
     if (typeof handleGenerateAndShowReview === 'function') {
       handleGenerateAndShowReview();
@@ -11498,7 +11560,12 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
     const pasteEl = document.getElementById('pasteNotes');
     const fileEl = document.getElementById('fileInput');
 
-    if (pasteEl) pasteEl.addEventListener('input', updateDesktopActionVisibility);
+    if (pasteEl) {
+      pasteEl.addEventListener('input', () => {
+        updateDesktopActionVisibility();
+        schedulePasteAutofill(pasteEl.value);
+      });
+    }
     if (fileEl) fileEl.addEventListener('change', updateDesktopActionVisibility);
 
     updateDesktopActionVisibility();
