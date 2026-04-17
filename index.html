@@ -824,40 +824,35 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── INPUT ACTION ROW ──────────────────────────────────────────── */
 .input-action-row {
-  display: none;
+  display: flex;
+  position: static;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 0.7rem 0 0.9rem;
+  margin-bottom: 0.2rem;
+  background: transparent;
+  border-bottom: 1px solid rgba(242,223,216,0.6);
 }
 
-@media (min-width: 768px) {
-  .input-action-row {
-    display: none !important;
-  }
+.input-action-row .btn-generate,
+.input-action-row .btn-ghost {
+  min-height: 48px;
+}
+
+.input-action-row .btn-generate {
+  flex: 1;
+  padding: 0.7rem 1.2rem;
+}
+
+.input-action-row .btn-ghost {
+  flex: 0 0 auto;
+  padding: 0.7rem 1.15rem;
 }
 
 @media (max-width: 767px) {
-  .input-action-row {
-    display: flex;
-    position: static;
-    justify-content: flex-start;
-    gap: 0.75rem;
-    padding: 0.7rem 0 0.9rem;
-    margin-bottom: 0.2rem;
-    background: transparent;
-    border-bottom: 1px solid rgba(242,223,216,0.6);
-  }
-
-  .input-action-row .btn-generate,
-  .input-action-row .btn-ghost {
-    min-height: 48px;
-  }
-
-  .input-action-row .btn-generate {
-    flex: 1;
-    padding: 0.7rem 1.2rem;
-  }
-
-  .input-action-row .btn-ghost {
-    flex: 0 0 auto;
-    padding: 0.7rem 1.15rem;
+  .input-action-row,
+  #inputActionRow {
+    display: none !important;
   }
 }
 
@@ -1269,9 +1264,64 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
 /* ── MOBILE FLOATING ACTION BAR ─────────────────────────────── */
-/* Disabled on the form page — mobile now uses the inline Input action row. */
 .mobile-floating-bar {
   display: none !important;
+}
+
+@media (max-width: 767px) {
+  .mobile-floating-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    z-index: 140;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, rgba(245,240,236,0.98), rgba(245,240,236,0.94));
+    border-top: 1px solid rgba(99,0,0,0.1);
+    box-shadow: 0 -10px 32px rgba(27,23,23,0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .mobile-floating-bar.is-visible {
+    display: block !important;
+  }
+  .mfab-stage {
+    display: none;
+    align-items: center;
+    gap: 0.65rem;
+    width: min(100%, var(--workspace-review));
+    margin: 0 auto;
+  }
+  .mfab-back,
+  .mfab-primary {
+    min-height: 48px;
+    border-radius: 999px;
+    font-family: 'Lato', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mfab-back {
+    flex: 0 0 auto;
+    padding: 0 1.1rem;
+    border: 1px solid rgba(99,0,0,0.18);
+    background: rgba(255,255,255,0.92);
+    color: var(--text);
+    font-size: 0.84rem;
+    font-weight: 600;
+  }
+  .mfab-primary {
+    flex: 1 1 auto;
+    padding: 0 1.4rem;
+    border: none;
+    background: linear-gradient(to right, var(--ui-accent), var(--coral));
+    color: var(--white);
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: 0 8px 24px rgba(99,0,0,0.18);
+  }
+  .mfab-primary:disabled {
+    opacity: 0.45;
+    box-shadow: none;
+  }
 }
 
 /* ── PRINT: hide all mobile-only chrome ─────────────────────── */
@@ -2590,6 +2640,7 @@ function applyUploadFlowResultToUi(result) {
     if (finalResult.pendingEntries?.length) populateFormFromPendingEntry(finalResult.populateData);
     else populateFormFromDreamData(finalResult.populateData, { fallbackNarrativeToRaw: true });
     if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
+    if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
   }
   if (finalResult.parserDebug?.data) {
     showParserDebug(finalResult.parserDebug.data, finalResult.parserDebug.meta || {});
@@ -10431,6 +10482,8 @@ function clearAll() {
   const _mfabPrintBtn = document.getElementById('mfabPrintBtn');
   if (_mfabPrintBtn) _mfabPrintBtn.textContent = 'Print / Save as PDF';
   window._printSettingsAutoOpened = false;
+  if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
+  if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
 }
 function scrollToForm() { document.getElementById('editorSection').scrollIntoView({ behavior:'smooth' }); }
  
@@ -10616,11 +10669,18 @@ function syncDesktopStickyTabsState(activeTab = document.body?.dataset.activeTab
   const body = document.body;
   if (!body) return;
   body.dataset.activeTab = activeTab || 'generator';
+  if (!body.dataset.generatorStage) {
+    body.dataset.generatorStage =
+      activeTab === 'review' ? 'review' :
+      activeTab === 'print'  ? 'print'  :
+      activeTab === 'saved'  ? 'saved'  : 'form';
+  }
   const shouldStick = window.matchMedia('(min-width: 768px)').matches && activeTab !== 'print';
   body.classList.toggle('has-desktop-sticky-tabs', shouldStick);
 }
 
 function switchTab(tab) {
+  const body = document.body;
   // ── Panel elements
   const gen    = document.getElementById('editorSection');
   const out    = document.getElementById('outputSection');
@@ -10701,6 +10761,13 @@ function switchTab(tab) {
     if (btnG) btnG.classList.add('active');
     if (btnS) btnS.classList.remove('active');
     try { sessionStorage.setItem('djTab', 'generator'); } catch {}
+  }
+
+  if (body) {
+    body.dataset.generatorStage =
+      tab === 'review' ? 'review' :
+      tab === 'print'  ? 'print'  :
+      tab === 'saved'  ? 'saved'  : 'form';
   }
 
   // Update mobile floating action bar to show buttons for the new stage
@@ -11343,18 +11410,46 @@ async function signOut() { await sb.auth.signOut(); }
 // Shows the correct button set for the active stage.
 // Called from switchTab() whenever the stage changes.
 function updateMobileFloatingBar(tab) {
+  const bar = document.getElementById('mobileFloatingBar');
   const stageIds = ['mfabForm', 'mfabReview', 'mfabPrint'];
   const activeMap = { generator: 'mfabForm', review: 'mfabReview', print: 'mfabPrint' };
+  const body = document.body;
+  const isMobile = window.matchMedia('(max-width: 767px)').matches;
+  const activeTab = body?.dataset.activeTab || tab || 'generator';
+  const currentStage = body?.dataset.generatorStage
+    || (tab === 'review' ? 'review' : tab === 'print' ? 'print' : tab === 'saved' ? 'saved' : 'form');
+  const hasMeaningfulContent = typeof formHasMeaningfulContent === 'function'
+    ? formHasMeaningfulContent()
+    : [
+        'dreamTitle','dreamDate','dreamTime','dreamNarrative','dreamBrainstorm',
+        'dreamInterpretation','dreamApplication','dreamSymbols','dreamScriptures','dreamAdditionalNotes'
+      ].some(id => {
+        const el = document.getElementById(id);
+        return el && typeof el.value === 'string' && el.value.trim() !== '';
+      });
+  let activeId = null;
+  let shouldShowBar = false;
+
   stageIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  const activeId = activeMap[tab];
+
+  if (isMobile && activeTab === 'generator' && currentStage === 'form' && hasMeaningfulContent) {
+    shouldShowBar = hasMeaningfulContent;
+    activeId = shouldShowBar ? activeMap.generator : null;
+  }
+
   if (activeId) {
     const el = document.getElementById(activeId);
     if (el) el.style.display = 'flex';
   }
+  if (bar) bar.classList.toggle('is-visible', shouldShowBar);
   syncMobileFloatingBarState();
+}
+
+function updateMobileFormBarVisibility() {
+  updateMobileFloatingBar(document.body?.dataset.activeTab || 'generator');
 }
 
 // Syncs enabled/disabled state of all floating bar action buttons.
@@ -11391,8 +11486,10 @@ function handleGenerateAndShowReview() {
 
 document.addEventListener('DOMContentLoaded', () => {
   syncDesktopStickyTabsState(document.body?.dataset.activeTab || 'generator');
+  if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
   window.addEventListener('resize', () => {
     syncDesktopStickyTabsState(document.body?.dataset.activeTab || 'generator');
+    if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
   });
 });
 
@@ -11520,6 +11617,7 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
       queuePendingEntries([]);
       clearParserDebug();
       if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
+      if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
       return;
     }
 
@@ -11565,12 +11663,17 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
     if (pasteEl) {
       pasteEl.addEventListener('input', () => {
         updateDesktopActionVisibility();
+        if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
         schedulePasteAutofill(pasteEl.value);
       });
     }
-    if (fileEl) fileEl.addEventListener('change', updateDesktopActionVisibility);
+    if (fileEl) fileEl.addEventListener('change', () => {
+      updateDesktopActionVisibility();
+      if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
+    });
 
     updateDesktopActionVisibility();
+    if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
   });
 </script>
 </body>
