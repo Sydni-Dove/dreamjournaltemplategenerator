@@ -8370,7 +8370,7 @@ function _showPagesCore(dataArray) {
   }
   // Also update the floating print button text on mobile
   const mfabPrintBtn = document.getElementById('mfabPrintBtn');
-  if (mfabPrintBtn) mfabPrintBtn.textContent = totalPages > 1 ? `Print All ${totalPages} Pages` : 'Print / Save as PDF';
+  if (mfabPrintBtn) mfabPrintBtn.textContent = 'Print All / Save PDF';
   // Sync Print Preview stage UI (empty state ↔ preview wrap, print button enabled)
   syncPrintEmptyState();
   schedulePreviewFrameScale({ scrollToOutput: false });
@@ -10492,7 +10492,7 @@ function clearAll() {
   const _badge = document.getElementById('printPageCount');
   if (_badge) { _badge.textContent = ''; _badge.classList.remove('visible'); }
   const _mfabPrintBtn = document.getElementById('mfabPrintBtn');
-  if (_mfabPrintBtn) _mfabPrintBtn.textContent = 'Print / Save as PDF';
+  if (_mfabPrintBtn) _mfabPrintBtn.textContent = 'Print All / Save PDF';
   window._printSettingsAutoOpened = false;
   if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
   if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
@@ -11424,10 +11424,9 @@ async function signOut() { await sb.auth.signOut(); }
 function updateMobileFloatingBar(tab) {
   const bar = document.getElementById('mobileFloatingBar');
   const stageIds = ['mfabForm', 'mfabReview', 'mfabPrint'];
-  const activeMap = { generator: 'mfabForm', review: 'mfabReview', print: 'mfabPrint' };
   const body = document.body;
   const isMobile = window.matchMedia('(max-width: 767px)').matches;
-  const activeTab = body?.dataset.activeTab || tab || 'generator';
+  const activeTab = tab || body?.dataset.activeTab || 'generator';
   const currentStage = body?.dataset.generatorStage
     || (tab === 'review' ? 'review' : tab === 'print' ? 'print' : tab === 'saved' ? 'saved' : 'form');
   const hasMeaningfulContent = typeof formHasMeaningfulContent === 'function'
@@ -11447,9 +11446,17 @@ function updateMobileFloatingBar(tab) {
     if (el) el.style.display = 'none';
   });
 
-  if (isMobile && activeTab === 'generator' && currentStage === 'form' && hasMeaningfulContent) {
-    shouldShowBar = hasMeaningfulContent;
-    activeId = shouldShowBar ? activeMap.generator : null;
+  if (isMobile) {
+    if (activeTab === 'generator' && currentStage === 'form' && hasMeaningfulContent) {
+      activeId = 'mfabForm';
+      shouldShowBar = true;
+    } else if (activeTab === 'review' && currentStage === 'review') {
+      activeId = 'mfabReview';
+      shouldShowBar = true;
+    } else if (activeTab === 'print' && currentStage === 'print') {
+      activeId = 'mfabPrint';
+      shouldShowBar = true;
+    }
   }
 
   if (activeId) {
@@ -11533,13 +11540,13 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
   <!-- Review stage: back to form, or continue to Print Preview -->
   <div class="mfab-stage" id="mfabReview" style="display:none">
     <button class="mfab-back" onclick="switchTab('generator')">← Form</button>
-    <button class="mfab-primary" id="mfabReviewPrintBtn" onclick="switchTab('print')" disabled>Continue to Print ›</button>
+    <button class="mfab-primary" id="mfabReviewPrintBtn" onclick="switchTab('print')">Continue to Print</button>
   </div>
 
   <!-- Print stage: back to review, or print/export -->
   <div class="mfab-stage" id="mfabPrint" style="display:none">
     <button class="mfab-back" onclick="switchTab('review')">← Review</button>
-    <button class="mfab-primary" id="mfabPrintBtn" onclick="handlePrint()" disabled>Print / Save as PDF</button>
+    <button class="mfab-primary" id="mfabPrintBtn" onclick="handlePrint()">Print All / Save PDF</button>
   </div>
 
 </div>
