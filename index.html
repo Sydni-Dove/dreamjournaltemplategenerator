@@ -79,75 +79,6 @@ body { font-family: 'Lato', sans-serif; background: var(--soft-bg); color: var(-
 .upload-msg.ok  { color: #5a8a5a; }
 .upload-msg.err { color: #a04040; }
 .upload-msg.spin { color: var(--gold); }
-.debug-panel { margin-top: 0; border: none; border-top: 1px solid rgba(99,0,0,0.08); border-radius: 0; background: transparent; padding: 0.9rem 1rem; display: none; }
-.debug-panel.show { display: block; }
-
-.parser-debug-shell {
-  margin-top: 0.9rem;
-  border: 1px solid rgba(99,0,0,0.14);
-  border-radius: 0.75rem;
-  background: #fffaf7;
-  overflow: hidden;
-}
-
-.parser-debug-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.parser-debug-toggle-label {
-  font-family: 'Playfair Display', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--primary);
-  flex-shrink: 0;
-}
-
-.parser-debug-toggle-meta {
-  font-family: 'Lora', serif;
-  font-size: 0.75rem;
-  font-style: italic;
-  color: var(--text-light);
-  margin-left: auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.parser-debug-toggle-caret {
-  font-size: 0.72rem;
-  color: var(--text-light);
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-}
-
-.parser-debug-shell.is-open .parser-debug-toggle-caret {
-  transform: rotate(180deg);
-}
-
-@media (min-width: 768px) {
-  .parser-debug-shell {
-    margin-top: 1rem;
-  }
-}
-.debug-panel-title { font-family: 'Playfair Display', serif; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--primary); margin-bottom: 0.7rem; }
-.debug-grid { display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
-.debug-item { border-top: 1px solid rgba(99,0,0,0.08); padding-top: 0.55rem; }
-.debug-item:first-child { border-top: none; padding-top: 0; }
-.debug-label { font-family: 'Lato', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-mid); margin-bottom: 0.2rem; }
-.debug-value { font-family: 'Lora', serif; font-size: 0.8rem; color: var(--text); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
-.debug-meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
-@media (max-width: 680px) { .debug-meta { grid-template-columns: 1fr; } }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
 .field-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .field-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
@@ -267,45 +198,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-print:hover { background: #4a0000; transform: translateY(-1px); }
 .btn-save-journal { font-family: 'Lato', sans-serif; font-size: 0.85rem; font-weight: 500; background: transparent; color: var(--primary); border: 1.5px solid rgba(99,0,0,0.4); border-radius: 100px; padding: 0.55rem 1.1rem; cursor: pointer; transition: all 0.2s; }
 .btn-save-journal:hover { background: rgba(99,0,0,0.07); }
-.btn-debug {
-  font-family: 'Lato', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--primary);
-  background: transparent;
-  border: 1.5px solid rgba(99,0,0,0.28);
-  border-radius: 100px;
-  padding: 0.55rem 1rem;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-.btn-debug:hover {
-  background: rgba(99,0,0,0.06);
-  border-color: rgba(99,0,0,0.4);
-}
-.preview-debug {
-  display: none;
-  position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
-  left: 0.75rem;
-  z-index: 2147483646;
-  width: min(92vw, 520px);
-  max-height: 70vh;
-  overflow: auto;
-  background: rgba(20, 20, 20, 0.88);
-  color: #8DFF6A;
-  border: 1px solid rgba(141,255,106,0.28);
-  border-radius: 14px;
-  box-shadow: 0 18px 48px rgba(0,0,0,0.35);
-  padding: 0.95rem 1rem 1rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 12px;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-.preview-debug.show { display: block; }
-
 /* ══════════════════════════════════════════════════════
    JOURNAL SHEET — always 8.5 × 11 US Letter (print container)
    Centers the inner journal page for smaller layout sizes.
@@ -440,10 +332,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   @page { size: 8.5in 11in; margin: 0; }
   body { background: white !important; }
   .site-header, .gen-nav, .editor-section, .output-controls, .auth-bar, .my-journal-section, .tab-nav, .app-footer { display: none !important; }
-  .btn-debug,
-  .preview-debug {
-    display: none !important;
-  }
   .page-spacer { display: none !important; }
   .output-section { display: block !important; max-width: none; margin: 0; padding: 0; overflow: visible; background: transparent !important; }
   /* Hide all print-stage UI chrome that lives inside #outputSection.
@@ -1483,39 +1371,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
           <p class="upload-hint">Upload PDF, DOCX, TXT, or a photo of handwritten notes • Multiple dated entries split into separate journal page sets automatically • Sections labeled Dream:, Symbols:, Interpretation:, etc. map to the right fields</p>
         </div>
         <div class="upload-msg" id="uploadMsg"></div>
-        <div class="parser-debug-shell" id="parserDebugShell">
-          <button class="parser-debug-toggle" id="parserDebugToggle" type="button" onclick="toggleParserDebug()" aria-expanded="false" aria-controls="debugPanel">
-            <span class="parser-debug-toggle-label">Parser Debug</span>
-            <span class="parser-debug-toggle-meta">Show extraction details</span>
-            <span class="parser-debug-toggle-caret" id="parserDebugCaret">▾</span>
-          </button>
-          <div class="debug-panel" id="debugPanel">
-            <div class="debug-panel-title">Parser Debug</div>
-            <div class="debug-grid">
-              <div class="debug-meta">
-                <div class="debug-item"><div class="debug-label">Build</div><div class="debug-value" id="dbgBuild"></div></div>
-                <div class="debug-item"><div class="debug-label">Detected Entry Count</div><div class="debug-value" id="dbgEntryCount"></div></div>
-                <div class="debug-item"><div class="debug-label">Doc Mode</div><div class="debug-value" id="dbgDocMode"></div></div>
-                <div class="debug-item"><div class="debug-label">Detected Heading Count</div><div class="debug-value" id="dbgHeadingCount"></div></div>
-                <div class="debug-item"><div class="debug-label">Labeled Sections</div><div class="debug-value" id="dbgLabeledDetected"></div></div>
-                <div class="debug-item"><div class="debug-label">Repeated Blocks</div><div class="debug-value" id="dbgRepeatedDetected"></div></div>
-              </div>
-              <div class="debug-item"><div class="debug-label">Title</div><div class="debug-value" id="dbgTitle"></div></div>
-              <div class="debug-item"><div class="debug-label">Top Document Title Candidate</div><div class="debug-value" id="dbgTopTitleCandidate"></div></div>
-              <div class="debug-item"><div class="debug-label">Filename Title Candidate</div><div class="debug-value" id="dbgFilenameTitleCandidate"></div></div>
-              <div class="debug-item"><div class="debug-label">Narrative Title Candidate</div><div class="debug-value" id="dbgNarrativeTitleCandidate"></div></div>
-              <div class="debug-item"><div class="debug-label">Final Title Source</div><div class="debug-value" id="dbgFinalTitleSource"></div></div>
-              <div class="debug-item"><div class="debug-label">Date</div><div class="debug-value" id="dbgDate"></div></div>
-              <div class="debug-item"><div class="debug-label">Dream Narrative</div><div class="debug-value" id="dbgNarrative"></div></div>
-              <div class="debug-item"><div class="debug-label">Brainstorm</div><div class="debug-value" id="dbgBrainstorm"></div></div>
-              <div class="debug-item"><div class="debug-label">Interpretation</div><div class="debug-value" id="dbgInterpretation"></div></div>
-              <div class="debug-item"><div class="debug-label">Application</div><div class="debug-value" id="dbgApplication"></div></div>
-              <div class="debug-item"><div class="debug-label">Symbols</div><div class="debug-value" id="dbgSymbols"></div></div>
-              <div class="debug-item"><div class="debug-label">Additional Notes</div><div class="debug-value" id="dbgNotes"></div></div>
-              <div class="debug-item"><div class="debug-label">Raw Preview</div><div class="debug-value" id="dbgRawPreview"></div></div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="form-block">
@@ -1686,7 +1541,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
     </div>
     <div class="print-stage-actions">
       <button class="btn-save-journal" id="saveJournalBtn" onclick="saveToJournal()">Save to Journal</button>
-      <button class="btn-debug" id="previewDebugToggle" onclick="togglePreviewDebug()" style="display:none">Debug</button>
     </div>
   </div>
 
@@ -1800,7 +1654,6 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   <div id="previewWrap" style="display:none">
     <div id="pagesContainer"></div>
   </div>
-  <pre id="previewDebugPanel" class="preview-debug"></pre>
 
   <!-- Print Preview bottom action bar -->
   <div class="stage-action-bar" id="printActionBar">
@@ -1872,7 +1725,6 @@ if (typeof pdfjsLib !== 'undefined') {
 let pendingPages      = [];
 let lastGeneratedData = [];
 let lastParsedEntryForGeneration = null;
-let previewDebugEnabled = false;
 let currentInputSource = null; // 'paste' | 'upload' | null
 let pasteAutofillDebounceId = null;
 const PREVIEW_SCALE_SETTLE_DELAYS_MS = [120, 360];
@@ -1880,81 +1732,6 @@ const PREVIEW_SCALE_SETTLE_DELAYS_MS = [120, 360];
 // ═════════════════════════════════════════════════════════════
 // 2. SHARED UTILS
 // ═════════════════════════════════════════════════════════════
-function setDebugField(id, value) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const text = String(value == null ? '' : value).trim();
-  el.textContent = text || '—';
-}
-
-function toggleParserDebug(forceOpen) {
-  const shell = document.getElementById('parserDebugShell');
-  const panel = document.getElementById('debugPanel');
-  const toggle = document.getElementById('parserDebugToggle');
-  if (!shell || !panel || !toggle) return;
-
-  const shouldOpen = typeof forceOpen === 'boolean'
-    ? forceOpen
-    : !shell.classList.contains('is-open');
-
-  shell.classList.toggle('is-open', shouldOpen);
-  panel.classList.toggle('show', shouldOpen);
-  toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-}
-
-function showParserDebug(data, meta = {}) {
-  const panel = document.getElementById('debugPanel');
-  if (!panel) return;
-  toggleParserDebug(true);
-
-  setDebugField('dbgBuild', meta.build || window.__DJ_BUILD || 'unknown');
-  setDebugField('dbgEntryCount', meta.entryCount || '1');
-  setDebugField('dbgDocMode', meta.docMode || data?._docMode || '');
-  setDebugField('dbgHeadingCount', meta.headingCount || data?._detectedHeadingCount || '');
-  setDebugField('dbgLabeledDetected', meta.labeledSectionsDetected || String(!!data?._labeledSectionsDetected));
-  setDebugField('dbgRepeatedDetected', meta.repeatedBlockDetected || String(!!data?._repeatedBlockDetected));
-  setDebugField('dbgTitle', data?.dreamTitle || '');
-  setDebugField('dbgTopTitleCandidate', data?._topDocumentTitleCandidate || '');
-  setDebugField('dbgFilenameTitleCandidate', data?._filenameTitleCandidate || '');
-  setDebugField('dbgNarrativeTitleCandidate', data?._narrativeTitleCandidate || '');
-  setDebugField('dbgFinalTitleSource', data?._finalTitleSource || '');
-  setDebugField('dbgDate', data?.dreamDate || '');
-  setDebugField('dbgNarrative', data?.dreamNarrative || '');
-  setDebugField('dbgBrainstorm', data?.dreamBrainstorm || '');
-  setDebugField('dbgInterpretation', data?.dreamInterpretation || '');
-  setDebugField('dbgApplication', data?.dreamApplication || '');
-  setDebugField('dbgSymbols', data?.dreamSymbols || '');
-  setDebugField('dbgNotes', data?.dreamAdditionalNotes || '');
-  setDebugField('dbgRawPreview', (meta.rawText || '').slice(0, 700));
-}
-
-function showPastedDebugFromText(rawText, entryCountOverride) {
-  const source = String(rawText || '').trim();
-  if (!source) {
-    clearParserDebug();
-    return null;
-  }
-  const splitEntries = parseEntries(source);
-  const firstEntryText = String(splitEntries[0]?.text || source).trim();
-  const debugData = extractDreamData(firstEntryText, { inputSource: 'pasted' });
-  showParserDebug(debugData, {
-    build: window.__DJ_BUILD || 'unknown',
-    entryCount: String(entryCountOverride || splitEntries.length || 1),
-    rawText: `[Source: pasted text]\n\n${firstEntryText}`
-  });
-  return debugData;
-}
-
-function clearParserDebug() {
-  toggleParserDebug(false);
-  [
-    'dbgBuild','dbgEntryCount','dbgDocMode','dbgHeadingCount','dbgLabeledDetected','dbgRepeatedDetected','dbgTitle','dbgDate','dbgNarrative',
-    'dbgTopTitleCandidate','dbgFilenameTitleCandidate','dbgNarrativeTitleCandidate','dbgFinalTitleSource',
-    'dbgBrainstorm','dbgInterpretation','dbgApplication',
-    'dbgSymbols','dbgNotes','dbgRawPreview'
-  ].forEach(id => setDebugField(id, ''));
-}
-
 // ═════════════════════════════════════════════════════════════
 // 8. DATA / AUTH / STORAGE LAYER
 // Shared client/bootstrap used by OCR upload, auth, and journal persistence.
@@ -2081,7 +1858,6 @@ async function handleUpload() {
 async function handleUploadEvent() {
   const { files, pastedText } = collectInputSources();
   if (!files.length) return;
-  clearParserDebug();
   const result = await runUploadImportFlow({ files, pastedText });
   applyUploadFlowResultToUi(result);
 }
@@ -2653,9 +2429,6 @@ function applyUploadFlowResultToUi(result) {
     else populateFormFromDreamData(finalResult.populateData, { fallbackNarrativeToRaw: true });
     if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
     if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
-  }
-  if (finalResult.parserDebug?.data) {
-    showParserDebug(finalResult.parserDebug.data, finalResult.parserDebug.meta || {});
   }
   if (finalResult.message) setMsg(finalResult.message, finalResult.messageType);
   if (finalResult.scrollToPaste) {
@@ -7919,7 +7692,6 @@ function handleGenerate(onComplete) {
     if (pastedText) {
       const pastedEntries = parseDreamEntriesFromText(pastedText, { inputSource: 'pasted' });
       allData.push(...pastedEntries);
-      showPastedDebugFromText(pastedText, pastedEntries.length);
     }
     // Populate form with first entry for UI inspection — does NOT affect generation
     if (allData[0]) populateFormFromDreamData(allData[0], { fallbackNarrativeToRaw: true });
@@ -7931,7 +7703,6 @@ function handleGenerate(onComplete) {
   // ── BATCH: multiple dated entries from paste ─────────────
   if (pastedText && !hasFiles) {
     const parsedEntries = parseDreamEntriesFromText(pastedText, { inputSource: 'pasted' });
-    showPastedDebugFromText(pastedText, parsedEntries.length);
     if (parsedEntries.length > 1) {
       if (parsedEntries[0]) populateFormFromDreamData(parsedEntries[0], { fallbackNarrativeToRaw: true });
       setMsg(`Detected ${parsedEntries.length} dated entries — generating ${parsedEntries.length} separate journal page sets.`, 'ok');
@@ -8018,7 +7789,6 @@ function generateFromCurrentForm(onComplete) {
     _showPagesCore([data]);
     const pageCount = document.getElementById('pagesContainer')?.children.length || 0;
     console.log('[DJ] Page count after render:', pageCount);
-    if (typeof updatePreviewDebug === 'function') updatePreviewDebug();
     if (typeof onComplete === 'function') onComplete();
   });
 }
@@ -8059,7 +7829,6 @@ function generateFromEntryArray(entries, onComplete) {
     _showPagesCore(normalized);
     const pageCount = document.getElementById('pagesContainer')?.children.length || 0;
     console.log('[DJ] Page count after batch render:', pageCount);
-    if (typeof updatePreviewDebug === 'function') updatePreviewDebug();
     if (typeof onComplete === 'function') onComplete();
   });
 }
@@ -10260,71 +10029,6 @@ function resetPreviewFrame() {
   }
 }
 
-function getPreviewScaleValue(el) {
-  if (!el) return 'n/a';
-  const raw = el.style.transform || '';
-  const m = raw.match(/scale\(([^)]+)\)/);
-  if (m) {
-    const n = Number(m[1]);
-    return Number.isFinite(n) ? n.toFixed(4) : m[1];
-  }
-  return raw ? raw : '1.0000';
-}
-
-function updatePreviewDebug() {
-  const panel = document.getElementById('previewDebugPanel');
-  if (!panel) return;
-  if (!previewDebugEnabled) {
-    panel.classList.remove('show');
-    return;
-  }
-
-  const outputSection = document.getElementById('outputSection');
-  const previewWrap = document.getElementById('previewWrap');
-  const pagesContainer = document.getElementById('pagesContainer');
-  const firstSheet = pagesContainer ? pagesContainer.querySelector('.journal-sheet') : null;
-  const vv = window.visualViewport;
-  const wrapRect = previewWrap ? previewWrap.getBoundingClientRect() : null;
-  const pagesRect = pagesContainer ? pagesContainer.getBoundingClientRect() : null;
-  const sheetRect = firstSheet ? firstSheet.getBoundingClientRect() : null;
-
-  const lines = [
-    '— STATE —',
-    `output visible: ${outputSection?.classList.contains('show') ? 'YES' : 'NO'}`,
-    `generated sets: ${Array.isArray(lastGeneratedData) ? lastGeneratedData.length : 0}`,
-    '',
-    '— VIEWPORT —',
-    `innerWidth: ${window.innerWidth}px`,
-    `innerHeight: ${window.innerHeight}px`,
-    `visualViewport.width: ${vv ? vv.width.toFixed(1) + 'px' : 'n/a'}`,
-    `visualViewport.height: ${vv ? vv.height.toFixed(1) + 'px' : 'n/a'}`,
-    '',
-    '— WIDTHS offsetW | BCR(visual) —',
-    `#previewWrap    ${previewWrap ? previewWrap.offsetWidth : 'n/a'}px | ${wrapRect ? wrapRect.width.toFixed(1) : 'n/a'}px`,
-    `#pagesContainer ${pagesContainer ? pagesContainer.offsetWidth : 'n/a'}px | ${pagesRect ? pagesRect.width.toFixed(1) : 'n/a'}px`,
-    `.journal-sheet  ${firstSheet ? firstSheet.offsetWidth : 'n/a'}px | ${sheetRect ? sheetRect.width.toFixed(1) : 'n/a'}px`,
-    '',
-    '— POSITION —',
-    `wrap left: ${wrapRect ? wrapRect.left.toFixed(1) : 'n/a'}px`,
-    `sheet left: ${sheetRect ? sheetRect.left.toFixed(1) : 'n/a'}px`,
-    '',
-    '— SCROLL —',
-    `output scrollWidth: ${outputSection ? outputSection.scrollWidth : 'n/a'}px`,
-    `output clientWidth: ${outputSection ? outputSection.clientWidth : 'n/a'}px`,
-    '',
-    '— SCALE —',
-    `pagesContainer transform: ${getPreviewScaleValue(pagesContainer)}`
-  ];
-
-  panel.textContent = lines.join('\n');
-  panel.classList.add('show');
-}
-
-function togglePreviewDebug() {
-  previewDebugEnabled = !previewDebugEnabled;
-  updatePreviewDebug();
-}
-
 function isPreviewOutputVisible() {
   return !!document.getElementById('outputSection')?.classList.contains('show');
 }
@@ -10337,10 +10041,7 @@ function scalePreviewFrame() {
   const outputSection = document.getElementById('outputSection');
   const previewWrap = document.getElementById('previewWrap');
   const pagesContainer = document.getElementById('pagesContainer');
-  if (!previewWrap || !pagesContainer) {
-    updatePreviewDebug();
-    return;
-  }
+  if (!previewWrap || !pagesContainer) return;
 
   // RELIABILITY GUARD: _showPagesCore temporarily un-hides outputSection for
   // layout measurements, then re-hides it when the user is on Review tab.
@@ -10348,18 +10049,12 @@ function scalePreviewFrame() {
   // Without this guard, those delayed calls run AFTER re-hide, see containerW=0,
   // and reset to scale(1) — silently undoing the correct scale set by the first call.
   // This is why the fix appeared correct in Claude Preview but not in real browsers.
-  if (outputSection && outputSection.style.display === 'none') {
-    updatePreviewDebug();
-    return;
-  }
+  if (outputSection && outputSection.style.display === 'none') return;
 
   resetPreviewFrame();
 
   const firstSheet = pagesContainer.querySelector('.journal-sheet');
-  if (!firstSheet) {
-    updatePreviewDebug();
-    return;
-  }
+  if (!firstSheet) return;
 
   const visualW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
   const edgeInset = visualW <= 699 ? 8 : 24;
@@ -10388,7 +10083,6 @@ function scalePreviewFrame() {
     previewWrap.style.height = '';
     previewWrap.style.overflow = '';
   }
-  updatePreviewDebug();
 }
 
 function scaleJournalToFit() {
@@ -10480,13 +10174,11 @@ function clearAll() {
   const countEl = document.getElementById('notesPageCount'); countEl.value = '1'; countEl.disabled = true; countEl.style.opacity = '0.35';
   document.getElementById('uploadMsg').textContent = '';
   document.getElementById('fileInput').value = '';
-  clearParserDebug();
   document.getElementById('outputSection').classList.remove('show');
   document.getElementById('pagesContainer').innerHTML = '';
   resetPreviewFrame();
   clearLayoutMeasurementCaches();
   applyPreset('dove');
-  updatePreviewDebug();
   syncPrintEmptyState(); // reset print stage to empty state
   // Clear page count badge + reset auto-open flag for next generation
   const _badge = document.getElementById('printPageCount');
@@ -11634,14 +11326,12 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
     const text = String(rawText || '').trim();
     if (!text) {
       queuePendingEntries([]);
-      clearParserDebug();
       if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
       if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
       return;
     }
 
     currentInputSource = 'paste';
-    clearParserDebug();
     const result = buildSingleTextPopulateResult(text, {
       inputSource: 'pasted',
       singleEntryMessage: '✓ Fields populated. Review and edit freely, then click Continue to Review.'
@@ -11656,7 +11346,6 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
     if (!text) {
       pasteAutofillDebounceId = null;
       queuePendingEntries([]);
-      clearParserDebug();
       if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
       return;
     }
