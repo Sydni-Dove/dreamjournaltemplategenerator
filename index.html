@@ -7861,8 +7861,7 @@ function handleGenerate(onComplete) {
     // Populate form with first entry for UI inspection — does NOT affect generation
     if (allData[0]) populateFormFromDreamData(allData[0], { fallbackNarrativeToRaw: true });
     console.log('[DJ] handleGenerate: batch from pendingPages, count:', allData.length);
-    generateFromEntryArray(allData);
-    if (typeof onComplete === 'function') onComplete();
+    generateFromEntryArray(allData, onComplete);
     return;
   }
 
@@ -7874,8 +7873,7 @@ function handleGenerate(onComplete) {
       if (parsedEntries[0]) populateFormFromDreamData(parsedEntries[0], { fallbackNarrativeToRaw: true });
       setMsg(`Detected ${parsedEntries.length} dated entries — generating ${parsedEntries.length} separate journal page sets.`, 'ok');
       console.log('[DJ] handleGenerate: batch from dated entries, count:', parsedEntries.length);
-      generateFromEntryArray(parsedEntries);
-      if (typeof onComplete === 'function') onComplete();
+      generateFromEntryArray(parsedEntries, onComplete);
       return;
     }
     // ── SINGLE: paste with single entry ───────────────────
@@ -7885,16 +7883,14 @@ function handleGenerate(onComplete) {
       populateFormFromDreamData(singleEntry, { fallbackNarrativeToRaw: true });
       setMsg('✓ Fields populated. Review and edit freely.', 'ok');
       console.log('[DJ] handleGenerate: single entry from paste → form path');
-      generateFromCurrentForm();
-      if (typeof onComplete === 'function') onComplete();
+      generateFromCurrentForm(onComplete);
     }, 200);
     return;
   }
 
   // ── SINGLE: form-only / file already populated form ──────
   console.log('[DJ] handleGenerate: single entry from form');
-  generateFromCurrentForm();
-  if (typeof onComplete === 'function') onComplete();
+  generateFromCurrentForm(onComplete);
 }
 
 function generateFromForm() {
@@ -7930,7 +7926,7 @@ function generateFromCurrentState() {
 // collectCurrentDreamFormData(), normalizes, and passes directly
 // to _showPagesCore. Never re-populates the form.
 // ═══════════════════════════════════════════════════════════════
-function generateFromCurrentForm() {
+function generateFromCurrentForm(onComplete) {
   console.log('[DJ] generateFromCurrentForm() — collecting from form');
   const data = collectCurrentDreamFormData();
   console.log('[DJ] Form collected:', {
@@ -7960,6 +7956,7 @@ function generateFromCurrentForm() {
     const pageCount = document.getElementById('pagesContainer')?.children.length || 0;
     console.log('[DJ] Page count after render:', pageCount);
     if (typeof updatePreviewDebug === 'function') updatePreviewDebug();
+    if (typeof onComplete === 'function') onComplete();
   });
 }
 
@@ -7970,11 +7967,11 @@ function generateFromCurrentForm() {
 // Each entry is normalized (finalizeDreamTitle + type inference)
 // before being passed to _showPagesCore.
 // ═══════════════════════════════════════════════════════════════
-function generateFromEntryArray(entries) {
+function generateFromEntryArray(entries, onComplete) {
   console.log('[DJ] generateFromEntryArray() — entry count:', Array.isArray(entries) ? entries.length : 0);
   if (!Array.isArray(entries) || !entries.length) {
     console.warn('[DJ] generateFromEntryArray: no entries — falling back to form path');
-    generateFromCurrentForm();
+    generateFromCurrentForm(onComplete);
     return;
   }
   const normalized = entries.map((entry, i) => {
@@ -8000,6 +7997,7 @@ function generateFromEntryArray(entries) {
     const pageCount = document.getElementById('pagesContainer')?.children.length || 0;
     console.log('[DJ] Page count after batch render:', pageCount);
     if (typeof updatePreviewDebug === 'function') updatePreviewDebug();
+    if (typeof onComplete === 'function') onComplete();
   });
 }
 
@@ -11370,6 +11368,10 @@ function syncMobileFloatingBarState() {
 }
 
 // ── GENERATE CONTROLLER ───────────────────────────────────
+function showClearAfterGenerate() {
+  if (typeof updateDesktopActionVisibility === 'function') updateDesktopActionVisibility();
+}
+
 function showReviewAfterGenerate() {
   showClearAfterGenerate();
   renderReviewFromCurrentData();
