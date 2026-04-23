@@ -10767,6 +10767,10 @@ async function loadMyJournal(append) {
 
 function renderEntryCard(entry) {
   const card      = document.createElement('div'); card.className = 'saved-entry-card';
+  card.style.cursor = 'pointer';
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', `Open saved dream entry from ${entry.date || 'unknown date'}`);
   const savedDate = new Date(entry.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
   const preview   = (entry.narrative || '').replace(/\n+/g,' ').substring(0, 180);
   const typeLabel = getDreamTypeLabel(entry);
@@ -10781,14 +10785,22 @@ function renderEntryCard(entry) {
       <div class="sec-meta">Saved ${savedDate}${themeMeta}</div>
     </div>
     <div class="sec-actions"></div>`;
+  // Card click loads entry into Review (Edit/Delete buttons guarded via .sec-btn closest check)
+  card.addEventListener('click', (event) => {
+    if (!event.target.closest('.sec-btn')) loadEntryIntoForm(entry);
+  });
+  card.addEventListener('keydown', (event) => {
+    if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('.sec-btn')) {
+      event.preventDefault();
+      loadEntryIntoForm(entry);
+    }
+  });
   const actions = card.querySelector('.sec-actions');
-  const loadBtn = document.createElement('button'); loadBtn.className = 'sec-btn'; loadBtn.textContent = 'Load';
-  loadBtn.onclick = () => { loadEntryIntoForm(entry); switchTab('generator'); };
   const editBtn = document.createElement('button'); editBtn.className = 'sec-btn'; editBtn.textContent = 'Edit';
-  editBtn.onclick = () => openEditModal(entry);
+  editBtn.onclick = (event) => { event.stopPropagation(); openEditModal(entry); };
   const delBtn  = document.createElement('button'); delBtn.className  = 'sec-btn del'; delBtn.textContent = 'Delete';
-  delBtn.onclick = () => deleteEntry(entry.id);
-  actions.appendChild(loadBtn); actions.appendChild(editBtn); actions.appendChild(delBtn);
+  delBtn.onclick = (event) => { event.stopPropagation(); deleteEntry(entry.id); };
+  actions.appendChild(editBtn); actions.appendChild(delBtn);
   return card;
 }
 
@@ -10817,26 +10829,13 @@ function mapSavedDreamEntryToGeneratorData(entry) {
 
 function loadEntryIntoForm(entry) {
   const mapped = mapSavedDreamEntryToGeneratorData(entry);
-  const fields = {
-    dreamTitle:           mapped.dreamTitle,
-    dreamDate:            mapped.dreamDate,
-    dreamNarrative:       mapped.dreamNarrative,
-    dreamBrainstorm:      mapped.dreamBrainstorm,
-    dreamInterpretation:  mapped.dreamInterpretation,
-    dreamApplication:     mapped.dreamApplication,
-    dreamActions:         mapped.dreamActions,
-    dreamerInvolvement:   mapped.dreamerInvolvement,
-    dreamType:            mapped.dreamType,
-    dreamSymbols:         mapped.dreamSymbols,
-    dreamEmotions:        mapped.dreamEmotions,
-    dreamScriptures:      mapped.dreamScriptures,
-    dreamContextSource:   mapped.dreamContextSource,
-    dreamTheme:           mapped.dreamTheme,
-    dreamAdditionalNotes: mapped.dreamAdditionalNotes,
-  };
-  Object.entries(fields).forEach(([id, val]) => setField(id, val||''));
-  if (mapped._raw) { const el = document.getElementById('pasteNotes'); if (el) el.value = mapped._raw; }
-  document.getElementById('editorSection').scrollIntoView({ behavior:'smooth' });
+  // Populate all form fields so Back to Form shows the loaded entry for editing.
+  populateFormFromDreamData(mapped, { fallbackNarrativeToRaw: true });
+  // Pre-build print pages so Continue to Print is enabled from Review.
+  showPages([mapped]);
+  // Route to Review. switchTab('review') internally calls renderReviewFromCurrentData()
+  // which reads the form fields we just populated.
+  switchTab('review');
 }
 
 async function loadSelectedDreamEntriesFromApp(ids) {
