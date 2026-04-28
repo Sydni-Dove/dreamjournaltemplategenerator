@@ -1926,8 +1926,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   <!-- Title row -->
   <div class="review-header" style="padding-bottom:0;">
     <div>
-      <div class="review-eyebrow">Step 2 — Review Entry</div>
+      <div class="review-eyebrow">Step 2 — Review</div>
       <div class="review-title-label" id="reviewTitle">—</div>
+      <div class="review-meta-val" id="reviewCountText"></div>
     </div>
   </div>
 
@@ -10789,44 +10790,52 @@ function initAccordionStates() {
 }
 
 // ── LAYER 1: REVIEW TAB RENDERER ────────────────────────────────
-// Reads DreamFormData from the live form — does NOT touch pagination or print.
+// Reads generated/imported DreamFormData only — does NOT touch pagination or print.
 let _reviewCurrentSection = 'all';
+
+function getReviewSourceEntries() {
+  if (Array.isArray(lastGeneratedData) && lastGeneratedData.length > 0) return lastGeneratedData;
+  if (Array.isArray(pendingPages) && pendingPages.length > 0) return pendingPages;
+  const formData = (typeof collectCurrentDreamFormData === 'function') ? collectCurrentDreamFormData() : {};
+  return [formData];
+}
+
+function hasReviewEntryContent(entry) {
+  const contentFields = [
+    'dreamNarrative',
+    'dreamBrainstorm',
+    'dreamInterpretation',
+    'dreamApplication',
+    'dreamSymbols',
+    'dreamActions',
+    'dreamEmotions',
+    'dreamScriptures',
+    'dreamAdditionalNotes'
+  ];
+  return contentFields.some(field => String(entry?.[field] || '').trim().length > 0);
+}
 
 function renderReviewFromCurrentData() {
   const titleEl = document.getElementById('reviewTitle');
+  const countEl = document.getElementById('reviewCountText');
   const cardsEl = document.getElementById('reviewCards');
   const printBtn = document.getElementById('reviewPrintBtn');
   if (!cardsEl) return;
 
-  // collectCurrentDreamFormData() returns a plain object, not an array
-  const d = (typeof collectCurrentDreamFormData === 'function')
-    ? collectCurrentDreamFormData()
-    : {};
+  const entries = getReviewSourceEntries().filter(Boolean);
+  const entryCount = entries.length;
 
   // Update title display
-  const title = d.dreamTitle?.trim() || 'Untitled';
-  if (titleEl) titleEl.textContent = title;
+  if (titleEl) titleEl.textContent = 'Review Your Entries';
+  if (countEl) {
+    countEl.textContent = entryCount > 1
+      ? `${entryCount} entries ready — confirm the content before continuing to print.`
+      : '1 entry ready — confirm the content before continuing to print.';
+  }
 
   // Enable/disable print nav button
   if (printBtn) printBtn.disabled = (document.getElementById('pagesContainer')?.children.length || 0) === 0;
 
-  // Build cards
-  const cards = [];
-
-  // Meta card
-  const metaFields = [
-    { key: 'Date',     val: d.dreamDate     || '' },
-    { key: 'Time',     val: d.dreamTime     || '' },
-    { key: 'Type',     val: d.dreamType     || '' },
-    { key: 'Theme',    val: d.dreamTheme    || '' },
-    { key: 'Source',   val: d.dreamContextSource || '' },
-    { key: 'Dreamer',  val: d.dreamerInvolvement || '' },
-  ].filter(f => f.val.trim());
-  if (metaFields.length) {
-    cards.push({ section: 'meta', label: 'Entry Details', html: buildMetaGridHTML(metaFields) });
-  }
-
-  // Content cards
   const contentFields = [
     { section: 'narrative',      label: 'Dream Narrative',     field: 'dreamNarrative' },
     { section: 'brainstorm',     label: 'Brainstorm',          field: 'dreamBrainstorm' },
@@ -10838,35 +10847,59 @@ function renderReviewFromCurrentData() {
     { section: 'keys',           label: 'Scriptures',          field: 'dreamScriptures' },
     { section: 'notes',          label: 'Additional Notes',    field: 'dreamAdditionalNotes' },
   ];
-  contentFields.forEach(({ section, label, field }) => {
-    const val = (d[field] || '').trim();
-    if (!val) return;
-    cards.push({ section, label, html: `<div class="review-card-body">${escapeHTML(val)}</div>` });
-  });
 
-  // Empty-state: only when all content sections (not meta) are empty
-  const hasContent = contentFields.some(({ field }) => (d[field] || '').trim().length > 0);
+  const hasContent = entries.some(hasReviewEntryContent);
   if (!hasContent) {
     cardsEl.innerHTML = '<div class="review-empty"><p>No content yet.</p><p>Fill in the form fields and tap Generate to see a preview here.</p></div>';
     return;
   }
 
-  // Filter by section
-  const filtered = _reviewCurrentSection === 'all'
-    ? cards
-    : cards.filter(c => c.section === _reviewCurrentSection);
+  const cards = entries.map((entry, index) => buildReviewEntryCard(entry, index, entryCount, contentFields)).filter(Boolean);
 
-  if (!filtered.length) {
+  if (!cards.length) {
     cardsEl.innerHTML = '<div class="review-empty"><p>Nothing in this section yet.</p></div>';
     return;
   }
 
-  cardsEl.innerHTML = filtered.map(c =>
-    `<div class="review-card" data-section="${c.section}">
-      <div class="review-card-label">${c.label}</div>
-      ${c.html}
-    </div>`
-  ).join('');
+  cardsEl.innerHTML = cards.join('');
+}
+
+function buildReviewEntryCard(entry, index, total, contentFields) {
+  const metaFields = [
+    { key: 'Date',     val: entry.dreamDate     || '' },
+    { key: 'Time',     val: entry.dreamTime     || '' },
+    { key: 'Type',     val: entry.dreamType     || '' },
+    { key: 'Theme',    val: entry.dreamTheme    || '' },
+    { key: 'Source',   val: entry.dreamContextSource || '' },
+    { key: 'Dreamer',  val: entry.dreamerInvolvement || '' },
+  ].filter(f => String(f.val || '').trim());
+
+  const visibleSections = [];
+  if (_reviewCurrentSection === 'all' && metaFields.length) {
+    visibleSections.push(buildMetaGridHTML(metaFields));
+  }
+  contentFields.forEach(({ section, label, field }) => {
+    if (_reviewCurrentSection !== 'all' && _reviewCurrentSection !== section) return;
+    const val = String(entry[field] || '').trim();
+    if (!val) return;
+    visibleSections.push(`
+      <div class="review-card-label">${label}</div>
+      <div class="review-card-body">${escapeHTML(val)}</div>
+    `);
+  });
+
+  if (!visibleSections.length) return '';
+  const title = String(entry.dreamTitle || '').trim();
+  const entryLabel = total > 1
+    ? `Entry ${index + 1} of ${total}${title ? ` — ${escapeHTML(title)}` : ''}`
+    : (title ? escapeHTML(title) : 'Entry 1 of 1');
+
+  return `
+    <div class="review-card" data-entry-index="${index}">
+      <div class="review-card-label">${entryLabel}</div>
+      ${visibleSections.join('')}
+    </div>
+  `;
 }
 
 function buildMetaGridHTML(fields) {
