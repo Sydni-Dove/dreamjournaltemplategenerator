@@ -12,7 +12,243 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="../shared/journal-export-utils.js"></script>
+<!-- Inlined from shared/journal-export-utils.js — keeps the export utility self-contained
+     so deployments don't need the sibling /shared folder (mobile Safari was throwing
+     "Can't find variable: JournalExportUtils" because the relative path 404'd in production). -->
+<script>
+(function (global) {
+  const HEADERS = [
+    'id',
+    'entryType',
+    'title',
+    'date',
+    'createdAt',
+    'updatedAt',
+    'source',
+    'theme',
+    'content',
+    'interpretation',
+    'scripture',
+    'response',
+    'notes'
+  ];
+
+  function asText(value) {
+    if (value == null) return '';
+    if (Array.isArray(value)) return value.map(asText).filter(Boolean).join('\n');
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'object') {
+      try { return JSON.stringify(value); } catch { return String(value); }
+    }
+    return String(value);
+  }
+
+  function normalizeEntries(entries) {
+    return (Array.isArray(entries) ? entries : []).map((entry) => {
+      const normalized = {};
+      HEADERS.forEach((key) => {
+        normalized[key] = asText(entry && entry[key]);
+      });
+      return normalized;
+    });
+  }
+
+  function escapeRTF(value) {
+    return asText(value)
+      .replace(/\\/g, '\\\\')
+      .replace(/{/g, '\\{')
+      .replace(/}/g, '\\}')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\n/g, '\\par ')
+      .replace(/\t/g, '\\tab ')
+      .replace(/[^\x00-\x7F]/g, function (char) {
+        const code = char.charCodeAt(0);
+        return '\\u' + (code > 32767 ? code - 65536 : code) + '?';
+      });
+  }
+
+  function buildClipboardText(entries) {
+    const normalized = normalizeEntries(entries);
+    return normalized.map((entry) => {
+      return [
+        `Title: ${entry.title || 'Untitled Entry'}`,
+        `Type: ${entry.entryType || ''}`,
+        `Date: ${entry.date || ''}`,
+        `Source: ${entry.source || ''}`,
+        `Theme: ${entry.theme || ''}`,
+        '',
+        'Content:',
+        entry.content || '',
+        '',
+        'Interpretation:',
+        entry.interpretation || '',
+        '',
+        'Scripture:',
+        entry.scripture || '',
+        '',
+        'Response:',
+        entry.response || '',
+        '',
+        'Notes:',
+        entry.notes || '',
+        '----------------------------------------'
+      ].join('\n');
+    }).join('\n\n');
+  }
+
+  function buildExcelWorkbook(entries) {
+    if (!global.XLSX) {
+      throw new Error('Excel export library is not loaded.');
+    }
+    const normalized = normalizeEntries(entries);
+    const rows = normalized.map((entry) => {
+      const row = {};
+      HEADERS.forEach((key) => {
+        row[key] = entry[key] || '';
+      });
+      return row;
+    });
+    const worksheet = global.XLSX.utils.json_to_sheet(rows, { header: HEADERS });
+    worksheet['!cols'] = HEADERS.map((key) => {
+      if (key === 'content' || key === 'interpretation' || key === 'scripture' || key === 'response' || key === 'notes') {
+        return { wch: 42 };
+      }
+      if (key === 'title' || key === 'theme' || key === 'source') {
+        return { wch: 24 };
+      }
+      return { wch: 18 };
+    });
+    const workbook = global.XLSX.utils.book_new();
+    global.XLSX.utils.book_append_sheet(workbook, worksheet, 'Journal Entries');
+    return workbook;
+  }
+
+  function buildRtfDocument(entries, title) {
+    const normalized = normalizeEntries(entries);
+    const docTitle = escapeRTF(title || 'Saved Journal Entries');
+    const blocks = normalized.map((entry, index) => {
+      const heading = escapeRTF(entry.title || ('Entry ' + (index + 1)));
+      return [
+        '\\b ' + heading + '\\b0\\par',
+        'Type: ' + escapeRTF(entry.entryType) + '\\par',
+        'Date: ' + escapeRTF(entry.date) + '\\par',
+        'Created: ' + escapeRTF(entry.createdAt) + '\\par',
+        'Updated: ' + escapeRTF(entry.updatedAt) + '\\par',
+        'Source: ' + escapeRTF(entry.source) + '\\par',
+        'Theme: ' + escapeRTF(entry.theme) + '\\par',
+        '\\par',
+        '\\b Content:\\b0\\par',
+        escapeRTF(entry.content) + '\\par',
+        '\\par',
+        '\\b Interpretation:\\b0\\par',
+        escapeRTF(entry.interpretation) + '\\par',
+        '\\par',
+        '\\b Scripture:\\b0\\par',
+        escapeRTF(entry.scripture) + '\\par',
+        '\\par',
+        '\\b Response:\\b0\\par',
+        escapeRTF(entry.response) + '\\par',
+        '\\par',
+        '\\b Notes:\\b0\\par',
+        escapeRTF(entry.notes) + '\\par',
+        '\\par',
+        '------------------------------\\par',
+        '\\par'
+      ].join('');
+    }).join('');
+
+    return [
+      '{\\rtf1\\ansi\\deff0',
+      '\\fs24 ',
+      '\\b ' + docTitle + '\\b0\\par',
+      '\\par',
+      blocks,
+      '}'
+    ].join('');
+  }
+
+  function downloadBlob(content, mimeType, filename) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  async function copyToClipboard(text) {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+      throw new Error('Clipboard copy is not supported in this browser.');
+    }
+    await navigator.clipboard.writeText(text);
+  }
+
+  function buildFilename(base, extension) {
+    const date = new Date().toISOString().slice(0, 10);
+    return `${base || 'saved-entries'}-${date}.${extension}`;
+  }
+
+  async function runAction(options) {
+    const {
+      action,
+      fetchEntries,
+      filenameBase,
+      title,
+      emptyMessage,
+      alertFn
+    } = options || {};
+
+    const notify = typeof alertFn === 'function' ? alertFn : function (message) { alert(message); };
+    const entries = normalizeEntries(await fetchEntries());
+
+    if (!entries.length) {
+      notify(emptyMessage || 'No saved entries exist yet.');
+      return { count: 0 };
+    }
+
+    if (action === 'excel') {
+      const workbook = buildExcelWorkbook(entries);
+      const wbout = global.XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+      const buf = new ArrayBuffer(wbout.length);
+      const view = new Uint8Array(buf);
+      for (let i = 0; i < wbout.length; i++) {
+        view[i] = wbout.charCodeAt(i) & 0xFF;
+      }
+      downloadBlob(
+        buf,
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buildFilename(filenameBase, 'xlsx')
+      );
+      return { count: entries.length };
+    }
+
+    if (action === 'copy') {
+      await copyToClipboard(buildClipboardText(entries));
+      return { count: entries.length };
+    }
+
+    if (action === 'word') {
+      downloadBlob(buildRtfDocument(entries, title), 'application/rtf', buildFilename(filenameBase, 'rtf'));
+      return { count: entries.length };
+    }
+
+    throw new Error(`Unsupported export action: ${action}`);
+  }
+
+  global.JournalExportUtils = {
+    HEADERS,
+    normalizeEntries,
+    buildExcelWorkbook,
+    buildClipboardText,
+    buildRtfDocument,
+    runAction
+  };
+})(window);
+</script>
 
 <!-- Image OCR handled via Supabase Edge Function + Google Gemini Vision -->
 <style>
@@ -484,12 +720,18 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── PAGE STYLE: DOTTED ───────────────────────────────── */
 /* Dots applied per writing section — header, metadata, and titles stay clean */
+.ps-dotted {
+  --dotted-rule-step: 0.28125in;
+  --dotted-rule-position-y: calc(var(--dotted-rule-step) / 2);
+  --dotted-grid-x: 0.24in;
+}
 .ps-dotted .j-writing-bg,
 .ps-dotted .j-panel-body,
-.ps-dotted .j-interpretation {
+.ps-dotted .j-scripture {
   background-image: radial-gradient(circle, var(--pg-accent) 1px, transparent 1px);
-  background-size: 18px 18px;
-  background-position: 0 0;
+  background-size: var(--dotted-grid-x) var(--dotted-rule-step);
+  background-position: 0 var(--dotted-rule-position-y);
+  background-repeat: repeat;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .ps-dotted .j-writing-wrap.is-narrative .j-writing-shell { min-height: 2in; }
@@ -501,8 +743,22 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   flex: 0 0 auto;
   min-height: 0;
   overflow: visible;
+  line-height: var(--dotted-rule-step);
+  padding-top: 0;
+  padding-bottom: 0;
 }
-.ps-dotted .j-panel-body { flex: 1 1 auto; min-height: 0; }
+.ps-dotted .j-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  line-height: var(--dotted-rule-step);
+  padding-top: 0;
+}
+.ps-dotted .j-narrative p,
+.ps-dotted .j-prose p,
+.ps-dotted .j-scripture p,
+.ps-dotted .j-panel-body p {
+  margin: 0;
+}
 
 /* ── COVER PAGE ─────────────────────────────────────────── */
 .cover-page .page-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #fff; overflow: hidden; }
@@ -11078,6 +11334,50 @@ async function signOut() { await sb.auth.signOut(); }
 // ║  the journal app (generatorUrls.ts). Field IDs must match   ║
 // ║  exactly — any rename breaks the live app connection.        ║
 // ╚══════════════════════════════════════════════════════════════╝
+// ── HASH PAYLOAD LOADER ───────────────────────────────────
+// Reads a base64-encoded JSON payload from the URL hash (#exportData=...) sent
+// by the Dove Expressions Hearing God app. Cross-origin safe (no localStorage
+// dependency between apps). The hash is cleared after a successful read.
+(function loadFromHashPayload() {
+  try {
+    const hash = window.location.hash || '';
+    const match = hash.match(/(?:^#|&)exportData=([^&]+)/);
+    if (!match) return;
+    const b64 = decodeURIComponent(match[1]);
+    const utf8 = atob(b64);
+    const json = decodeURIComponent(escape(utf8));
+    const payload = JSON.parse(json);
+    const entries = Array.isArray(payload?.entries) ? payload.entries : [];
+    if (!entries.length) return;
+
+    // Strip the exportData fragment but preserve other hash params (auth tokens).
+    const cleanedHash = hash
+      .replace(/(?:^#|&)exportData=[^&]+/, '')
+      .replace(/^#&/, '#')
+      .replace(/^#$/, '');
+    history.replaceState(null, '', window.location.pathname + window.location.search + cleanedHash);
+
+    if (entries.length === 1) {
+      // Single entry: populate the form fields directly via the existing helper.
+      populateFormFromDreamData(entries[0], { fallbackNarrativeToRaw: false });
+      if (typeof setMsg === 'function') {
+        setMsg('Entry loaded from journal app — review fields then click Generate Template.', 'ok');
+      }
+    } else {
+      // Multi-entry: queue every structured entry for batch generation and
+      // populate the first into the form only for user inspection.
+      populateFormFromDreamData(entries[0], { fallbackNarrativeToRaw: false });
+      if (typeof queuePendingEntries === 'function') queuePendingEntries(entries);
+      if (typeof setMsg === 'function') {
+        setMsg(`Loaded ${entries.length} entries from journal app — review and click Generate Template.`, 'ok');
+      }
+    }
+    if (typeof updateMobileFormBarVisibility === 'function') updateMobileFormBarVisibility();
+  } catch (err) {
+    console.warn('[hash payload] failed to load export data:', err);
+  }
+})();
+
 // ── URL PARAM LOADER ──────────────────────────────────────
 // Detects entry data passed from the Dove Expressions journal app via URL params.
 // Supported params: dreamTitle, dreamDate, dreamTime, dreamType, dreamerInvolvement,
