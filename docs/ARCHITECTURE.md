@@ -48,6 +48,33 @@
 
 ---
 
+## Hash Import
+
+Dream Generator can receive structured Dream entries through a URL hash payload:
+
+```text
+#exportData=<encoded-payload>
+```
+
+The cross-app payload contract is documented in [`../DoveExpressionsArchitecture.md`](../DoveExpressionsArchitecture.md). This section only describes Dream Generator internals.
+
+Dream-specific receiver behavior:
+- `loadFromHashPayload` reads `window.location.hash` on page load
+- the decoded payload is expected to contain `entries`
+- imported entries are already structured Dream data and must not be sent through `extractDreamData`
+- one imported entry populates the form for the normal single-entry flow
+- multiple imported entries are queued in `pendingPages`
+- generated entries are stored in `lastGeneratedData`
+
+Review source order:
+- `lastGeneratedData` for generated entries
+- `pendingPages` for imported batch entries
+- current form data as the single-entry/manual fallback
+
+Review must render all available Dream entries and must not collapse a batch to the first entry. Print behavior remains separate and uses the generated page set.
+
+---
+
 ## Current UI Control Architecture
 
 ### Breakpoint CTA model

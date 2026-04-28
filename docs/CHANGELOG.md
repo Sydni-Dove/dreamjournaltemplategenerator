@@ -11,6 +11,38 @@ Format per entry:
 
 ---
 
+## 2026-04-28 — Hash Import + Dream Review Batch Rendering
+
+**Issue:** Dream Generator could receive multiple structured entries, and Print could show multiple entries, while Review only displayed the active/current entry.
+
+**Root Cause:** The Dream Generator import/review path was not consistently using the full imported/generated batch. The hash import path needed to queue every imported entry, and the Review renderer needed to read from batch state instead of only the active form entry.
+
+**Fix:** Dream Generator now supports the structured `#exportData` receiver path and renders full imported/generated Dream batches in Review.
+
+Confirmed behavior:
+- `#exportData` payloads are decoded on page load
+- all imported entries are queued correctly, without dropping entries through the previous slice behavior
+- structured hash payloads are not sent through `extractDreamData`
+- Review reads from `lastGeneratedData` for generated entries
+- Review reads from `pendingPages` for imported batch entries
+- Review falls back to the current form only for single-entry/manual cases
+- Review displays `Review Your Entries`
+- Review displays `N entries ready`
+- Review cards are labeled `Entry 1 of N`, `Entry 2 of N`, etc.
+- Print behavior is unchanged and continues to render the generated page set
+
+**Scope:** Dream Generator hash receiver, imported-entry queueing, and Review rendering only.
+
+**Not Touched:**
+- parser logic
+- pagination logic
+- print layout
+- saved-entry storage
+- Supabase schema
+- TTS / speech code
+
+---
+
 ## 2026-04-15
 
 ### Improvements
