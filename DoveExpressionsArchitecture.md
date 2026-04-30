@@ -101,3 +101,74 @@ The following handoff paths are deprecated and should not be restored:
 - `savedPropheticIds`
 - query-param-based generator loading for selected-entry export
 - ID-only generator handoff for selected-entry export
+
+---
+
+## Hearing God App Runtime Contracts
+
+These notes describe app-side contracts that must stay aligned with the shared generator ecosystem.
+
+### Music Feed + Sticky Player
+
+The Music Feed and sticky music player use a shared music context. The current contract is:
+
+```text
+Music Feed click
+  -> selectTrack(playlist, track)
+  -> MusicContext stores current playlist ID + current track ID
+  -> currentTrack resolves from the selected playlist
+  -> PersistentMusicPlayer renders currentTrack.url
+```
+
+Important boundaries:
+
+- `selectTrack` requires both the `MusicPlaylist` and `MusicTrack`.
+- Music Feed song buttons must call `onSelectTrack(playlist, track)`, not `onSelectTrack(track)`.
+- `MusicContext` must preserve the selected track's `url`; it should not replace the clicked track with title-only data.
+- `PersistentMusicPlayer` must derive embeds and direct audio from `currentTrack.url`.
+- The iframe/audio element must be keyed by the selected track, using `currentTrack.id || currentTrack.url`, so a changed song remounts the media element and does not keep playing a stale YouTube/audio source.
+- Direct audio playback should reset when `currentTrack.id` or `currentTrack.url` changes.
+
+The playlist data source is `src/data/musicPlaylists.ts`. Track URLs are part of the playback contract and must not be removed. If a YouTube video disables embedding, replace that track with an embeddable/available video URL rather than changing player logic.
+
+Current playlist curation notes:
+
+- Jesus Culture tracks live in `Soaking`.
+- Embassy Worship tracks live in `Warfare`.
+- `Prayer` includes `Names Of God` by Mercy Culture Worship.
+- `Warfare` includes `The Breaking` by Sharde Martin, `Yahweh Flow` by Tye Tribbett, and `Way Maker` by Maranda Curtis.
+- `Prophetic Warfare (Instrumental)` includes Braam Official's `Prophetic Worship Instrumental; YAHWEH`.
+- `Jump in the River` by Sharde Martin was removed.
+- The DappyTKeys `Alone With God` URL should only be used by that specific DappyTKeys track, not as a fallback for unrelated songs.
+
+### Prophetic Word Save Requirements
+
+The prophetic word form must only require the main prophetic word/content field.
+
+Validation contract:
+
+```text
+if (!wordContent.trim()) {
+  block save
+}
+```
+
+Fields that must remain optional:
+
+- author / speaker / "who it's by"
+- time
+- date UI may default to the current date, but validation should not require the user to fill author/speaker or time
+
+Save behavior:
+
+- Empty author/speaker should be sent as an empty value that maps to `source: null` in the existing app save flow.
+- Empty time should remain optional (`undefined` or `null`, depending on the existing local form model).
+- Do not change Supabase table shape or service calls to enforce these UI validation rules.
+
+### Facebook Community Link
+
+The Facebook Community page's join button should route users to the private Facebook group:
+
+```text
+https://www.facebook.com/groups/1810675959353145
+```
