@@ -635,8 +635,8 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 /* ── MY JOURNAL SECTION ───────────────────────────────── */
 .my-journal-section { background: var(--white); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .saved-entries-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.8rem; }
-.saved-entry-card { display: flex; align-items: flex-start; gap: 1rem; padding: 0.9rem 1rem; background: white; border: 1px solid var(--pale-pink); border-radius: 0.75rem; transition: border-color 0.2s; }
-.saved-entry-card,
+.saved-entry-card { position: relative; z-index: 0; display: flex; align-items: flex-start; gap: 1rem; padding: 0.9rem 1rem; background: white; border: 1px solid var(--pale-pink); border-radius: 0.75rem; transition: border-color 0.2s; overflow: visible; }
+.saved-entry-card:has(.saved-menu.is-open) { z-index: 10000; }
 .saved-entries-list,
 .saved-entry-row {
   isolation: isolate;
@@ -678,10 +678,10 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
-  z-index: 1;
+  z-index: 999;
   overflow: visible;
 }
-.saved-menu.is-open { z-index: 270; }
+.saved-menu.is-open { z-index: 9999; }
 .saved-menu-trigger {
   display: inline-flex;
   align-items: center;
@@ -713,7 +713,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   position: absolute;
   top: calc(100% + 0.35rem);
   right: 0;
-  z-index: 280;
+  z-index: 9999;
   display: none;
   min-width: 12.5rem;
   padding: 0.35rem;
@@ -722,6 +722,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   background: #FFFFFF;
   opacity: 1;
   box-shadow: 0 14px 36px rgba(27, 23, 23, 0.18);
+  background-clip: padding-box;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   isolation: isolate;
@@ -741,7 +742,7 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   padding: 0.55rem 0.7rem;
 }
 .saved-menu-item:hover {
-  background: rgba(242,223,216,0.45);
+  background: #f2dfd8;
   color: var(--primary);
 }
 .sec-btn:disabled { opacity: 0.42; cursor: not-allowed; }
@@ -2017,7 +2018,8 @@ textarea,
   opacity: 1;
   border: 1px solid rgba(99, 0, 0, 0.14);
   box-shadow: 0 14px 36px rgba(27, 23, 23, 0.18);
-  z-index: 280;
+  z-index: 9999;
+  background-clip: padding-box;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
