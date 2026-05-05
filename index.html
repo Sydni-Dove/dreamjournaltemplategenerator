@@ -531,15 +531,31 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .field-row, .field-row.cols-3, .field-row.cols-4 { grid-template-columns: 1fr; }
   /* ── Saved-entry card: wrap action buttons to a second row so the title has room ── */
   .saved-entry-card { flex-wrap: wrap; }
+  .saved-entry-select { order: 0; }
+  .sec-date { min-width: 0; }
   .sec-body { flex: 1 1 0; min-width: 0; }
   .sec-actions {
-    width: 100%;
     flex-shrink: 0;
-    justify-content: flex-start;
-    border-top: 1px solid rgba(242,223,216,0.8);
-    padding-top: 0.4rem;
+    justify-content: flex-end;
+    margin-left: auto;
     margin-top: 0.15rem;
     flex-wrap: wrap;
+  }
+  .lib-search,
+  .library-controls > .sec-btn,
+  .library-controls > .saved-menu,
+  .library-controls .saved-menu-trigger,
+  .saved-selection-bar,
+  .saved-selection-actions,
+  .saved-selection-actions > .sec-btn,
+  .saved-selection-actions > .saved-menu,
+  .saved-selection-actions .saved-menu-trigger {
+    width: 100%;
+  }
+  .saved-menu-list {
+    left: 0;
+    right: auto;
+    min-width: min(16rem, calc(100vw - 3rem));
   }
 }
 @media screen and (min-width: 681px) and (max-width: 816px) { .output-section { overflow-x: hidden; } }
@@ -620,7 +636,17 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .my-journal-section { background: var(--white); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .saved-entries-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.8rem; }
 .saved-entry-card { display: flex; align-items: flex-start; gap: 1rem; padding: 0.9rem 1rem; background: white; border: 1px solid var(--pale-pink); border-radius: 0.75rem; transition: border-color 0.2s; }
+.saved-entry-card,
+.saved-entries-list,
+.saved-entry-row {
+  isolation: isolate;
+  overflow: visible;
+}
 .saved-entry-card:hover { border-color: rgba(99,0,0,0.3); box-shadow: 0 2px 8px rgba(27,23,23,0.07); }
+.saved-entry-select { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin-top: -0.35rem; cursor: pointer; }
+.saved-entry-select input { appearance: none; -webkit-appearance: none; width: 30px; height: 30px; border: 1.5px solid rgba(99,0,0,0.28); border-radius: 999px; background: rgba(255,255,255,0.95); box-shadow: inset 0 0 0 6px rgba(242,223,216,0.28); cursor: pointer; transition: all 0.18s ease; }
+.saved-entry-select input:hover { border-color: rgba(99,0,0,0.48); box-shadow: inset 0 0 0 6px rgba(242,223,216,0.42); }
+.saved-entry-select input:checked { border-color: var(--primary); background: radial-gradient(circle at center, var(--primary) 0 34%, rgba(255,255,255,0.98) 36% 100%); box-shadow: 0 0 0 3px rgba(99,0,0,0.08); }
 .sec-date { font-family: 'Playfair Display', serif; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--primary); flex-shrink: 0; min-width: 4.5rem; margin-top: 0.1rem; }
 .sec-body { flex: 1; min-width: 0; }
 .sec-word { font-family: 'Lora', serif; font-size: 0.82rem; font-style: italic; color: var(--text); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -644,6 +670,82 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 .library-controls { display: flex; gap: 0.65rem; flex-wrap: wrap; margin-bottom: 1.2rem; align-items: center; }
 .saved-export-bar { display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center; margin: -0.2rem 0 1rem; }
 .saved-export-note { font-family: 'Lora', serif; font-size: 0.76rem; color: var(--text-light); margin-right: 0.25rem; }
+.saved-selection-bar { justify-content: space-between; margin-top: 0; }
+.saved-selection-bar[hidden] { display: none; }
+.saved-selection-status { font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--primary); }
+.saved-selection-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.saved-menu {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  z-index: 1;
+  overflow: visible;
+}
+.saved-menu.is-open { z-index: 270; }
+.saved-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+.saved-menu-trigger::after {
+  content: '▾';
+  font-size: 0.7rem;
+  line-height: 1;
+  transform: translateY(-0.04rem);
+}
+.saved-entry-menu-trigger {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  font-family: 'Lato', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.saved-entry-menu-trigger::after {
+  content: none;
+}
+.saved-menu-list {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 280;
+  display: none;
+  min-width: 12.5rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(99, 0, 0, 0.14);
+  border-radius: 0.75rem;
+  background: #FFFFFF;
+  opacity: 1;
+  box-shadow: 0 14px 36px rgba(27, 23, 23, 0.18);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  isolation: isolate;
+}
+.saved-menu.is-open .saved-menu-list { display: grid; gap: 0.15rem; }
+.saved-menu-item {
+  width: 100%;
+  min-height: 40px;
+  border: none;
+  border-radius: 0.55rem;
+  background: #FFFFFF;
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'Lora', serif;
+  font-size: 0.8rem;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+}
+.saved-menu-item:hover {
+  background: rgba(242,223,216,0.45);
+  color: var(--primary);
+}
+.sec-btn:disabled { opacity: 0.42; cursor: not-allowed; }
+.sec-btn:disabled:hover { background: transparent; color: var(--primary); }
 .lib-search { font-family: 'Lora', serif; font-size: 0.85rem; color: var(--text); background: white; border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.85rem; outline: none; flex: 1; min-width: 160px; transition: border-color 0.2s; }
 .lib-search:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,0,0,0.08); }
 .lib-select { font-family: 'Lora', serif; font-size: 0.8rem; color: var(--text); background: white; border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.65rem; outline: none; cursor: pointer; }
@@ -1493,6 +1595,435 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
   .print-settings-panel { display: none !important; }
   .print-empty-state  { display: none !important; }
 }
+
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  HEARING GOD APP — VISUAL ALIGNMENT  (ui shell only)   ║
+   ║  Modernizes shell to match app design language.        ║
+   ║  All printable journal page layout is fully preserved. ║
+   ╚══════════════════════════════════════════════════════════╝ */
+
+/* 1 · PAGE BACKGROUND */
+body { background: linear-gradient(160deg, #ffffff 0%, rgba(242,223,216,0.18) 100%); background-attachment: fixed; }
+@media print { body { background: white !important; } }
+
+/* 2 · SITE HEADER — compact, app-integrated */
+.site-header {
+  padding: 1rem 1.5rem 0.9rem;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.site-header::before { width: 130px; }
+.site-header h1 { margin-bottom: 0.25rem; }
+.site-header .brand-tag { margin-bottom: 0.25rem; font-size: 0.68rem; }
+.site-header .subtitle  { font-size: 0.85rem; }
+@media (max-width: 767px) {
+  .site-header { padding: 0.85rem 1rem 0.8rem; }
+  .site-header h1 { font-size: clamp(1.3rem, 5vw, 1.65rem); }
+}
+
+/* 3 · HERO BANNER — compact and subtle */
+.hero-banner {
+  padding: 0.55rem 1.5rem;
+  background: linear-gradient(to right, rgba(242,223,216,0.22), rgba(242,223,216,0.38), rgba(242,223,216,0.22));
+  border-bottom: 1px solid rgba(242,223,216,0.55);
+}
+.hero-banner .hero-quote { font-size: 0.82rem; }
+.hero-banner .hero-icon { width: 22px; height: 22px; }
+.hero-banner .hero-icon svg { width: 10px; height: 10px; }
+
+/* 4 · GENERATOR NAV — app-nav feel */
+.gen-nav {
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(242,223,216,0.65);
+  padding: 0.5rem 1.5rem;
+}
+.gen-nav-link {
+  font-size: 0.82rem;
+  padding: 0.38rem 1rem;
+  background: rgba(242,223,216,0.55);
+  border: 1px solid rgba(242,223,216,0.85);
+  transition: all 0.18s ease;
+}
+.gen-nav-link:hover {
+  background: rgba(242,223,216,0.9);
+  color: var(--primary);
+  border-color: rgba(99,0,0,0.18);
+}
+.gen-nav-link.is-active {
+  background: linear-gradient(to right, var(--ui-accent), var(--coral));
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(99,0,0,0.2);
+}
+
+/* 5 · FORM INPUTS — rounder */
+input[type="text"], select, textarea { border-radius: 0.75rem; }
+
+/* 6 · UPLOAD ZONE — rounder */
+.upload-zone { border-radius: 1.1rem; }
+
+/* 7 · HOW IT WORKS CARD */
+.how-it-works {
+  border-radius: 1.25rem;
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(242,223,216,0.72);
+  box-shadow: 0 2px 12px rgba(27,23,23,0.04);
+}
+
+/* 8 · SAVED ENTRY CARDS */
+.saved-entry-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(242,223,216,0.7);
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 1px 6px rgba(27,23,23,0.04);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.saved-entry-card:hover {
+  border-color: rgba(99,0,0,0.18);
+  box-shadow: 0 4px 16px rgba(27,23,23,0.08);
+  transform: translateY(-1px);
+}
+
+/* 9 · BUTTONS */
+.btn-generate { padding: 0.8rem 2.8rem; box-shadow: 0 4px 18px rgba(99,0,0,0.22); letter-spacing: 0.01em; }
+.btn-ghost { background: rgba(255,255,255,0.88); border: 1px solid rgba(242,223,216,0.9); color: var(--text-mid); }
+.btn-ghost:hover { background: rgba(242,223,216,0.55); color: var(--primary); border-color: rgba(99,0,0,0.22); }
+.btn-edit-save { border-radius: 100px; }
+.btn-load-more { border-radius: 100px; }
+
+/* 10 · MY JOURNAL SECTION */
+.my-journal-section { background: transparent; border-top: none; border-bottom: none; }
+
+/* 11 · EDIT MODAL */
+.edit-modal { border-radius: 1.25rem; }
+@media (max-width: 680px) { .edit-modal { border-radius: 0; } }
+
+/* 12 · EDITOR & FOOTER */
+.editor-section { margin-top: 1.75rem; margin-bottom: 1.75rem; }
+.app-footer { background: transparent; border-top: 1px solid rgba(242,223,216,0.55); }
+
+/* ── HEARING GOD PRODUCT ALIGNMENT — UI shell only ───────────── */
+body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(242,223,216,0.42), transparent 32rem),
+    linear-gradient(160deg, #ffffff 0%, rgba(242,223,216,0.24) 55%, rgba(230,167,66,0.14) 100%);
+  background-attachment: fixed;
+}
+@media print { body { background: white !important; } }
+
+.site-header {
+  background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(242,223,216,0.52) 58%, rgba(230,167,66,0.24) 100%);
+  border-bottom: 1px solid rgba(242,223,216,0.72);
+  box-shadow: 0 12px 34px rgba(99,0,0,0.05);
+}
+.site-header::before {
+  width: 210px;
+  background: linear-gradient(to left, rgba(217,121,4,0.16), transparent);
+}
+.site-header .brand-tag {
+  font-family: 'Lato', sans-serif;
+  letter-spacing: 0.16em;
+  color: var(--primary);
+}
+.site-header h1 {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--coral) 54%, var(--sunrise) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-banner {
+  background: linear-gradient(90deg, rgba(242,223,216,0.32), rgba(230,167,66,0.18), rgba(217,98,72,0.12));
+  border-bottom: 1px solid rgba(242,223,216,0.62);
+}
+.hero-banner .hero-icon,
+.gen-nav-link.is-active,
+.btn-generate,
+.btn-print,
+.btn-save:hover {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--coral) 58%, var(--sunrise) 100%);
+}
+.btn-save:hover {
+  color: var(--white);
+}
+.btn-generate,
+.btn-print {
+  box-shadow: 0 10px 26px rgba(99,0,0,0.22);
+}
+.btn-generate:hover,
+.btn-print:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(99,0,0,0.28);
+}
+.btn-ghost,
+.sec-btn {
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: rgba(255,255,255,0.82);
+  border-color: rgba(242,223,216,0.95);
+}
+.btn-ghost:hover,
+.sec-btn:hover {
+  background: rgba(242,223,216,0.58);
+  color: var(--primary);
+  border-color: rgba(99,0,0,0.22);
+}
+.sec-btn.del:hover {
+  background: #b87070;
+  color: var(--white);
+  border-color: #b87070;
+}
+.sec-btn:disabled:hover {
+  background: rgba(255,255,255,0.82);
+  color: var(--primary);
+}
+
+.section-eyebrow,
+.acc-trigger-label {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.08rem, 1.45vw, 1.28rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--primary);
+  margin-bottom: 0.55rem;
+}
+.section-eyebrow {
+  gap: 0.5rem;
+  margin-top: 1.65rem;
+}
+.section-eyebrow::after,
+.acc-trigger-label::after {
+  flex: 0 0 38px;
+  width: 38px;
+  opacity: 0.2;
+}
+.acc-trigger-tag,
+.saved-export-note,
+label {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.acc-trigger-tag {
+  font-size: 0.64rem;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--text-light);
+}
+.section-support {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin-bottom: 0.8rem;
+}
+.my-journal-section .section-eyebrow:first-child {
+  font-size: clamp(1.32rem, 2vw, 1.55rem);
+  margin-bottom: 0.75rem;
+}
+.my-journal-section .section-eyebrow:first-child::after {
+  flex-basis: 48px;
+  width: 48px;
+}
+input[type="text"],
+select,
+textarea,
+.lib-search,
+.lib-select {
+  font-size: 0.88rem;
+}
+.acc-trigger {
+  padding: 0.72rem 0;
+}
+.form-block {
+  margin-bottom: 1.65rem;
+}
+.editor-section {
+  margin-top: 1.35rem;
+  margin-bottom: 1.45rem;
+}
+.site-header .brand-tag {
+  font-size: 0.68rem;
+}
+.hero-banner .hero-quote {
+  font-size: 0.8rem;
+}
+.editor-section,
+.review-card,
+.saved-entry-card,
+.how-it-works,
+.upload-zone,
+.saved-export-bar {
+  border-color: rgba(242,223,216,0.72);
+  box-shadow: 0 10px 28px rgba(58,28,28,0.055);
+}
+.review-card,
+.saved-entry-card,
+.how-it-works,
+.upload-zone {
+  background: linear-gradient(145deg, rgba(255,255,255,0.96), rgba(242,223,216,0.18));
+}
+.saved-export-bar {
+  background: linear-gradient(135deg, rgba(255,255,255,0.82), rgba(242,223,216,0.24), rgba(230,167,66,0.1));
+}
+.library-controls {
+  align-items: center;
+  margin-top: 0.8rem;
+}
+.lib-search {
+  flex: 1 1 22rem;
+  min-width: min(100%, 220px);
+}
+.lib-select {
+  flex: 0 0 auto;
+  max-width: 9.5rem;
+  background: rgba(255,255,255,0.72);
+  color: var(--text-soft);
+}
+.saved-export-bar:not(.saved-selection-bar) {
+  display: none;
+}
+.sec-date-col {
+  min-width: 5rem;
+}
+.sec-title {
+  font-size: 0.86rem;
+}
+.sec-actions {
+  justify-content: flex-end;
+}
+.saved-entry-card {
+  align-items: flex-start;
+  padding: 0.82rem 0.95rem;
+}
+
+/* ── DREAM GENERATOR SPACING REBALANCE — UI only ───────────── */
+.review-card {
+  padding: 1.15rem 1.15rem 1.25rem;
+}
+.review-card-label {
+  margin-bottom: 0.72rem;
+}
+.review-card-body {
+  line-height: 1.82;
+  padding-top: 0.08rem;
+}
+.review-card-body br {
+  line-height: 1.95;
+}
+.review-meta-grid {
+  gap: 0.95rem 1.1rem;
+  margin-bottom: 0.25rem;
+}
+.review-meta-item {
+  gap: 0.26rem;
+}
+.field-row {
+  gap: 1.45rem 1.55rem;
+}
+.field-row[style*="margin-top"] {
+  margin-top: 1.45rem !important;
+}
+.field-row[style*="gap:1.2rem"] {
+  gap: 1.45rem 1.55rem !important;
+}
+.f-group {
+  gap: 0.46rem;
+}
+#editorSection {
+  padding-bottom: 5rem;
+}
+.generate-strip {
+  margin-top: 2.4rem;
+  padding-bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .generate-strip {
+    margin-top: 3.2rem;
+    padding-bottom: 1.5rem;
+  }
+}
+@media (max-width: 767px) {
+  #editorSection {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+  .field-row,
+  .field-row[style*="gap:1.2rem"] {
+    gap: 1.05rem !important;
+  }
+  .review-card {
+    padding: 1rem 0.95rem 1.12rem;
+  }
+  .review-card-label {
+    margin-bottom: 0.62rem;
+  }
+}
+
+/* ── GENERATOR TAB SURFACE — styling only ─────────────────── */
+.m-tab-nav {
+  background: #FFFFFF;
+  background-image: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom: 1px solid rgba(99, 0, 0, 0.08);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.03);
+}
+@media (max-width: 767px) {
+  .m-tab-nav {
+    background: #FFFFFF;
+    border-top: 1px solid rgba(99, 0, 0, 0.08);
+    border-bottom: none;
+    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.04);
+  }
+}
+
+/* ── SAVED ENTRIES SOLID SURFACE — styling only ───────────── */
+#myJournalSection {
+  background: #FFFFFF;
+  background-image: none;
+  border-top: 1px solid rgba(99, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(99, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(27, 23, 23, 0.04);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+#myJournalSection > .editor-section {
+  background: #FFFFFF;
+  background-image: none;
+  border: 1px solid rgba(99, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(27, 23, 23, 0.04);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+#myJournalSection .saved-entry-card,
+#myJournalSection .saved-export-bar {
+  background: #FFFFFF;
+  background-image: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+#myJournalSection .saved-entry-card {
+  border: 1px solid rgba(99, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(27, 23, 23, 0.04);
+}
+#myJournalSection .saved-menu-list {
+  background: #FFFFFF;
+  background-image: none;
+  opacity: 1;
+  border: 1px solid rgba(99, 0, 0, 0.14);
+  box-shadow: 0 14px 36px rgba(27, 23, 23, 0.18);
+  z-index: 280;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+#myJournalSection .saved-menu-item {
+  background: #FFFFFF;
+}
 </style>
 </head>
 <body>
@@ -1568,9 +2099,9 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
 
 <!-- MY JOURNAL SECTION -->
 <div class="my-journal-section" id="myJournalSection" style="display:none">
-  <div class="editor-section" style="padding-top:1.5rem; padding-bottom:2.5rem;">
+  <div class="editor-section" style="padding-top:1.5rem; padding-bottom:2rem;">
     <div class="section-eyebrow">My Dream Journal</div>
-    <div class="library-controls">
+    <div class="library-controls saved-library-controls">
       <input class="lib-search" type="text" id="libSearch" placeholder="Search title, dream, or theme…" oninput="onLibSearchInput()">
       <select class="lib-select" id="libSort" onchange="onLibFilter()">
         <option value="newest">Newest First</option>
@@ -1586,12 +2117,29 @@ select:disabled { opacity: 0.35; cursor: not-allowed; }
         <option value="revelation">Revelation</option>
         <option value="prophetic">Prophetic</option>
       </select>
+      <div class="saved-menu" id="savedExportMenu">
+        <button class="sec-btn saved-menu-trigger" type="button" onclick="toggleSavedMenu(event, 'savedExportMenu')" aria-haspopup="menu" aria-expanded="false">Export</button>
+        <div class="saved-menu-list" role="menu">
+          <button class="saved-menu-item" type="button" role="menuitem" onclick="handleSavedEntriesExport('excel'); closeSavedMenus()">Export Excel</button>
+          <button class="saved-menu-item" type="button" role="menuitem" onclick="handleSavedEntriesExport('copy'); closeSavedMenus()">Copy Entries</button>
+          <button class="saved-menu-item" type="button" role="menuitem" onclick="handleSavedEntriesExport('word'); closeSavedMenus()">Export Word</button>
+        </div>
+      </div>
+      <button class="sec-btn" type="button" id="savedSelectEntriesBtn" onclick="enterSavedEntriesSelectionMode()">Select entries</button>
     </div>
     <div class="saved-export-bar">
       <span class="saved-export-note">Export saved entries:</span>
       <button class="sec-btn" type="button" onclick="handleSavedEntriesExport('excel')">Export Excel</button>
       <button class="sec-btn" type="button" onclick="handleSavedEntriesExport('copy')">Copy Entries</button>
       <button class="sec-btn" type="button" onclick="handleSavedEntriesExport('word')">Export Word</button>
+    </div>
+    <div class="saved-export-bar saved-selection-bar" id="savedSelectionBar" hidden>
+      <span class="saved-selection-status" id="savedSelectionStatus">0 selected</span>
+      <div class="saved-selection-actions">
+        <button class="sec-btn saved-selected-action" type="button" onclick="sendSelectedDreamEntriesToReview()" disabled>Review Selected</button>
+        <button class="sec-btn saved-selected-action" type="button" onclick="sendSelectedDreamEntriesToPrint()" disabled>Print Selected</button>
+        <button class="sec-btn" type="button" onclick="cancelSavedEntriesSelectionMode()">Cancel</button>
+      </div>
     </div>
     <div class="saved-entries-list" id="savedEntriesList">
       <div class="saved-entries-empty">Loading…</div>
@@ -1986,6 +2534,8 @@ let lastGeneratedData = [];
 let lastParsedEntryForGeneration = null;
 let currentInputSource = null; // 'paste' | 'upload' | null
 let pasteAutofillDebounceId = null;
+let savedEntriesSelectionMode = false;
+let selectedSavedDreamEntryIds = new Set();
 const PREVIEW_SCALE_SETTLE_DELAYS_MS = [120, 360];
 
 // ═════════════════════════════════════════════════════════════
@@ -10565,21 +11115,81 @@ function packExtras(d) {
 
 // Unpack extras from dreams.reflection
 function unpackExtras(entry) {
-  try { return entry.reflection ? JSON.parse(entry.reflection) : {}; } catch { return {}; }
+  try {
+    const parsed = entry.reflection ? JSON.parse(entry.reflection) : {};
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function readableTextFromStoredValue(value) {
+  if (value == null) return '';
+  if (typeof value !== 'string') {
+    if (Array.isArray(value)) return value.map(readableTextFromStoredValue).filter(Boolean).join('\n');
+    if (typeof value === 'object') {
+      const candidate = value.raw_text || value.text || value.reflection || value.content || value.value || value.notes;
+      return readableTextFromStoredValue(candidate);
+    }
+    return String(value);
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  if (/^[\[{]/.test(trimmed)) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      const normalized = readableTextFromStoredValue(parsed);
+      if (normalized) return normalized;
+    } catch {}
+  }
+
+  if (/<[a-z][\s\S]*>/i.test(trimmed)) {
+    try {
+      const doc = new DOMParser().parseFromString(trimmed, 'text/html');
+      const text = doc.body?.textContent || '';
+      if (text.trim()) return text.trim();
+    } catch {}
+    return trimmed.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  return trimmed;
+}
+
+function getEntryCategoryLabel(entry, extras = unpackExtras(entry)) {
+  return readableTextFromStoredValue(
+    extras.entry_type || extras.entryType || extras.category || extras.kind || extras.type || ''
+  );
+}
+
+function isReflectionCategory(entry, extras = unpackExtras(entry)) {
+  const category = getEntryCategoryLabel(entry, extras).toLowerCase();
+  const storedType = readableTextFromStoredValue(extras.dream_type_label || entry.dream_type || '').toLowerCase();
+  return /\breflection\b/.test(category) || /\breflection\b/.test(storedType);
+}
+
+function isDreamMetadataEntry(entry, extras = unpackExtras(entry)) {
+  if (isReflectionCategory(entry, extras)) return false;
+  const category = getEntryCategoryLabel(entry, extras).toLowerCase();
+  const label = readableTextFromStoredValue(extras.dream_type_label || '').toLowerCase();
+  if (/\bdream\b|\bvision\b/.test(category) || /\bdream\b|\bvision\b/.test(label)) return true;
+  return Boolean(entry.dream_type || entry.dreamer_role || extras.symbols || extras.emotions || extras.scriptures);
 }
 
 // Get full display label for a dream entry (prefers stored label over enum)
 function getDreamTypeLabel(entry) {
   const x = unpackExtras(entry);
-  if (x.dream_type_label) return x.dream_type_label;
+  if (!isDreamMetadataEntry(entry, x)) return '';
+  if (x.dream_type_label) return readableTextFromStoredValue(x.dream_type_label);
   return DREAM_ENUM_LABELS[entry.dream_type] || entry.dream_type || '';
 }
 
 // Extract plain text from dreams.brainstorm (jsonb stored as {text:"..."})
 function getBrainstormText(val) {
   if (!val) return '';
-  if (typeof val === 'string') return val;
-  if (typeof val === 'object' && val.text) return val.text;
+  if (typeof val === 'string') return readableTextFromStoredValue(val);
+  if (typeof val === 'object' && val.text) return readableTextFromStoredValue(val.text);
   return '';
 }
 
@@ -10622,7 +11232,7 @@ async function saveToJournal() {
 
 // ── JOURNAL LIBRARY STATE ─────────────────────────────────
 const PAGE_SIZE = 20;
-const journalState = { search: '', sort: 'newest', filterType: '', page: 0, hasMore: false, loading: false };
+const journalState = { search: '', sort: 'newest', filterType: '', page: 0, hasMore: false, loading: false, entries: [] };
 let _libSearchTimer = null;
 
 // ── LAYER 1: 4-TAB MOBILE SWITCHER ──────────────────────────────
@@ -10930,6 +11540,37 @@ function escapeHTML(str) {
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+function closeSavedMenus() {
+  document.querySelectorAll('.saved-menu.is-open').forEach(menu => {
+    menu.classList.remove('is-open');
+    const trigger = menu.querySelector('.saved-menu-trigger');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function toggleSavedMenu(event, menuId) {
+  event.preventDefault();
+  event.stopPropagation();
+  const menu = document.getElementById(menuId);
+  const trigger = event.currentTarget;
+  if (!menu || trigger?.disabled) return;
+
+  const shouldOpen = !menu.classList.contains('is-open');
+  closeSavedMenus();
+  if (shouldOpen) {
+    menu.classList.add('is-open');
+    if (trigger) trigger.setAttribute('aria-expanded', 'true');
+  }
+}
+
+document.addEventListener('click', event => {
+  if (!(event.target instanceof Element) || !event.target.closest('.saved-menu')) closeSavedMenus();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeSavedMenus();
+});
+
 function onLibSearchInput() {
   clearTimeout(_libSearchTimer);
   _libSearchTimer = setTimeout(() => {
@@ -10949,6 +11590,84 @@ function onLibFilter() {
 function loadMoreEntries() {
   journalState.page++;
   loadMyJournal(true);
+}
+
+function renderCurrentSavedDreamEntries() {
+  const list = document.getElementById('savedEntriesList');
+  if (!list) return;
+  list.innerHTML = '';
+  (journalState.entries || []).forEach(entry => list.appendChild(renderEntryCard(entry)));
+  updateSavedDreamSelectionUi();
+}
+
+function enterSavedEntriesSelectionMode() {
+  savedEntriesSelectionMode = true;
+  renderCurrentSavedDreamEntries();
+  updateSavedDreamSelectionUi();
+}
+
+function cancelSavedEntriesSelectionMode() {
+  savedEntriesSelectionMode = false;
+  selectedSavedDreamEntryIds.clear();
+  closeSavedMenus();
+  renderCurrentSavedDreamEntries();
+  updateSavedDreamSelectionUi();
+}
+
+function updateSavedDreamSelectionUi() {
+  const count = selectedSavedDreamEntryIds.size;
+  const status = document.getElementById('savedSelectionStatus');
+  const selectionBar = document.getElementById('savedSelectionBar');
+  const selectEntriesBtn = document.getElementById('savedSelectEntriesBtn');
+  const exportMenu = document.getElementById('savedExportMenu');
+
+  if (status) status.textContent = `${count} selected`;
+  if (selectionBar) selectionBar.hidden = !savedEntriesSelectionMode;
+  if (selectEntriesBtn) selectEntriesBtn.hidden = savedEntriesSelectionMode;
+  if (exportMenu) exportMenu.hidden = savedEntriesSelectionMode;
+  document.querySelectorAll('.saved-selected-action').forEach(btn => {
+    btn.disabled = count === 0;
+  });
+  document.querySelectorAll('.saved-entry-select-input').forEach(input => {
+    input.checked = selectedSavedDreamEntryIds.has(input.value);
+  });
+}
+
+function toggleSavedDreamEntrySelection(entryId, checked) {
+  if (!entryId) return;
+  if (checked) selectedSavedDreamEntryIds.add(entryId);
+  else selectedSavedDreamEntryIds.delete(entryId);
+  updateSavedDreamSelectionUi();
+}
+
+function getSelectedDreamEntries() {
+  return (journalState.entries || []).filter(entry => selectedSavedDreamEntryIds.has(entry.id));
+}
+
+function resetSavedDreamSelectionAfterSend() {
+  selectedSavedDreamEntryIds.clear();
+  savedEntriesSelectionMode = false;
+  closeSavedMenus();
+  renderCurrentSavedDreamEntries();
+  updateSavedDreamSelectionUi();
+}
+
+function sendSelectedDreamEntriesToReview() {
+  const selected = getSelectedDreamEntries();
+  if (!selected.length) return;
+  const mapped = selected.map(mapSavedDreamEntryToGeneratorData);
+  showPages(mapped);
+  showReviewAfterGenerate();
+  resetSavedDreamSelectionAfterSend();
+}
+
+function sendSelectedDreamEntriesToPrint() {
+  const selected = getSelectedDreamEntries();
+  if (!selected.length) return;
+  const mapped = selected.map(mapSavedDreamEntryToGeneratorData);
+  showPages(mapped);
+  switchTab('print');
+  resetSavedDreamSelectionAfterSend();
 }
 
 // ── MY JOURNAL LOADER ────────────────────────────────────
@@ -11036,12 +11755,22 @@ async function loadMyJournal(append) {
   const loadMoreBtn = document.getElementById('loadMoreBtn');
   if (error) {
     console.error('[loadMyJournal] Supabase error:', error);
+    if (!append) {
+      journalState.entries = [];
+      savedEntriesSelectionMode = false;
+      selectedSavedDreamEntryIds.clear();
+      updateSavedDreamSelectionUi();
+    }
     list.innerHTML = `<div class="saved-entries-empty">Could not load entries: ${error.message || error.code || 'unknown error'}. Check console for details.</div>`;
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
     return;
   }
   if (!data || data.length === 0) {
     if (!append) {
+      journalState.entries = [];
+      savedEntriesSelectionMode = false;
+      selectedSavedDreamEntryIds.clear();
+      updateSavedDreamSelectionUi();
       list.innerHTML = search
         ? '<div class="saved-entries-empty">No saved dream entries match the current search.</div>'
         : '<div class="saved-entries-empty">No saved entries yet — generate journal pages and click "Save to Journal."</div>';
@@ -11049,11 +11778,15 @@ async function loadMyJournal(append) {
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
     return;
   }
+  journalState.entries = append ? [...(journalState.entries || []), ...data] : data;
+  const validIds = new Set(journalState.entries.map(entry => entry.id).filter(Boolean));
+  selectedSavedDreamEntryIds = new Set(Array.from(selectedSavedDreamEntryIds).filter(id => validIds.has(id)));
   if (!append) list.innerHTML = '';
   data.forEach(entry => list.appendChild(renderEntryCard(entry)));
 
   journalState.hasMore = count !== null ? (from + data.length) < count : data.length === PAGE_SIZE;
   if (loadMoreBtn) loadMoreBtn.style.display = journalState.hasMore ? 'block' : 'none';
+  updateSavedDreamSelectionUi();
 }
 
 function renderEntryCard(entry) {
@@ -11068,7 +11801,12 @@ function renderEntryCard(entry) {
   const typeBadge = typeLabel ? `<span class="sec-type-badge">${esc(typeLabel)}</span>` : '';
   const extras    = unpackExtras(entry);
   const themeMeta = extras.theme ? ` · ${esc(extras.theme)}` : '';
+  const actionMenuId = `saved-entry-actions-${String(entry.id || '').replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   card.innerHTML = `
+    ${savedEntriesSelectionMode ? `
+    <label class="saved-entry-select" aria-label="Select saved dream entry">
+      <input class="saved-entry-select-input" type="checkbox" value="${escAttr(entry.id || '')}" ${selectedSavedDreamEntryIds.has(entry.id) ? 'checked' : ''}>
+    </label>` : ''}
     <div class="sec-date-col"><span class="sec-date">${esc(entry.date||'—')}</span>${typeBadge}</div>
     <div class="sec-body">
       <div class="sec-title">${esc((entry.title || '').trim() || 'Untitled')}</div>
@@ -11078,43 +11816,82 @@ function renderEntryCard(entry) {
     <div class="sec-actions"></div>`;
   // Card click loads entry into Review (Edit/Delete buttons guarded via .sec-btn closest check)
   card.addEventListener('click', (event) => {
-    if (!event.target.closest('.sec-btn')) loadEntryIntoForm(entry);
+    if (!event.target.closest('.sec-btn, .saved-entry-select, .saved-menu')) loadEntryIntoForm(entry);
   });
   card.addEventListener('keydown', (event) => {
-    if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('.sec-btn')) {
+    if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('.sec-btn, .saved-entry-select, .saved-menu')) {
       event.preventDefault();
       loadEntryIntoForm(entry);
     }
   });
+  const selectInput = card.querySelector('.saved-entry-select-input');
+  if (selectInput) {
+    selectInput.addEventListener('click', event => event.stopPropagation());
+    selectInput.addEventListener('change', event => {
+      toggleSavedDreamEntrySelection(entry.id, event.target.checked);
+    });
+  }
   const actions = card.querySelector('.sec-actions');
-  const editBtn = document.createElement('button'); editBtn.className = 'sec-btn'; editBtn.textContent = 'Edit';
-  editBtn.onclick = (event) => { event.stopPropagation(); openEditModal(entry); };
-  const delBtn  = document.createElement('button'); delBtn.className  = 'sec-btn del'; delBtn.textContent = 'Delete';
-  delBtn.onclick = (event) => { event.stopPropagation(); deleteEntry(entry.id); };
-  actions.appendChild(editBtn); actions.appendChild(delBtn);
+  if (!savedEntriesSelectionMode) {
+    const actionMenu = document.createElement('div');
+    actionMenu.className = 'saved-menu';
+    actionMenu.id = actionMenuId;
+    actionMenu.innerHTML = `
+      <button class="sec-btn saved-menu-trigger saved-entry-menu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Saved entry actions">⋮</button>
+      <div class="saved-menu-list" role="menu">
+        <button class="saved-menu-item" type="button" role="menuitem" data-menu-action="select">Select</button>
+        <button class="saved-menu-item" type="button" role="menuitem" data-menu-action="edit">Edit</button>
+        <button class="saved-menu-item" type="button" role="menuitem" data-menu-action="delete">Delete</button>
+      </div>
+    `;
+    actionMenu.querySelector('.saved-menu-trigger').onclick = (event) => toggleSavedMenu(event, actionMenuId);
+    actionMenu.querySelectorAll('.saved-menu-item').forEach(item => {
+      item.onclick = (event) => {
+        event.stopPropagation();
+        if (item.dataset.menuAction === 'select') {
+          savedEntriesSelectionMode = true;
+          selectedSavedDreamEntryIds.add(entry.id);
+          closeSavedMenus();
+          renderCurrentSavedDreamEntries();
+          updateSavedDreamSelectionUi();
+          return;
+        }
+        if (item.dataset.menuAction === 'edit') {
+          closeSavedMenus();
+          openEditModal(entry);
+          return;
+        }
+        if (item.dataset.menuAction === 'delete') {
+          closeSavedMenus();
+          deleteEntry(entry.id);
+        }
+      };
+    });
+    actions.appendChild(actionMenu);
+  }
   return card;
 }
 
 function mapSavedDreamEntryToGeneratorData(entry) {
   const extras = unpackExtras(entry);
+  const isDreamEntry = isDreamMetadataEntry(entry, extras);
   const mapped = {
-    dreamTitle: entry.title || '',
+    dreamTitle: readableTextFromStoredValue(entry.title),
     dreamDate: entry.date || '',
-    dreamNarrative: entry.narrative || '',
+    dreamNarrative: readableTextFromStoredValue(entry.narrative),
     dreamBrainstorm: getBrainstormText(entry.brainstorm),
-    dreamInterpretation: entry.interpretation || '',
-    dreamApplication: entry.application || '',
+    dreamInterpretation: readableTextFromStoredValue(entry.interpretation),
+    dreamApplication: readableTextFromStoredValue(entry.application),
     dreamActions: getActionsText(entry.actions),
-    dreamerInvolvement: entry.dreamer_role || '',
-    dreamType: getDreamTypeLabel(entry),
-    dreamSymbols: extras.symbols || '',
-    dreamEmotions: extras.emotions || '',
-    dreamScriptures: extras.scriptures || '',
-    dreamContextSource: extras.context_source || '',
-    dreamTheme: extras.theme || '',
-    dreamAdditionalNotes: extras.additional_notes || '',
+    dreamerInvolvement: isDreamEntry ? readableTextFromStoredValue(entry.dreamer_role) : '',
+    dreamType: isDreamEntry ? getDreamTypeLabel(entry) : '',
+    dreamSymbols: isDreamEntry ? readableTextFromStoredValue(extras.symbols) : '',
+    dreamEmotions: isDreamEntry ? readableTextFromStoredValue(extras.emotions) : '',
+    dreamScriptures: isDreamEntry ? readableTextFromStoredValue(extras.scriptures) : '',
+    dreamContextSource: readableTextFromStoredValue(extras.context_source),
+    dreamTheme: readableTextFromStoredValue(extras.theme || getEntryCategoryLabel(entry, extras)),
+    dreamAdditionalNotes: readableTextFromStoredValue(extras.additional_notes || extras.notes || extras.reflection),
   };
-  if (extras.raw_text) mapped._raw = extras.raw_text;
   return mapped;
 }
 
@@ -11197,25 +11974,35 @@ async function deleteEntry(id) {
 
 // ── EDIT ENTRY MODAL ──────────────────────────────────────
 let _editingEntryId = null;
+let _editingEntryExtras = {};
+let _editingEntryIsDream = true;
+let _editingEntryDreamType = null;
 
 function openEditModal(entry) {
   _editingEntryId = entry.id;
   const extras = unpackExtras(entry);
-  document.getElementById('em-title').value          = entry.title                  || '';
+  _editingEntryExtras = { ...extras };
+  _editingEntryIsDream = isDreamMetadataEntry(entry, extras);
+  _editingEntryDreamType = entry.dream_type || null;
+  document.querySelector('#editModal .edit-modal-title').textContent = _editingEntryIsDream ? 'Edit Dream Entry' : 'Edit Reflection Entry';
+  document.getElementById('em-type-group').style.display = _editingEntryIsDream ? '' : 'none';
+  document.querySelector('label[for="em-narrative"]').textContent = _editingEntryIsDream ? 'Dream Narrative' : 'Reflection';
+  document.getElementById('em-narrative').placeholder = _editingEntryIsDream ? 'Write the dream exactly as it happened…' : 'Write the reflection…';
+  document.getElementById('em-title').value          = readableTextFromStoredValue(entry.title);
   document.getElementById('em-date').value           = entry.date                   || '';
-  document.getElementById('em-theme').value          = extras.theme                 || '';
-  document.getElementById('em-ctx').value            = extras.context_source        || '';
-  document.getElementById('em-narrative').value      = entry.narrative              || '';
+  document.getElementById('em-theme').value          = readableTextFromStoredValue(extras.theme || getEntryCategoryLabel(entry, extras));
+  document.getElementById('em-ctx').value            = readableTextFromStoredValue(extras.context_source);
+  document.getElementById('em-narrative').value      = readableTextFromStoredValue(entry.narrative || extras.reflection || extras.content || extras.text);
   document.getElementById('em-brainstorm').value     = getBrainstormText(entry.brainstorm);
-  document.getElementById('em-symbols').value        = extras.symbols               || '';
+  document.getElementById('em-symbols').value        = _editingEntryIsDream ? readableTextFromStoredValue(extras.symbols) : '';
   document.getElementById('em-actions').value        = getActionsText(entry.actions);
-  document.getElementById('em-emotions').value       = extras.emotions              || '';
-  document.getElementById('em-scriptures').value     = extras.scriptures            || '';
-  document.getElementById('em-interpretation').value = entry.interpretation         || '';
-  document.getElementById('em-application').value    = entry.application            || '';
-  document.getElementById('em-notes').value          = extras.additional_notes      || '';
+  document.getElementById('em-emotions').value       = _editingEntryIsDream ? readableTextFromStoredValue(extras.emotions) : '';
+  document.getElementById('em-scriptures').value     = _editingEntryIsDream ? readableTextFromStoredValue(extras.scriptures) : '';
+  document.getElementById('em-interpretation').value = readableTextFromStoredValue(entry.interpretation);
+  document.getElementById('em-application').value    = readableTextFromStoredValue(entry.application);
+  document.getElementById('em-notes').value          = readableTextFromStoredValue(extras.additional_notes || extras.notes);
   // Set dream type dropdown — use the full label stored in extras
-  const typeLabel = extras.dream_type_label || DREAM_ENUM_LABELS[entry.dream_type] || '';
+  const typeLabel = _editingEntryIsDream ? (extras.dream_type_label || DREAM_ENUM_LABELS[entry.dream_type] || '') : '';
   const typeEl = document.getElementById('em-type');
   if (typeEl) {
     const opt = [...typeEl.options].find(o => o.value.toLowerCase() === typeLabel.toLowerCase());
@@ -11233,6 +12020,9 @@ function closeEditModal() {
   document.getElementById('editModal').style.display = 'none';
   document.body.style.overflow = '';
   _editingEntryId = null;
+  _editingEntryExtras = {};
+  _editingEntryIsDream = true;
+  _editingEntryDreamType = null;
 }
 
 function closeEditModalBackdrop(e) {
@@ -11246,7 +12036,7 @@ async function saveEditedEntry() {
   if (saveBtn) { saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; }
   if (msg) { msg.textContent = ''; msg.className = 'edit-modal-msg'; }
 
-  const typeLabel     = document.getElementById('em-type').value.trim();
+  const typeLabel     = _editingEntryIsDream ? document.getElementById('em-type').value.trim() : '';
   const themeVal      = document.getElementById('em-theme').value.trim();
   const ctxVal        = document.getElementById('em-ctx').value.trim();
   const symbolsVal    = document.getElementById('em-symbols').value.trim();
@@ -11256,20 +12046,22 @@ async function saveEditedEntry() {
   const actionsRaw    = document.getElementById('em-actions').value.trim();
   const brainstormRaw = document.getElementById('em-brainstorm').value.trim();
 
-  // Rebuild reflection JSON with all unmapped fields
-  const extras = {};
-  if (typeLabel)     extras.dream_type_label  = typeLabel;
-  if (symbolsVal)    extras.symbols           = symbolsVal;
-  if (emotionsVal)   extras.emotions          = emotionsVal;
-  if (scripturesVal) extras.scriptures        = scripturesVal;
+  const extras = { ..._editingEntryExtras };
+  if (_editingEntryIsDream && typeLabel) extras.dream_type_label = typeLabel;
+  if (_editingEntryIsDream && symbolsVal) extras.symbols = symbolsVal;
+  if (_editingEntryIsDream && emotionsVal) extras.emotions = emotionsVal;
+  if (_editingEntryIsDream && scripturesVal) extras.scriptures = scripturesVal;
   if (ctxVal)        extras.context_source    = ctxVal;
+  else delete extras.context_source;
   if (themeVal)      extras.theme             = themeVal;
+  else delete extras.theme;
   if (notesVal)      extras.additional_notes  = notesVal;
+  else delete extras.additional_notes;
 
   const updates = {
     title:          document.getElementById('em-title').value.trim()          || null,
     date:           parseDateToISO(document.getElementById('em-date').value)  || null,
-    dream_type:     DREAM_TYPE_TO_ENUM[typeLabel] || null,
+    dream_type:     _editingEntryIsDream ? (DREAM_TYPE_TO_ENUM[typeLabel] || null) : _editingEntryDreamType,
     narrative:      document.getElementById('em-narrative').value.trim()      || null,
     brainstorm:     brainstormRaw ? { text: brainstormRaw } : {},
     interpretation: document.getElementById('em-interpretation').value.trim() || null,
@@ -11588,7 +12380,7 @@ console.log('%c[Dream Journal] Build: index-v2-structural-fix-01', 'color:#63000
       <div class="field-row cols-3">
         <div class="f-group"><label for="em-title">Title</label><input type="text" id="em-title" placeholder="Dream title"></div>
         <div class="f-group"><label for="em-date">Date</label><input type="text" id="em-date" placeholder="e.g. March 5, 2026"></div>
-        <div class="f-group">
+        <div class="f-group" id="em-type-group">
           <label for="em-type">Dream Type</label>
           <select id="em-type">
             <option value="">— Select —</option>
